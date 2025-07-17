@@ -134,6 +134,18 @@ func main() {
 				fmt.Printf("  %d. %s - %s\n", i+1, tool.Name, tool.Description)
 			}
 		}
+
+		fmt.Println("Calling List Databases...")
+		listDatabasesRequest := mcp.CallToolRequest{
+			Params: mcp.CallToolParams{
+				Name: "list_databases",
+			},
+		}
+		listDatabasesResult, err := c.CallTool(ctx, listDatabasesRequest)
+		if err != nil {
+			log.Printf("Failed to call list databases tool: %v", err)
+		}
+		fmt.Printf("databases: %v\n", listDatabasesResult.Content)
 	}
 
 	// List available resources if the server supports them

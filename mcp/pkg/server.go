@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
-	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
@@ -22,7 +21,7 @@ const (
 
 type Server interface {
 	MCP() *server.MCPServer
-	ValidateCallToolRequest(ctx context.Context, request mcp.CallToolRequest) error
+	DB() db.Database
 	ListenAndServe(ctx context.Context)
 }
 
@@ -69,18 +68,16 @@ func NewMCPHTTPServer(config db.Config, port int, opts ...Option) (Server, error
 	return srv, nil
 }
 
+func (s *httpServerImpl) DB() db.Database {
+	return s.db
+}
+
 func (s *httpServerImpl) MCP() *server.MCPServer {
 	return s.mcp
 }
 
 func (s *httpServerImpl) ListenAndServe(ctx context.Context) {
 	serve(ctx, s.handler, s.port)
-}
-
-func (s *httpServerImpl) ValidateCallToolRequest(ctx context.Context, request mcp.CallToolRequest) error {
-	// todo: validate stuff here
-	fmt.Println("DUSTIN: validating call tool request")
-	return nil
 }
 
 func serve(ctx context.Context, handler http.Handler, port int) {

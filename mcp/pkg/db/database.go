@@ -1,20 +1,32 @@
-package db 
+package db
 
 import (
 	"context"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
 )
+
+type ResultFormat int
+
+const (
+	ResultFormatUndefined = iota
+	ResultFormatMarkdown
+	ResultFormatCSV
+)
+
+var ErrUnsupportedResultFormat = errors.New("unsupported result format")
 
 type RowMap map[string]interface{}
 type Columns []string
 
 type Database interface {
-	QueryContext(ctx context.Context, query string) (string, error)
-	// ExecContext(ctx context.Context, query string) error
+	QueryContext(ctx context.Context, query string, resultFormat ResultFormat) (string, error)
+	ExecContext(ctx context.Context, query string) error
 }
 
 type databaseImpl struct {
@@ -35,12 +47,58 @@ func NewDatabase(config Config) (Database, error) {
 	}, nil
 }
 
-func (d *databaseImpl) QueryContext(ctx context.Context, query string) (string, error) {
+func (d *databaseImpl) QueryContext(ctx context.Context, query string, resultFormat ResultFormat) (string, error) {
 	rowMap, columns, err := d.doQueryContext(ctx, query)
 	if err != nil {
 		return "", err
 	}
-	return d.rowMapToCSV(rowMap, columns)
+	switch resultFormat {
+	case ResultFormatMarkdown:
+		return d.rowMapToMarkdown(rowMap, columns)
+	case ResultFormatCSV:
+		return d.rowMapToCSV(rowMap, columns)
+	default:
+		return "", ErrUnsupportedResultFormat
+	}
+}
+
+func (d *databaseImpl) rowMapToMarkdown(rowMaps []RowMap, headers []string) (string, error) {
+	var mdBuf strings.Builder
+
+	// Write header row
+	for i, header := range headers {
+		if i > 0 {
+			mdBuf.WriteString(" | ")
+		}
+		mdBuf.WriteString(header)
+	}
+	mdBuf.WriteString("\n")
+
+	// Write separator row
+	for i := range headers {
+		if i > 0 {
+			mdBuf.WriteString(" | ")
+		}
+		mdBuf.WriteString("---")
+	}
+	mdBuf.WriteString("\n")
+
+	// Write data rows
+	for _, rowMap := range rowMaps {
+		for i, header := range headers {
+			if i > 0 {
+				mdBuf.WriteString(" | ")
+			}
+			value, exists := rowMap[header]
+			if !exists {
+				return "", fmt.Errorf("key '%s' not found in map", header)
+			}
+			mdBuf.WriteString(fmt.Sprintf("%v", value))
+		}
+		mdBuf.WriteString("\n")
+	}
+
+	return mdBuf.String(), nil
 }
 
 func (d *databaseImpl) rowMapToCSV(rowMaps []RowMap, headers []string) (string, error) {
@@ -121,8 +179,13 @@ func (d *databaseImpl) doQueryContext(ctx context.Context, query string) ([]RowM
 	return rowMaps, columns, nil
 }
 
-func (d *databaseImpl) ExecContext(ctx context.Context, query string) (string, error) {
-	return "", nil
+func (d *databaseImpl) doExecContext(ctx context.Context, query string) error {
+	_, err := d.db.ExecContext(ctx, query)
+	return err
+}
+
+func (d *databaseImpl) ExecContext(ctx context.Context, query string) error {
+	return d.doExecContext(ctx, query)
 }
 
 func newDB(config Config) (*sql.DB, error) {
@@ -133,11 +196,9 @@ func newDB(config Config) (*sql.DB, error) {
 		return nil, err
 	}
 
-	// todo: retry with backoff
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 
 	return db, nil
 }
-
