@@ -11,6 +11,8 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg"
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt/go/performance/utils/benchmark_runner"
 	"github.com/dolthub/dolt/go/store/constants"
 	"golang.org/x/sync/errgroup"
@@ -19,8 +21,8 @@ import (
 const (
 	mcpTestDatabaseName         = "test"
 	mcpTestRootUserName         = "root"
-	mcpTestMCPClientSQLUser     = "mcp-client-1"
-	mcpTestMCPClientSQLPassword = "passw0rd"
+	mcpTestMCPServerSQLUser     = "mcp-client-1"
+	mcpTestMCPServerSQLPassword = "passw0rd"
 	mcpTestRootPassword         = ""
 	doltServerHost              = "0.0.0.0"
 	doltServerPort              = 3306
@@ -36,7 +38,7 @@ type testSuite struct {
 	dsn                   string
 	testDb                *sql.DB
 	doltServer            benchmark_runner.Server
-	mcpServer             Server
+	mcpServer             pkg.Server
 	mcpErrGroup           *errgroup.Group
 	mcpErrGroupCancelFunc context.CancelFunc
 }
@@ -219,24 +221,27 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 		return nil, err
 	}
 
-	_, err = testDb.ExecContext(ctx, fmt.Sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';", mcpTestMCPClientSQLUser, "%", mcpTestMCPClientSQLPassword))
+	_, err = testDb.ExecContext(ctx, fmt.Sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';", mcpTestMCPServerSQLUser, "%", mcpTestMCPServerSQLPassword))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = testDb.ExecContext(ctx, fmt.Sprintf("GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%s';", mcpTestDatabaseName, mcpTestMCPClientSQLUser, "%"))
+	_, err = testDb.ExecContext(ctx, fmt.Sprintf("GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%s';", mcpTestDatabaseName, mcpTestMCPServerSQLUser, "%"))
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: do schema creation stuff here
 
-	// TODO: this should be test specific
-	middleware := []Middleware{
-		NoopAuthenticationHTTPMiddleware,
-	} 
+	config := db.Config{
+		Host: doltServerHost,
+		Port: doltServerPort,
+		User: mcpTestMCPServerSQLUser,
+		Password: mcpTestMCPServerSQLPassword,
+		DatabaseName: mcpTestDatabaseName,
+	}
 
-	mcpServer, err := NewMCPServer(middleware)
+	mcpServer, err := pkg.NewMCPHTTPServer(config, mcpServerPort, pkg.WithToolSet(&pkg.PrimitiveToolSetV1{}))
 	if err != nil {
 		doltServer.Stop()
 		testDb.Close()
@@ -248,7 +253,7 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 	eg, egCtx := errgroup.WithContext(newCtx)
 
 	eg.Go(func() error {
-		mcpServer.ListenAndServe(egCtx, mcpServerPort)
+		mcpServer.ListenAndServe(egCtx)
 		return nil
 	})
 
