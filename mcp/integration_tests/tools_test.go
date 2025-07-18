@@ -31,12 +31,16 @@ func testListDatabasesTool(s *testSuite) {
 	listDatabasesCallToolParams := mcp.CallToolParams{
 		Name: pkg.ListDatabasesToolName,
 	}
+
 	listDatabasesCallToolRequest := mcp.CallToolRequest{
 		Params: listDatabasesCallToolParams,
 	}
+
 	listDatabasesCallToolResult, err := client.CallTool(ctx, &listDatabasesCallToolRequest)
 	require.NoError(s.t, err)
 	require.NotNil(s.t, listDatabasesCallToolResult)
+	require.False(s.t, listDatabasesCallToolResult.IsError)
+	require.NotEmpty(s.t, listDatabasesCallToolResult.Content)
 
 }
 
