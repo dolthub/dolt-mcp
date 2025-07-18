@@ -36,7 +36,7 @@ func testListDatabasesTool(s *testSuite) {
 		Params: listDatabasesCallToolParams,
 	}
 
-	listDatabasesCallToolResult, err := client.CallTool(ctx, &listDatabasesCallToolRequest)
+	listDatabasesCallToolResult, err := client.CallTool(ctx, listDatabasesCallToolRequest)
 	require.NoError(s.t, err)
 	require.NotNil(s.t, listDatabasesCallToolResult)
 	require.False(s.t, listDatabasesCallToolResult.IsError)

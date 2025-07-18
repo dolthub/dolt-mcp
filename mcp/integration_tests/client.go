@@ -60,6 +60,6 @@ func (c *TestClient) ListTools(ctx context.Context) (*mcp.ListToolsResult, error
 	return c.c.ListTools(ctx, mcp.ListToolsRequest{})
 }
 
-func (c *TestClient) CallTool(ctx context.Context, request *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return c.c.CallTool(ctx, *request)
+func (c *TestClient) CallTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return c.c.CallTool(ctx, request)
 }
