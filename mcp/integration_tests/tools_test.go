@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dolthub/dolt-mcp/mcp/pkg"
+	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
@@ -26,10 +26,10 @@ func testListDatabasesTool(s *testSuite) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolMustExist(s, ctx, client, serverInfo, pkg.ListDatabasesToolName)
+	requireToolMustExist(s, ctx, client, serverInfo, tools.ListDatabasesToolName)
 
 	listDatabasesCallToolParams := mcp.CallToolParams{
-		Name: pkg.ListDatabasesToolName,
+		Name: tools.ListDatabasesToolName,
 	}
 
 	listDatabasesCallToolRequest := mcp.CallToolRequest{

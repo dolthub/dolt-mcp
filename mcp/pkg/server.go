@@ -17,9 +17,3 @@ type Server interface {
 
 type Option func(Server)
 
-func WithToolSet(ts ToolSet) Option {
-	return func(s Server) {
-		ts.RegisterTools(s)
-	}
-}
-

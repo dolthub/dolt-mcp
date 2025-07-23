@@ -9,6 +9,7 @@ import (
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
+	"github.com/dolthub/dolt-mcp/mcp/pkg/toolsets"
 	"go.uber.org/zap"
 )
 
@@ -79,7 +80,7 @@ func main() {
 			logger,
 			config,
 			*mcpPort,
-			pkg.WithToolSet(&pkg.PrimitiveToolSetV1{}))
+			toolsets.WithToolSet(&toolsets.PrimitiveToolSetV1{}))
 		if err != nil {
 			logger.Fatal("failed to create Dolt MCP HTTP server", zap.Error(err))
 		}
@@ -89,7 +90,7 @@ func main() {
 		srv, err := pkg.NewMCPStdioServer(
 			logger,
 			config,
-			pkg.WithToolSet(&pkg.PrimitiveToolSetV1{}),
+			toolsets.WithToolSet(&toolsets.PrimitiveToolSetV1{}),
 		)
 		if err != nil {
 			logger.Fatal("failed to create Dolt MCP stdio server", zap.Error(err))
