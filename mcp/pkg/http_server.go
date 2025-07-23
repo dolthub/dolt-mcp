@@ -28,7 +28,7 @@ type HTTPServer interface {
 
 var _ HTTPServer = &httpServerImpl{}
 
-func NewMCPHTTPServer(config db.Config, port int, opts ...Option) (Server, error) {
+func NewMCPHTTPServer(config db.Config, port int, opts ...Option) (HTTPServer, error) {
 	db, err := db.NewDatabase(config)
 	if err != nil {
 		return nil, err

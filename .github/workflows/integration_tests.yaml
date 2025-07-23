@@ -23,6 +23,12 @@ jobs:
       with:
         go-version-file: ./go.mod
       id: go
+    - name: Install latest Dolt
+      run: |
+        sudo bash -c 'curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash'
+        dolt version
+        dolt config --global --add user.name mcp-ci
+        dolt config --global --add user.email mcp-ci@dolthub.com
     - name: Test All
       working-directory: ./mcp/integration_tests/
       run: |
