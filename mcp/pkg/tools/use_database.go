@@ -14,6 +14,7 @@ const (
 	UseDatabaseToolSQLQueryFormatString = "use %s;"
 	UseDatabaseToolDescription = "Specifies which database in the Dolt server to use."
 	UseDatabaseToolCallSuccessFormatString = "now using database: %s"
+	DatabaseCallToolArgumentName = "database"
 )
 
 func RegisterUseDatabaseTool(server pkg.Server) {
@@ -30,7 +31,7 @@ func RegisterUseDatabaseTool(server pkg.Server) {
 	)
 
 	mcpServer.AddTool(useDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		databaseToUse, err := GetDatabaseArgumentFromCallToolRequest(request) 
+		databaseToUse, err := GetRequiredStringArgumentFromCallToolRequest(request, DatabaseCallToolArgumentName) 
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}

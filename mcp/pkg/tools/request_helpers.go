@@ -6,20 +6,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const (
-	DatabaseCallToolArgumentName = "database"
-)
-
-func GetDatabaseArgumentFromCallToolRequest(request mcp.CallToolRequest) (string, error) {
-	database, ok := request.GetArguments()[DatabaseCallToolArgumentName].(string)
+func GetRequiredStringArgumentFromCallToolRequest(request mcp.CallToolRequest, argument string) (string, error) {
+	value, ok := request.GetArguments()[argument].(string)
 	if !ok {
-		err := status.Errorf(codes.InvalidArgument, "%s not defined", DatabaseCallToolArgumentName)
+		err := status.Errorf(codes.InvalidArgument, "%s not defined", argument)
 		return "", err
 	}
-	if database == "" {
-		err := status.Errorf(codes.InvalidArgument, "%s not defined", DatabaseCallToolArgumentName)
+	if value == "" {
+		err := status.Errorf(codes.InvalidArgument, "%s not defined", argument)
 		return "", err
 	}
-	return database, nil
+	return value, nil
 }
 
