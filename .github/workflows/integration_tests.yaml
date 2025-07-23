@@ -1,0 +1,29 @@
+name: Run Integration Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: integration-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Integration Tests
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go/go.mod
+      id: go
+    - name: Test All
+      working-directory: ./mcp/integration_tests/
+      run: |
+         go test -timeout 30m ./...
+
