@@ -12,6 +12,7 @@ concurrency:
 jobs:
   test:
     name: Integration Tests
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
