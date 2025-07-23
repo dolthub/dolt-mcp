@@ -21,13 +21,11 @@ func WithNotificationHandler(handler func(notification mcp.JSONRPCNotification))
 
 func NewMCPHTTPTestClient(httpURL string, opts ...TestClientOption) (*TestClient, error) {
 	// Create HTTP transport
-	httpTransport, err := transport.NewStreamableHTTP(httpURL)
+	httpTransport, err := transport.NewStreamableHTTP(httpURL, transport.WithContinuousListening())
 	// NOTE: the default streamableHTTP transport is not 100% identical to the stdio client.
 	// By default, it could not receive global notifications (e.g. toolListChanged).
 	// You need to enable the `WithContinuousListening()` option to establish a long-live connection,
 	// and receive the notifications any time the server sends them.
-	//
-	//   httpTransport, err := transport.NewStreamableHTTP(*httpURL, transport.WithContinuousListening())
 	if err != nil {
 		return nil, err
 	}
