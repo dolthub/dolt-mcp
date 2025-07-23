@@ -12,8 +12,10 @@ var _ ToolSet = &PrimitiveToolSetV1{}
 func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterListDatabasesTool(server)
 	tools.RegisterUseDatabaseTool(server)
-	// TODO: create database
-	// TODO: drop database
+	tools.RegisterCreateDatabaseTool(server)
+	tools.RegisterCreateDatabaseIfNotExistsTool(server)
+	tools.RegisterDropDatabaseTool(server)
+	tools.RegisterDropDatabaseIfExistsTool(server)
 	// TODO: show tables
 	// TODO: show create table
 	// TODO: describe table
