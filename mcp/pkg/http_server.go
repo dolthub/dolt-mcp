@@ -12,6 +12,7 @@ import (
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/mark3labs/mcp-go/server"
+	"go.uber.org/zap"
 )
 
 type httpServerImpl struct {
@@ -19,6 +20,7 @@ type httpServerImpl struct {
 	handler http.Handler
 	port    int
 	db      db.Database
+	logger  *zap.Logger
 }
 
 type HTTPServer interface {
@@ -28,7 +30,7 @@ type HTTPServer interface {
 
 var _ HTTPServer = &httpServerImpl{}
 
-func NewMCPHTTPServer(config db.Config, port int, opts ...Option) (HTTPServer, error) {
+func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, opts ...Option) (HTTPServer, error) {
 	db, err := db.NewDatabase(config)
 	if err != nil {
 		return nil, err
@@ -38,12 +40,14 @@ func NewMCPHTTPServer(config db.Config, port int, opts ...Option) (HTTPServer, e
 		DoltMCPServerName,
 		DoltMCPServerVersion,
 		server.WithToolCapabilities(true),
+		server.WithLogging(),
 	)
 
 	srv := &httpServerImpl{
+		logger:  logger,
 		mcp:     mcp,
 		db:      db,
-		port: port,
+		port:    port,
 		handler: server.NewStreamableHTTPServer(mcp),
 	}
 
@@ -63,10 +67,10 @@ func (s *httpServerImpl) MCP() *server.MCPServer {
 }
 
 func (s *httpServerImpl) ListenAndServe(ctx context.Context) {
-	serve(ctx, s.handler, s.port)
+	serve(ctx, s.logger, s.handler, s.port)
 }
 
-func serve(ctx context.Context, handler http.Handler, port int) {
+func serve(ctx context.Context, logger *zap.Logger, handler http.Handler, port int) {
 	portStr := fmt.Sprintf(":%d", port)
 	srv := &http.Server{
 		Addr:    portStr,
@@ -86,7 +90,7 @@ func serve(ctx context.Context, handler http.Handler, port int) {
 			ctxTimeout, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			if err := srv.Shutdown(ctxTimeout); err != nil {
-				fmt.Println("failed to shutdown server:", err.Error())
+				logger.Error("failed to shutdown server", zap.Error(err))
 			}
 		})
 	}
@@ -106,9 +110,8 @@ func serve(ctx context.Context, handler http.Handler, port int) {
 	// Start the server
 	fmt.Println("Serving Dolt MCP on", portStr)
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		fmt.Println("error serving Dolt MCP server:", err.Error())
+		logger.Error("error serving Dolt MCP server", zap.Error(err))
 	}
 
-	fmt.Println("Successfully stopped Dolt MCP server.")
+	logger.Info("Successfully stopped Dolt MCP server.")
 }
-

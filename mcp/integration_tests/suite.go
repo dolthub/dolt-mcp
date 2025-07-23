@@ -1,4 +1,4 @@
-package integration_tests 
+package integration_tests
 
 import (
 	"database/sql"
@@ -13,8 +13,10 @@ import (
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
+	"github.com/dolthub/dolt-mcp/mcp/pkg/toolsets"
 	"github.com/dolthub/dolt/go/performance/utils/benchmark_runner"
 	"github.com/dolthub/dolt/go/store/constants"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -241,7 +243,9 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 		DatabaseName: mcpTestDatabaseName,
 	}
 
-	mcpServer, err := pkg.NewMCPHTTPServer(config, mcpServerPort, pkg.WithToolSet(&pkg.PrimitiveToolSetV1{}))
+	logger := zap.NewNop()
+
+	mcpServer, err := pkg.NewMCPHTTPServer(logger, config, mcpServerPort, toolsets.WithToolSet(&toolsets.PrimitiveToolSetV1{}))
 	if err != nil {
 		doltServer.Stop()
 		testDb.Close()
