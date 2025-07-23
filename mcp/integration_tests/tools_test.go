@@ -12,7 +12,11 @@ func TestTools(t *testing.T) {
 	})
 	t.Run("TestCreateDatabaseTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testCreateDatabaseToolInvalidArguments)
-		RunTest(t, "TestSuccess", testCreateDatabaseToolSuccess)
+		RunTestWithTeardownSQL(t, "TestSuccess", testCreateDatabaseTeardownSQL, testCreateDatabaseToolSuccess)
+	})
+	t.Run("TestDropDatabaseTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDropDatabaseToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testDropDatabaseSetupSQL, testDropDatabaseToolSuccess)
 	})
 }
 

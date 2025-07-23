@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testCreateDatabaseTeardownSQL = "DROP DATABASE foo;"
+var testDropDatabaseSetupSQL = "CREATE DATABASE foo;"
 
-func testCreateDatabaseToolInvalidArguments(s *testSuite) {
+func testDropDatabaseToolInvalidArguments(s *testSuite) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -21,7 +21,7 @@ func testCreateDatabaseToolInvalidArguments(s *testSuite) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolMustExist(s, ctx, client, serverInfo, tools.CreateDatabaseToolName)
+	requireToolMustExist(s, ctx, client, serverInfo, tools.DropDatabaseToolName)
 
 	requests := []struct {
 		description   string
@@ -33,7 +33,7 @@ func testCreateDatabaseToolInvalidArguments(s *testSuite) {
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.CreateDatabaseToolName,
+					Name: tools.DropDatabaseToolName,
 				},
 			},
 		},
@@ -42,7 +42,7 @@ func testCreateDatabaseToolInvalidArguments(s *testSuite) {
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.CreateDatabaseToolName,
+					Name: tools.DropDatabaseToolName,
 					Arguments: map[string]any{
 						tools.DatabaseCallToolArgumentName: "",
 					},
@@ -50,13 +50,13 @@ func testCreateDatabaseToolInvalidArguments(s *testSuite) {
 			},
 		},
 		{
-			description:   "Existing database argument",
+			description:   "Non-existent database argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.CreateDatabaseToolName,
+					Name: tools.DropDatabaseToolName,
 					Arguments: map[string]any{
-						tools.DatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.DatabaseCallToolArgumentName: "bar",
 					},
 				},
 			},
@@ -64,21 +64,21 @@ func testCreateDatabaseToolInvalidArguments(s *testSuite) {
 	}
 
 	for _, request := range requests {
-		createDatabaseCallToolResult, err := client.CallTool(ctx, request.request)
+		dropDatabaseCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
 		if request.errorExpected {
-			require.True(s.t, createDatabaseCallToolResult.IsError)
+			require.True(s.t, dropDatabaseCallToolResult.IsError)
 		} else {
-			require.False(s.t, createDatabaseCallToolResult.IsError)
+			require.False(s.t, dropDatabaseCallToolResult.IsError)
 		}
 
-		require.NotNil(s.t, createDatabaseCallToolResult)
-		require.NotEmpty(s.t, createDatabaseCallToolResult.Content)
+		require.NotNil(s.t, dropDatabaseCallToolResult)
+		require.NotEmpty(s.t, dropDatabaseCallToolResult.Content)
 	}
 }
 
-func testCreateDatabaseToolSuccess(s *testSuite) {
+func testDropDatabaseToolSuccess(s *testSuite) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -89,25 +89,25 @@ func testCreateDatabaseToolSuccess(s *testSuite) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolMustExist(s, ctx, client, serverInfo, tools.CreateDatabaseToolName)
+	requireToolMustExist(s, ctx, client, serverInfo, tools.DropDatabaseToolName)
 
-	createDatabaseToolCallRequest := mcp.CallToolRequest{
+	dropDatabaseToolCallRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
-			Name: tools.CreateDatabaseToolName,
+			Name: tools.DropDatabaseToolName,
 			Arguments: map[string]any{
 				tools.DatabaseCallToolArgumentName: "foo",
 			},
 		},
 	}
 
-	createDatabaseCallToolResult, err := client.CallTool(ctx, createDatabaseToolCallRequest)
+	dropDatabaseCallToolResult, err := client.CallTool(ctx, dropDatabaseToolCallRequest)
 	require.NoError(s.t, err)
-	require.False(s.t, createDatabaseCallToolResult.IsError)
-	require.NotNil(s.t, createDatabaseCallToolResult)
-	require.NotEmpty(s.t, createDatabaseCallToolResult.Content)
+	require.False(s.t, dropDatabaseCallToolResult.IsError)
+	require.NotNil(s.t, dropDatabaseCallToolResult)
+	require.NotEmpty(s.t, dropDatabaseCallToolResult.Content)
 
-	resultString, err := resultToString(createDatabaseCallToolResult)
+	resultString, err := resultToString(dropDatabaseCallToolResult)
 	require.NoError(s.t, err)
-	require.Contains(s.t, resultString, "successfully created database")
+	require.Contains(s.t, resultString, "successfully dropped database")
 }
 
