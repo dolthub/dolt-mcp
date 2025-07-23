@@ -1,0 +1,36 @@
+name: Run Integration Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: integration-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Integration Tests
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: ./go.mod
+      id: go
+    - name: Install latest Dolt
+      run: |
+        sudo bash -c 'curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash'
+        dolt version
+        dolt config --global --add user.name mcp-ci
+        dolt config --global --add user.email mcp-ci@dolthub.com
+    - name: Test All
+      working-directory: ./mcp/integration_tests/
+      run: |
+         go test -timeout 30m ./...
+
