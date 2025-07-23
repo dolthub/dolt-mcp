@@ -20,7 +20,7 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
       with:
-        go-version-file: go/go.mod
+        go-version-file: ./go.mod
       id: go
     - name: Test All
       working-directory: ./mcp/integration_tests/
