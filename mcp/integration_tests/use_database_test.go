@@ -19,7 +19,7 @@ func testUseDatabaseToolInvalidArguments(s *testSuite) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolMustExist(s, ctx, client, serverInfo, tools.UseDatabaseToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.UseDatabaseToolName)
 
 	requests := []struct {
 		description   string
@@ -87,7 +87,7 @@ func testUseDatabaseToolSuccess(s *testSuite) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolMustExist(s, ctx, client, serverInfo, tools.UseDatabaseToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.UseDatabaseToolName)
 
 	useDatabaseToolCallRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{

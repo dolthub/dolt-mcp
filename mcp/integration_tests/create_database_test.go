@@ -21,7 +21,7 @@ func testCreateDatabaseToolInvalidArguments(s *testSuite) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolMustExist(s, ctx, client, serverInfo, tools.CreateDatabaseToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.CreateDatabaseToolName)
 
 	requests := []struct {
 		description   string
@@ -89,7 +89,7 @@ func testCreateDatabaseToolSuccess(s *testSuite) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolMustExist(s, ctx, client, serverInfo, tools.CreateDatabaseToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.CreateDatabaseToolName)
 
 	requests := []struct {
 		description   string

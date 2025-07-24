@@ -11,7 +11,7 @@ import (
 
 var testSuiteHTTPURL = "http://0.0.0.0:8080/mcp"
 
-func requireToolMustExist(s *testSuite, ctx context.Context, client *TestClient, serverInfo *mcp.InitializeResult, toolName string) {
+func requireToolExists(s *testSuite, ctx context.Context, client *TestClient, serverInfo *mcp.InitializeResult, toolName string) {
 	require.NotNil(s.t, serverInfo.Capabilities.Tools)
 	listToolsResult, err := client.ListTools(ctx)
 	require.NoError(s.t, err)

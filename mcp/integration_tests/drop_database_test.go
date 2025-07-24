@@ -21,7 +21,7 @@ func testDropDatabaseToolInvalidArguments(s *testSuite) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolMustExist(s, ctx, client, serverInfo, tools.DropDatabaseToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.DropDatabaseToolName)
 
 	requests := []struct {
 		description   string
@@ -89,7 +89,7 @@ func testDropDatabaseToolSuccess(s *testSuite) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolMustExist(s, ctx, client, serverInfo, tools.DropDatabaseToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.DropDatabaseToolName)
 
 	requests := []struct {
 		description   string
