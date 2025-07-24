@@ -48,7 +48,7 @@ func RunTest(t *testing.T, testName string, testFunc func(s *testSuite)) {
 		suite.t = t
 		testBranchName := generateTestBranchName()
 		suite.Setup(testBranchName, "")
-		defer suite.Teardown(testBranchName)
+		defer suite.Teardown(testBranchName, "")
 		testFunc(suite)
 	})
 }
@@ -61,7 +61,33 @@ func RunTestWithSetupSQL(t *testing.T, testName, setupSQL string, testFunc func(
 		suite.t = t
 		testBranchName := generateTestBranchName()
 		suite.Setup(testBranchName, setupSQL)
-		defer suite.Teardown(testBranchName)
+		defer suite.Teardown(testBranchName, "")
+		testFunc(suite)
+	})
+}
+
+func RunTestWithTeardownSQL(t *testing.T, testName, teardownSQL string, testFunc func(s *testSuite)) {
+	t.Run(testName, func(t *testing.T) {
+		if suite == nil {
+			t.Fatalf("no test suite")
+		}
+		suite.t = t
+		testBranchName := generateTestBranchName()
+		suite.Setup(testBranchName, "")
+		defer suite.Teardown(testBranchName, teardownSQL)
+		testFunc(suite)
+	})
+}
+
+func RunTestWithSetupAndTeardownSQL(t *testing.T, testName, setupSQL, teardownSQL string, testFunc func(s *testSuite)) {
+	t.Run(testName, func(t *testing.T) {
+		if suite == nil {
+			t.Fatalf("no test suite")
+		}
+		suite.t = t
+		testBranchName := generateTestBranchName()
+		suite.Setup(testBranchName, setupSQL)
+		defer suite.Teardown(testBranchName, teardownSQL)
 		testFunc(suite)
 	})
 }

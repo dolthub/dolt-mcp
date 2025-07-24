@@ -14,7 +14,6 @@ const (
 	UseDatabaseToolSQLQueryFormatString = "use %s;"
 	UseDatabaseToolDescription = "Specifies which database in the Dolt server to use."
 	UseDatabaseToolCallSuccessFormatString = "now using database: %s"
-	DatabaseCallToolArgumentName = "database"
 )
 
 func RegisterUseDatabaseTool(server pkg.Server) {

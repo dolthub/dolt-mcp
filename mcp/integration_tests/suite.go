@@ -3,6 +3,7 @@ package integration_tests
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"testing"
 
 	"context"
@@ -134,12 +135,15 @@ func (s *testSuite) Setup(newBranchName, setupSQL string) {
 
 		err = s.addAndCommitChanges("add test setup changes")
 		if err != nil {
-			s.t.Fatalf("failed add and commit changes during test setup: %s", err.Error())
+			if !strings.Contains(err.Error(), "nothing to commit") {
+
+				s.t.Fatalf("failed add and commit changes during test setup: %s", err.Error())
+			}
 		}
 	}
 }
 
-func (s *testSuite) Teardown(branchName string) {
+func (s *testSuite) Teardown(branchName, teardownSQL string) {
 	if branchName == "" {
 		s.t.Fatalf("no new branch name provided")
 	}
@@ -152,6 +156,13 @@ func (s *testSuite) Teardown(branchName string) {
 	err = s.exec(fmt.Sprintf("USE %s;", mcpTestDatabaseName))
 	if err != nil {
 		s.t.Fatalf("failed to use database during test setup: %s", err.Error())
+	}
+
+	if teardownSQL != "" {
+		err = s.exec(teardownSQL)
+		if err != nil {
+			s.t.Fatalf("failed to execute teardown sql: %s", err.Error())
+		}
 	}
 
 	err = s.checkoutBranch("main")
@@ -228,7 +239,7 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 		return nil, err
 	}
 
-	_, err = testDb.ExecContext(ctx, fmt.Sprintf("GRANT ALL PRIVILEGES ON `%s`.* TO '%s'@'%s';", mcpTestDatabaseName, mcpTestMCPServerSQLUser, "%"))
+	_, err = testDb.ExecContext(ctx, fmt.Sprintf("GRANT ALL PRIVILEGES ON *.* TO '%s'@'%s';", mcpTestMCPServerSQLUser, "%"))
 	if err != nil {
 		return nil, err
 	}
