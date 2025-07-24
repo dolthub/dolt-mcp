@@ -161,7 +161,7 @@ func (s *testSuite) Teardown(branchName, teardownSQL string) {
 	if teardownSQL != "" {
 		err = s.exec(teardownSQL)
 		if err != nil {
-			s.t.Fatalf("failed to use database during test setup: %s", err.Error())
+			s.t.Fatalf("failed to execute teardown sql: %s", err.Error())
 		}
 	}
 
