@@ -19,3 +19,11 @@ func GetRequiredStringArgumentFromCallToolRequest(request mcp.CallToolRequest, a
 	return value, nil
 }
 
+func GetBooleanArgumentFromCallToolRequest(request mcp.CallToolRequest, argument string) bool {
+	value, ok := request.GetArguments()[argument].(bool)
+	if !ok {
+		return false
+	}
+	return value
+}
+

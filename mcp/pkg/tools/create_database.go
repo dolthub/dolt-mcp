@@ -10,13 +10,12 @@ import (
 
 const (
 	CreateDatabaseToolName                            = "create_database"
-	CreateDatabaseIfNotExistsToolName                 = "create_database_if_not_exists"
 	CreateDatabaseToolDatabaseArgumentDescription     = "The name of the database to create."
 	CreateDatabaseToolSQLQueryFormatString            = "CREATE DATABASE %s;"
 	CreateDatabaseIfNotExistsToolSQLQueryFormatString = "CREATE DATABASE IF NOT EXISTS %s;"
 	CreateDatabaseToolDescription                     = "Creates a database in the Dolt server."
-	CreateDatabaseIfNotExistsToolDescription          = "Creates a database in the Dolt server, if the database does not already exist."
 	CreateDatabaseToolCallSuccessFormatString         = "successfully created database: %s"
+	CreateDatabaseToolIfNotExistsArgumentDescription  = "If true will only create the specified database if it does not exist in the Dolt server."
 )
 
 func RegisterCreateDatabaseTool(server pkg.Server) {
@@ -30,6 +29,10 @@ func RegisterCreateDatabaseTool(server pkg.Server) {
 			mcp.Required(),
 			mcp.Description(CreateDatabaseToolDatabaseArgumentDescription),
 		),
+		mcp.WithBoolean(
+			IfNotExistsCallToolArgumentName,
+			mcp.Description(CreateDatabaseToolIfNotExistsArgumentDescription),
+		),
 	)
 
 	mcpServer.AddTool(createDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -38,37 +41,17 @@ func RegisterCreateDatabaseTool(server pkg.Server) {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
 
-		database := server.DB()
-		err = database.ExecContext(ctx, fmt.Sprintf(CreateDatabaseToolSQLQueryFormatString, databaseToCreate))
-		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
-		}
+		ifNotExists := GetBooleanArgumentFromCallToolRequest(request, IfNotExistsCallToolArgumentName)
 
-		return mcp.NewToolResultText(fmt.Sprintf(CreateDatabaseToolCallSuccessFormatString, databaseToCreate)), nil
-	})
-}
-
-func RegisterCreateDatabaseIfNotExistsTool(server pkg.Server) {
-	mcpServer := server.MCP()
-
-	createDatabaseIfNotExistsTool := mcp.NewTool(
-		CreateDatabaseIfNotExistsToolName,
-		mcp.WithDescription(CreateDatabaseIfNotExistsToolDescription),
-		mcp.WithString(
-			DatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(CreateDatabaseToolDatabaseArgumentDescription),
-		),
-	)
-
-	mcpServer.AddTool(createDatabaseIfNotExistsTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		databaseToCreate, err := GetRequiredStringArgumentFromCallToolRequest(request, DatabaseCallToolArgumentName)
-		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+		var query string
+		if ifNotExists {
+			query = fmt.Sprintf(CreateDatabaseIfNotExistsToolSQLQueryFormatString, databaseToCreate)
+		} else {
+			query = fmt.Sprintf(CreateDatabaseToolSQLQueryFormatString, databaseToCreate)
 		}
 
 		database := server.DB()
-		err = database.ExecContext(ctx, fmt.Sprintf(CreateDatabaseIfNotExistsToolSQLQueryFormatString, databaseToCreate))
+		err = database.ExecContext(ctx, query)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}

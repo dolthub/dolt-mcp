@@ -91,23 +91,44 @@ func testDropDatabaseToolSuccess(s *testSuite) {
 
 	requireToolMustExist(s, ctx, client, serverInfo, tools.DropDatabaseToolName)
 
-	dropDatabaseToolCallRequest := mcp.CallToolRequest{
-		Params: mcp.CallToolParams{
-			Name: tools.DropDatabaseToolName,
-			Arguments: map[string]any{
-				tools.DatabaseCallToolArgumentName: "foo",
+	requests := []struct {
+		description   string
+		request       mcp.CallToolRequest
+		errorExpected bool
+	}{
+		{
+			description: "Drops existing database",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DropDatabaseToolName,
+					Arguments: map[string]any{
+						tools.DatabaseCallToolArgumentName: "foo",
+					},
+				},
+			},
+		},
+		{
+			description: "Drops non-existent database",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DropDatabaseToolName,
+					Arguments: map[string]any{
+						tools.DatabaseCallToolArgumentName: "foo",
+						tools.IfExistsCallToolArgumentName: true,
+					},
+				},
 			},
 		},
 	}
 
-	dropDatabaseCallToolResult, err := client.CallTool(ctx, dropDatabaseToolCallRequest)
-	require.NoError(s.t, err)
-	require.False(s.t, dropDatabaseCallToolResult.IsError)
-	require.NotNil(s.t, dropDatabaseCallToolResult)
-	require.NotEmpty(s.t, dropDatabaseCallToolResult.Content)
-
-	resultString, err := resultToString(dropDatabaseCallToolResult)
-	require.NoError(s.t, err)
-	require.Contains(s.t, resultString, "successfully dropped database")
+	for _, request := range requests {
+		dropDatabaseCallToolResult, err := client.CallTool(ctx, request.request)
+		require.NoError(s.t, err)
+		require.False(s.t, dropDatabaseCallToolResult.IsError)
+		require.NotNil(s.t, dropDatabaseCallToolResult)
+		require.NotEmpty(s.t, dropDatabaseCallToolResult.Content)
+		resultString, err := resultToString(dropDatabaseCallToolResult)
+		require.NoError(s.t, err)
+		require.Contains(s.t, resultString, "successfully dropped database")
+	}
 }
-

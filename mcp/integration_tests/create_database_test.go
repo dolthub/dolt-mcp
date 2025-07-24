@@ -91,23 +91,45 @@ func testCreateDatabaseToolSuccess(s *testSuite) {
 
 	requireToolMustExist(s, ctx, client, serverInfo, tools.CreateDatabaseToolName)
 
-	createDatabaseToolCallRequest := mcp.CallToolRequest{
-		Params: mcp.CallToolParams{
-			Name: tools.CreateDatabaseToolName,
-			Arguments: map[string]any{
-				tools.DatabaseCallToolArgumentName: "foo",
+	requests := []struct {
+		description   string
+		request       mcp.CallToolRequest
+		errorExpected bool
+	}{
+		{
+			description: "Create non-existent database",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateDatabaseToolName,
+					Arguments: map[string]any{
+						tools.DatabaseCallToolArgumentName: "foo",
+					},
+				},
+			},
+		},
+		{
+			description: "Create existing database",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateDatabaseToolName,
+					Arguments: map[string]any{
+						tools.DatabaseCallToolArgumentName:    "foo",
+						tools.IfNotExistsCallToolArgumentName: true,
+					},
+				},
 			},
 		},
 	}
 
-	createDatabaseCallToolResult, err := client.CallTool(ctx, createDatabaseToolCallRequest)
-	require.NoError(s.t, err)
-	require.False(s.t, createDatabaseCallToolResult.IsError)
-	require.NotNil(s.t, createDatabaseCallToolResult)
-	require.NotEmpty(s.t, createDatabaseCallToolResult.Content)
-
-	resultString, err := resultToString(createDatabaseCallToolResult)
-	require.NoError(s.t, err)
-	require.Contains(s.t, resultString, "successfully created database")
+	for _, request := range requests {
+		createDatabaseCallToolResult, err := client.CallTool(ctx, request.request)
+		require.NoError(s.t, err)
+		require.False(s.t, createDatabaseCallToolResult.IsError)
+		require.NotNil(s.t, createDatabaseCallToolResult)
+		require.NotEmpty(s.t, createDatabaseCallToolResult.Content)
+		resultString, err := resultToString(createDatabaseCallToolResult)
+		require.NoError(s.t, err)
+		require.Contains(s.t, resultString, "successfully created database")
+	}
 }
 

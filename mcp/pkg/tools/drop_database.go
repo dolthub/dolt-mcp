@@ -10,13 +10,12 @@ import (
 
 const (
 	DropDatabaseToolName                         = "drop_database"
-	DropDatabaseIfExistsToolName                 = "create_database_if_exists"
 	DropDatabaseToolDatabaseArgumentDescription  = "The name of the database to drop."
 	DropDatabaseToolSQLQueryFormatString         = "DROP DATABASE %s;"
 	DropDatabaseIfExistsToolSQLQueryFormatString = "DROP DATABASE IF EXISTS %s;"
 	DropDatabaseToolDescription                  = "Drops a database in the Dolt server."
-	DropDatabaseIfExistsToolDescription          = "Drops a database in the Dolt server, if the database exists."
 	DropDatabaseToolCallSuccessFormatString      = "successfully dropped database: %s"
+	DropDatabaseToolIfExistsArgumentDescription  = "If true will only drop the specified database if it exists in the Dolt server."
 )
 
 func RegisterDropDatabaseTool(server pkg.Server) {
@@ -30,6 +29,10 @@ func RegisterDropDatabaseTool(server pkg.Server) {
 			mcp.Required(),
 			mcp.Description(DropDatabaseToolDatabaseArgumentDescription),
 		),
+		mcp.WithBoolean(
+			IfExistsCallToolArgumentName,
+			mcp.Description(DropDatabaseToolIfExistsArgumentDescription),
+		),
 	)
 
 	mcpServer.AddTool(dropDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -38,8 +41,17 @@ func RegisterDropDatabaseTool(server pkg.Server) {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
 
+		ifExists := GetBooleanArgumentFromCallToolRequest(request, IfExistsCallToolArgumentName)
+
+		var query string
+		if ifExists {
+			query = fmt.Sprintf(DropDatabaseIfExistsToolSQLQueryFormatString, databaseToDrop)
+		} else {
+			query = fmt.Sprintf(DropDatabaseToolSQLQueryFormatString, databaseToDrop)
+		}
+
 		database := server.DB()
-		err = database.ExecContext(ctx, fmt.Sprintf(DropDatabaseToolSQLQueryFormatString, databaseToDrop))
+		err = database.ExecContext(ctx, query)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
@@ -47,33 +59,3 @@ func RegisterDropDatabaseTool(server pkg.Server) {
 		return mcp.NewToolResultText(fmt.Sprintf(DropDatabaseToolCallSuccessFormatString, databaseToDrop)), nil
 	})
 }
-
-func RegisterDropDatabaseIfExistsTool(server pkg.Server) {
-	mcpServer := server.MCP()
-
-	dropDatabaseIfExistsTool := mcp.NewTool(
-		DropDatabaseIfExistsToolName,
-		mcp.WithDescription(DropDatabaseIfExistsToolDescription),
-		mcp.WithString(
-			DatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(DropDatabaseToolDatabaseArgumentDescription),
-		),
-	)
-
-	mcpServer.AddTool(dropDatabaseIfExistsTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		databaseToDrop, err := GetRequiredStringArgumentFromCallToolRequest(request, DatabaseCallToolArgumentName)
-		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
-		}
-
-		database := server.DB()
-		err = database.ExecContext(ctx, fmt.Sprintf(DropDatabaseIfExistsToolSQLQueryFormatString, databaseToDrop))
-		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
-		}
-
-		return mcp.NewToolResultText(fmt.Sprintf(DropDatabaseToolCallSuccessFormatString, databaseToDrop)), nil
-	})
-}
-
