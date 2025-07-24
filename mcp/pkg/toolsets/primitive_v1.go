@@ -14,14 +14,13 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterUseDatabaseTool(server)
 	tools.RegisterCreateDatabaseTool(server)
 	tools.RegisterDropDatabaseTool(server)
-	// TODO: show tables
-	// TODO: show create table
-	// TODO: describe table
-	// TODO: create table
-	// TODO: drop table
-	// TODO: alter table
-	// TODO: create index
-	// TODO: drop index
+	tools.RegisterShowTablesTool(server)
+	tools.RegisterShowCreateTableTool(server)
+	tools.RegisterDescribeTableTool(server)
+	tools.RegisterCreateTableTool(server)
+	tools.RegisterDropTableTool(server)
+	tools.RegisterAlterTableTool(server)
+
 	// TODO: select active branch
 	// TODO: select version
 	// TODO: query

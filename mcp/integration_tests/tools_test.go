@@ -18,5 +18,23 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testDropDatabaseToolInvalidArguments)
 		RunTestWithSetupSQL(t, "TestSuccess", testDropDatabaseSetupSQL, testDropDatabaseToolSuccess)
 	})
+	RunTest(t, "TestShowTablesTool", testShowTablesTool)
+	t.Run("TestDescribeTableTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDescribeTableToolInvalidArguments)
+		RunTest(t, "TestSuccess", testDescribeTableToolSuccess)
+	})
+	RunTest(t, "TestShowCreateTableTool", testShowCreateTableTool)
+	t.Run("TestCreateTableTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testCreateTableToolInvalidArguments)
+		RunTest(t, "TestSuccess", testCreateTableToolSuccess)
+	})
+	t.Run("TestAlterTableTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testAlterTableToolInvalidArguments)
+		RunTest(t, "TestSuccess", testAlterTableToolSuccess)
+	})
+	t.Run("TestDropTableTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDropTableToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testDropTableSetupSQL, testDropTableToolSuccess)
+	})
 }
 

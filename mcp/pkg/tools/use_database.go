@@ -11,7 +11,7 @@ import (
 const (
 	UseDatabaseToolName                 = "use_database"
 	UseDatabaseToolDatabaseArgumentDescription = "The name of the database to use."
-	UseDatabaseToolSQLQueryFormatString = "use %s;"
+	UseDatabaseToolSQLQueryFormatString = "use `%s`;"
 	UseDatabaseToolDescription = "Specifies which database in the Dolt server to use."
 	UseDatabaseToolCallSuccessFormatString = "now using database: %s"
 )
