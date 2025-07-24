@@ -82,7 +82,7 @@ func (s *testSuite) deleteBranch(branchName string) error {
 	if err != nil {
 		s.t.Fatalf("failed to reach database before deleting a branch: %s", err.Error())
 	}
-	_, err = s.testDb.Exec(fmt.Sprintf("CALL DOLT_BRANCH('-d', '%s');", branchName))
+	_, err = s.testDb.Exec(fmt.Sprintf("CALL DOLT_BRANCH('-D', '%s');", branchName))
 	return err
 }
 
