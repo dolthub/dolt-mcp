@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"log"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -69,20 +70,12 @@ func (s *stdioServerImpl) ServeStdio(ctx context.Context) {
 }
 
 func serveStdio(ctx context.Context, srv *server.StdioServer) {
-	stdinReader, stdinWriter := io.Pipe()
-	stdoutReader, stdoutWriter := io.Pipe()
-	defer func() {
-		stdoutWriter.Close()
-		stdinWriter.Close()
-		stdinReader.Close()
-		stdoutReader.Close()
-	}()
-
 	// Start the server
 	fmt.Println("Serving Dolt MCP on Stdin")
-	if err := srv.Listen(ctx, stdinReader, stdoutWriter); err != nil && err != io.EOF && err != context.Canceled {
+	if err := srv.Listen(ctx, os.Stdin, os.Stdout); err != nil && err != io.EOF && err != context.Canceled {
 		fmt.Println("error serving Dolt MCP server:", err.Error())
 	}
 
 	fmt.Println("Successfully stopped Dolt MCP server.")
 }
+
