@@ -3,6 +3,7 @@ package integration_tests
 import (
 	"database/sql"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 
 	"errors"
 	"os"
+	"runtime"
 	"syscall"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
@@ -244,13 +246,23 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 		return nil, err
 	}
 
-	// TODO: do schema creation stuff here
+	seedSQLBytes, err := readSeedSQLFile()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(seedSQLBytes) > 0 {
+		_, err = testDb.ExecContext(ctx, string(seedSQLBytes))
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	config := db.Config{
-		Host: doltServerHost,
-		Port: doltServerPort,
-		User: mcpTestMCPServerSQLUser,
-		Password: mcpTestMCPServerSQLPassword,
+		Host:         doltServerHost,
+		Port:         doltServerPort,
+		User:         mcpTestMCPServerSQLUser,
+		Password:     mcpTestMCPServerSQLPassword,
 		DatabaseName: mcpTestDatabaseName,
 	}
 
@@ -309,4 +321,15 @@ func teardownMCPDoltServerTestSuite(s *testSuite) {
 	}
 }
 
+func readSeedSQLFile() ([]byte, error) {
+	// Get the absolute path of the current source file
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		return nil, errors.New("could not determine caller path")
+	}
 
+	// Build path relative to this source file
+	path := filepath.Join(filepath.Dir(filename), "testdata", "seed.sql")
+
+	return os.ReadFile(path)
+}

@@ -26,6 +26,7 @@ func TestMain(m *testing.M) {
 	suite, err = createMCPDoltServerTestSuite(ctx, doltBinPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to create dolt server test suite: %v\n", err)
+		teardownMCPDoltServerTestSuite(suite)
 		os.Exit(1)
 	}
 

@@ -34,5 +34,8 @@ func testListDatabasesTool(s *testSuite) {
 	require.NotNil(s.t, listDatabasesCallToolResult)
 	require.False(s.t, listDatabasesCallToolResult.IsError)
 	require.NotEmpty(s.t, listDatabasesCallToolResult.Content)
+	resultStr, err := resultToString(listDatabasesCallToolResult)
+	require.NoError(s.t, err)
+	require.NotEmpty(s.t, resultStr)
 }
 
