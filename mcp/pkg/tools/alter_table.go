@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/vitess/go/vt/sqlparser"
 	"github.com/mark3labs/mcp-go/mcp"
 )
@@ -45,24 +46,43 @@ func RegisterAlterTableTool(server pkg.Server) {
 		),
 	)
 
-	mcpServer.AddTool(alterTableTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		alterTableStatement, err := GetRequiredStringArgumentFromCallToolRequest(request, QueryCallToolArgumentName)
+	mcpServer.AddTool(alterTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+		var err error
+		var alterTableStatement string
+		alterTableStatement, err = GetRequiredStringArgumentFromCallToolRequest(request, QueryCallToolArgumentName)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			result = mcp.NewToolResultError(err.Error())
+			return
 		}
 
 		err = ValidateAlterTableQuery(alterTableStatement)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			result = mcp.NewToolResultError(err.Error())
+			return
 		}
 
-		database := server.DB()
-		err = database.ExecContext(ctx, alterTableStatement)
+		config := server.DBConfig()
+		var tx db.DatabaseTransaction
+		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			result = mcp.NewToolResultError(err.Error())
+			return
 		}
 
-		return mcp.NewToolResultText(AlterTableToolCallSuccessMessage), nil
+		defer func() {
+			rerr := CommitTransactionOrRollbackOnError(ctx, tx, err)
+			if rerr != nil {
+				result = mcp.NewToolResultError(rerr.Error())
+			}
+		}()
+
+		err = tx.ExecContext(ctx, alterTableStatement)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		result = mcp.NewToolResultText(AlterTableToolCallSuccessMessage)
+		return
 	})
 }
-

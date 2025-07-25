@@ -12,7 +12,7 @@ const (
 
 type Server interface {
 	MCP() *server.MCPServer
-	DB() db.Database
+	DBConfig() db.Config
 }
 
 type Option func(Server)

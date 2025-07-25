@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"log"
+	"os"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/mark3labs/mcp-go/server"
@@ -15,7 +15,7 @@ import (
 type stdioServerImpl struct {
 	mcp         *server.MCPServer
 	stdioServer *server.StdioServer
-	db          db.Database
+	dbConfig    db.Config
 }
 
 type StdioServer interface {
@@ -26,11 +26,6 @@ type StdioServer interface {
 var _ StdioServer = &stdioServerImpl{}
 
 func NewMCPStdioServer(logger *zap.Logger, config db.Config, opts ...Option) (StdioServer, error) {
-	db, err := db.NewDatabase(config)
-	if err != nil {
-		return nil, err
-	}
-
 	errorWriter := NewZapErrorWriter(logger)
 	errorLogger := log.New(errorWriter, "Dolt MCP server error:", 0)
 
@@ -46,7 +41,7 @@ func NewMCPStdioServer(logger *zap.Logger, config db.Config, opts ...Option) (St
 
 	srv := &stdioServerImpl{
 		mcp:         mcp,
-		db:          db,
+		dbConfig: config,
 		stdioServer: stdioServer,
 	}
 
@@ -57,8 +52,8 @@ func NewMCPStdioServer(logger *zap.Logger, config db.Config, opts ...Option) (St
 	return srv, nil
 }
 
-func (s *stdioServerImpl) DB() db.Database {
-	return s.db
+func (s *stdioServerImpl) DBConfig() db.Config {
+	return s.dbConfig
 }
 
 func (s *stdioServerImpl) MCP() *server.MCPServer {
@@ -78,4 +73,3 @@ func serveStdio(ctx context.Context, srv *server.StdioServer) {
 
 	fmt.Println("Successfully stopped Dolt MCP server.")
 }
-

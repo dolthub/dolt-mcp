@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -35,10 +36,13 @@ func RegisterDropDatabaseTool(server pkg.Server) {
 		),
 	)
 
-	mcpServer.AddTool(dropDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		databaseToDrop, err := GetRequiredStringArgumentFromCallToolRequest(request, DatabaseCallToolArgumentName)
+	mcpServer.AddTool(dropDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+		var err error
+		var databaseToDrop string
+		databaseToDrop, err = GetRequiredStringArgumentFromCallToolRequest(request, DatabaseCallToolArgumentName)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			result = mcp.NewToolResultError(err.Error())
+			return
 		}
 
 		ifExists := GetBooleanArgumentFromCallToolRequest(request, IfExistsCallToolArgumentName)
@@ -50,12 +54,29 @@ func RegisterDropDatabaseTool(server pkg.Server) {
 			query = fmt.Sprintf(DropDatabaseToolSQLQueryFormatString, databaseToDrop)
 		}
 
-		database := server.DB()
-		err = database.ExecContext(ctx, query)
+		config := server.DBConfig()
+		var tx db.DatabaseTransaction
+		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			result = mcp.NewToolResultError(err.Error())
+			return
 		}
 
-		return mcp.NewToolResultText(fmt.Sprintf(DropDatabaseToolCallSuccessFormatString, databaseToDrop)), nil
+		defer func() {
+			rerr := CommitTransactionOrRollbackOnError(ctx, tx, err)
+			if rerr != nil {
+				result = mcp.NewToolResultError(rerr.Error())
+			}
+		}()
+
+		err = tx.ExecContext(ctx, query)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		result = mcp.NewToolResultText(fmt.Sprintf(DropDatabaseToolCallSuccessFormatString, databaseToDrop))
+		return
 	})
 }
+
