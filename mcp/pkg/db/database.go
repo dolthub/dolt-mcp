@@ -20,34 +20,41 @@ const (
 )
 
 var ErrUnsupportedResultFormat = errors.New("unsupported result format")
+var ErrTransactionHasBeenCommittedOrRolledBack = errors.New("transaction has already been committed or rolled back")
 
 type RowMap map[string]interface{}
 type Columns []string
 
-type Database interface {
+type DatabaseTransaction interface {
 	QueryContext(ctx context.Context, query string, resultFormat ResultFormat) (string, error)
 	ExecContext(ctx context.Context, query string) error
+	Rollback(ctx context.Context) error
+	Commit(ctx context.Context) error
 }
 
-type databaseImpl struct {
+type databaseTransactionImpl struct {
 	db     *sql.DB
 	config Config
 }
 
-var _ Database = &databaseImpl{}
+var _ DatabaseTransaction = &databaseTransactionImpl{}
 
-func NewDatabase(config Config) (Database, error) {
+func NewDatabaseTransaction(ctx context.Context, config Config) (DatabaseTransaction, error) {
 	db, err := newDB(config)
 	if err != nil {
 		return nil, err
 	}
-	return &databaseImpl{
+	_, err = db.ExecContext(ctx, "BEGIN;")
+	if err != nil {
+		return nil, err
+	}
+	return &databaseTransactionImpl{
 		db:     db,
 		config: config,
 	}, nil
 }
 
-func (d *databaseImpl) QueryContext(ctx context.Context, query string, resultFormat ResultFormat) (string, error) {
+func (d *databaseTransactionImpl) QueryContext(ctx context.Context, query string, resultFormat ResultFormat) (string, error) {
 	rowMap, columns, err := d.doQueryContext(ctx, query)
 	if err != nil {
 		return "", err
@@ -62,7 +69,7 @@ func (d *databaseImpl) QueryContext(ctx context.Context, query string, resultFor
 	}
 }
 
-func (d *databaseImpl) rowMapToMarkdown(rowMaps []RowMap, headers []string) (string, error) {
+func (d *databaseTransactionImpl) rowMapToMarkdown(rowMaps []RowMap, headers []string) (string, error) {
 	var mdBuf strings.Builder
 
 	// Write header row
@@ -101,7 +108,7 @@ func (d *databaseImpl) rowMapToMarkdown(rowMaps []RowMap, headers []string) (str
 	return mdBuf.String(), nil
 }
 
-func (d *databaseImpl) rowMapToCSV(rowMaps []RowMap, headers []string) (string, error) {
+func (d *databaseTransactionImpl) rowMapToCSV(rowMaps []RowMap, headers []string) (string, error) {
 	var csvBuf strings.Builder
 	writer := csv.NewWriter(&csvBuf)
 
@@ -131,7 +138,11 @@ func (d *databaseImpl) rowMapToCSV(rowMaps []RowMap, headers []string) (string, 
 	return csvBuf.String(), nil
 }
 
-func (d *databaseImpl) doQueryContext(ctx context.Context, query string) ([]RowMap, Columns, error) {
+func (d *databaseTransactionImpl) doQueryContext(ctx context.Context, query string) ([]RowMap, Columns, error) {
+	if d.db == nil {
+		return nil, nil, ErrTransactionHasBeenCommittedOrRolledBack
+	}
+
 	rows, err := d.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, nil, err
@@ -179,13 +190,60 @@ func (d *databaseImpl) doQueryContext(ctx context.Context, query string) ([]RowM
 	return rowMaps, columns, nil
 }
 
-func (d *databaseImpl) doExecContext(ctx context.Context, query string) error {
+func (d *databaseTransactionImpl) doExecContext(ctx context.Context, query string) error {
+	if d.db == nil {
+		return ErrTransactionHasBeenCommittedOrRolledBack
+	}
 	_, err := d.db.ExecContext(ctx, query)
 	return err
 }
 
-func (d *databaseImpl) ExecContext(ctx context.Context, query string) error {
+func (d *databaseTransactionImpl) ExecContext(ctx context.Context, query string) error {
 	return d.doExecContext(ctx, query)
+}
+
+func (d *databaseTransactionImpl) Rollback(ctx context.Context) (err error) {
+	if d.db == nil {
+		err = ErrTransactionHasBeenCommittedOrRolledBack
+		return
+	}
+
+	defer func(){
+		rerr := d.db.Close()
+		if err == nil {
+			err = rerr
+		}
+		d.db = nil
+	}()
+
+	err = d.doExecContext(ctx, "ROLLBACK;")
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (d *databaseTransactionImpl) Commit(ctx context.Context) (err error) {
+	if d.db == nil {
+		err = ErrTransactionHasBeenCommittedOrRolledBack
+		return
+	}
+
+	defer func(){
+		rerr := d.db.Close()
+		if err == nil {
+			err = rerr
+		}
+		d.db = nil
+	}()
+
+	err = d.doExecContext(ctx, "COMMIT;")
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func newDB(config Config) (*sql.DB, error) {
@@ -202,3 +260,4 @@ func newDB(config Config) (*sql.DB, error) {
 
 	return db, nil
 }
+

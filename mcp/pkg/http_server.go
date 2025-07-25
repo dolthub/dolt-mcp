@@ -19,7 +19,7 @@ type httpServerImpl struct {
 	mcp     *server.MCPServer
 	handler http.Handler
 	port    int
-	db      db.Database
+	dbConfig db.Config
 	logger  *zap.Logger
 }
 
@@ -31,11 +31,6 @@ type HTTPServer interface {
 var _ HTTPServer = &httpServerImpl{}
 
 func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, opts ...Option) (HTTPServer, error) {
-	db, err := db.NewDatabase(config)
-	if err != nil {
-		return nil, err
-	}
-
 	mcp := server.NewMCPServer(
 		DoltMCPServerName,
 		DoltMCPServerVersion,
@@ -46,7 +41,7 @@ func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, opts ...Op
 	srv := &httpServerImpl{
 		logger:  logger,
 		mcp:     mcp,
-		db:      db,
+		dbConfig: config,
 		port:    port,
 		handler: server.NewStreamableHTTPServer(mcp),
 	}
@@ -58,12 +53,12 @@ func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, opts ...Op
 	return srv, nil
 }
 
-func (s *httpServerImpl) DB() db.Database {
-	return s.db
-}
-
 func (s *httpServerImpl) MCP() *server.MCPServer {
 	return s.mcp
+}
+
+func (s *httpServerImpl) DBConfig() db.Config {
+	return s.dbConfig
 }
 
 func (s *httpServerImpl) ListenAndServe(ctx context.Context) {

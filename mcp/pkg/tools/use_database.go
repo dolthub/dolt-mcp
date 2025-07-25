@@ -5,15 +5,16 @@ import (
 	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
 const (
-	UseDatabaseToolName                 = "use_database"
+	UseDatabaseToolName                        = "use_database"
 	UseDatabaseToolDatabaseArgumentDescription = "The name of the database to use."
-	UseDatabaseToolSQLQueryFormatString = "use `%s`;"
-	UseDatabaseToolDescription = "Specifies which database in the Dolt server to use."
-	UseDatabaseToolCallSuccessFormatString = "now using database: %s"
+	UseDatabaseToolSQLQueryFormatString        = "use `%s`;"
+	UseDatabaseToolDescription                 = "Specifies which database in the Dolt server to use."
+	UseDatabaseToolCallSuccessFormatString     = "now using database: %s"
 )
 
 func RegisterUseDatabaseTool(server pkg.Server) {
@@ -29,19 +30,38 @@ func RegisterUseDatabaseTool(server pkg.Server) {
 		),
 	)
 
-	mcpServer.AddTool(useDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		databaseToUse, err := GetRequiredStringArgumentFromCallToolRequest(request, DatabaseCallToolArgumentName) 
+	mcpServer.AddTool(useDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+		var err error
+		var databaseToUse string
+		databaseToUse, err = GetRequiredStringArgumentFromCallToolRequest(request, DatabaseCallToolArgumentName)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			result = mcp.NewToolResultError(err.Error())
+			return
 		}
 
-		database := server.DB()
-		err = database.ExecContext(ctx, fmt.Sprintf(UseDatabaseToolSQLQueryFormatString, databaseToUse))
+		config := server.DBConfig()
+		var tx db.DatabaseTransaction
+		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			result = mcp.NewToolResultError(err.Error())
+			return
 		}
 
-		return mcp.NewToolResultText(fmt.Sprintf(UseDatabaseToolCallSuccessFormatString, databaseToUse)), nil
+		defer func() {
+			rerr := CommitTransactionOrRollbackOnError(ctx, tx, err)
+			if rerr != nil {
+				result = mcp.NewToolResultError(rerr.Error())
+			}
+		}()
+
+		err = tx.ExecContext(ctx, fmt.Sprintf(UseDatabaseToolSQLQueryFormatString, databaseToUse))
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		result = mcp.NewToolResultText(fmt.Sprintf(UseDatabaseToolCallSuccessFormatString, databaseToUse))
+		return
 	})
 }
 

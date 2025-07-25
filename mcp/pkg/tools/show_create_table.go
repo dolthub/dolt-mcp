@@ -29,19 +29,39 @@ func RegisterShowCreateTableTool(server pkg.Server) {
 		),
 	)
 
-	mcpServer.AddTool(showCreateTableTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		table, err := GetRequiredStringArgumentFromCallToolRequest(request, TableCallToolArgumentName)
+	mcpServer.AddTool(showCreateTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+		var err error
+
+		var table string
+
+		table, err = GetRequiredStringArgumentFromCallToolRequest(request, TableCallToolArgumentName)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			result = mcp.NewToolResultError(err.Error())
+			return
 		}
 
-		database := server.DB()
-		result, err := database.QueryContext(ctx, fmt.Sprintf(ShowCreateTableToolSQLQueryFormatString, table), db.ResultFormatMarkdown)
+		config := server.DBConfig()
+
+		var tx db.DatabaseTransaction
+		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			result = mcp.NewToolResultError(err.Error())
+			return
 		}
 
-		return mcp.NewToolResultText(result), nil
+		defer func() {
+			tx.Rollback(ctx)
+		}()
+
+		var formattedResult string
+		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(ShowCreateTableToolSQLQueryFormatString, table), db.ResultFormatMarkdown)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		result = mcp.NewToolResultText(formattedResult)
+		return
 	})
 }
 
