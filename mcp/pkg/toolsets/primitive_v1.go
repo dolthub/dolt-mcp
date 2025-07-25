@@ -20,11 +20,10 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterCreateTableTool(server)
 	tools.RegisterDropTableTool(server)
 	tools.RegisterAlterTableTool(server)
-
-	// TODO: select active branch
-	// TODO: select version
-	// TODO: query
-	// TODO: exec
+	tools.RegisterQueryTool(server)
+	tools.RegisterExecTool(server)
+	tools.RegisterSelectActiveBranchTool(server)
+	tools.RegisterSelectVersionTool(server)
 	// TODO: dolt_branch
 	// TODO: dolt_checkout
 	// TODO: dolt_add
