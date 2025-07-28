@@ -2,7 +2,6 @@ package integration_tests
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -145,13 +144,10 @@ func testAlterTableToolSuccess(s *testSuite, testBranchName string) {
 
 	alterTableCallToolResult, err := client.CallTool(ctx, alterTableToolCallRequest)
 	require.NoError(s.t, err)
-	resultStr, err := resultToString(alterTableCallToolResult)
-	require.NoError(s.t, err)
-	fmt.Println("DUSTIN: alterTable result:", resultStr)
 	require.False(s.t, alterTableCallToolResult.IsError)
 	require.NotNil(s.t, alterTableCallToolResult)
 	require.NotEmpty(s.t, alterTableCallToolResult.Content)
-	// resultStr, err := resultToString(alterTableCallToolResult)
-	// require.NoError(s.t, err)
+	resultStr, err := resultToString(alterTableCallToolResult)
+	require.NoError(s.t, err)
 	require.Contains(s.t, resultStr, "successfully altered table")
 }

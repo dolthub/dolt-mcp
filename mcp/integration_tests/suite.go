@@ -129,44 +129,44 @@ func (s *testSuite) Setup(newBranchName, setupSQL string) {
 		s.t.Fatalf("failed checkout main branch during test setup: %s", err.Error())
 	}
 
-	fmt.Println("DUSTIN: running test on branch:", newBranchName)
-	rows, err := s.testDb.QueryContext(context.Background(), "select active_branch();")
-	if err != nil {
-		s.t.Fatal("failed to select active branch during teardown")
-	}
-
-	for rows.Next() {
-		var activeBranch string
-
-		if err := rows.Scan(&activeBranch); err != nil {
-			s.t.Fatalf("failed to select active branch during teardown: %s", err.Error())
-		}
-
-		fmt.Printf("Active Branch: %s\n", activeBranch)
-	}
-
-	if err := rows.Err(); err != nil {
-		s.t.Fatalf("failed to query rows: %s", err.Error())
-	}
-
-	rows, err = s.testDb.QueryContext(context.Background(), "show tables;")
-	if err != nil {
-		s.t.Fatal("failed to show tables during setup")
-	}
-
-	defer rows.Close()
-	for rows.Next() {
-		var tableName string
-
-		if err := rows.Scan(&tableName); err != nil {
-			s.t.Fatalf("failed to show tables during setup: %s", err.Error())
-		}
-
-		fmt.Printf("Table: %s\n", tableName)
-	}
-	if err := rows.Err(); err != nil {
-		s.t.Fatalf("failed to query rows: %s", err.Error())
-	}
+	// fmt.Println("DUSTIN: running test on branch:", newBranchName)
+	// rows, err := s.testDb.QueryContext(context.Background(), "select active_branch();")
+	// if err != nil {
+	// 	s.t.Fatal("failed to select active branch during teardown")
+	// }
+	//
+	// for rows.Next() {
+	// 	var activeBranch string
+	//
+	// 	if err := rows.Scan(&activeBranch); err != nil {
+	// 		s.t.Fatalf("failed to select active branch during teardown: %s", err.Error())
+	// 	}
+	//
+	// 	fmt.Printf("Active Branch: %s\n", activeBranch)
+	// }
+	//
+	// if err := rows.Err(); err != nil {
+	// 	s.t.Fatalf("failed to query rows: %s", err.Error())
+	// }
+	//
+	// rows, err = s.testDb.QueryContext(context.Background(), "show tables;")
+	// if err != nil {
+	// 	s.t.Fatal("failed to show tables during setup")
+	// }
+	//
+	// defer rows.Close()
+	// for rows.Next() {
+	// 	var tableName string
+	//
+	// 	if err := rows.Scan(&tableName); err != nil {
+	// 		s.t.Fatalf("failed to show tables during setup: %s", err.Error())
+	// 	}
+	//
+	// 	fmt.Printf("Table: %s\n", tableName)
+	// }
+	// if err := rows.Err(); err != nil {
+	// 	s.t.Fatalf("failed to query rows: %s", err.Error())
+	// }
 
 	if setupSQL != "" {
 		err = s.exec(setupSQL)
@@ -204,6 +204,14 @@ func (s *testSuite) Teardown(branchName, teardownSQL string) {
 		if err != nil {
 			s.t.Fatalf("failed to execute teardown sql: %s", err.Error())
 		}
+
+		err = s.addAndCommitChanges("teardown test changes")
+		if err != nil {
+			if !strings.Contains(err.Error(), "nothing to commit") {
+
+				s.t.Fatalf("failed add and commit changes during test teardown: %s", err.Error())
+			}
+		}
 	}
 
 	err = s.checkoutBranch("main")
@@ -216,7 +224,7 @@ func (s *testSuite) Teardown(branchName, teardownSQL string) {
 		s.t.Fatalf("failed delete branch during test teardown: %s", err.Error())
 	}
 
-	fmt.Println("DUSTIN: deleted branch:", branchName)
+	// fmt.Println("DUSTIN: deleted branch:", branchName)
 
 	// rows, err := s.testDb.QueryContext(context.Background(), "select active_branch();")
 	// if err != nil {
