@@ -25,6 +25,8 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterSelectActiveBranchTool(server)
 	tools.RegisterSelectVersionTool(server)
 	// TODO: dolt_branch
+	tools.RegisterCreateDoltBranchFromHeadTool(server)
+	tools.RegisterCreateDoltBranchTool(server)
 	// TODO: dolt_checkout
 	// TODO: dolt_add
 	// TODO: dolt_commit

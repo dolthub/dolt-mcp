@@ -20,7 +20,7 @@ const (
 	CreateDoltBranchToolForceSQLQueryFormatString         = "CALL DOLT_BRANCH('-f', '-c', '%s', '%s');"
 )
 
-func RegisterCallDoltBranchTool(server pkg.Server) {
+func RegisterCreateDoltBranchTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
 	createDoltBranchTool := mcp.NewTool(
