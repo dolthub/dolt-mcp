@@ -36,5 +36,7 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testDropTableToolInvalidArguments)
 		RunTestWithSetupSQL(t, "TestSuccess", testDropTableSetupSQL, testDropTableToolSuccess)
 	})
+	RunTest(t, "TestSelectVersionTool", testSelectVersionTool)
+	RunTest(t, "TestSelectActiveBranchTool", testSelectActiveBranchTool)
 }
 
