@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -26,6 +25,11 @@ func RegisterShowTablesTool(server pkg.Server) {
 			mcp.Required(),
 			mcp.Description(WorkingBranchCallToolArgumentDescription),
 		),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
 	)
 
 	mcpServer.AddTool(showTablesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
@@ -37,9 +41,17 @@ func RegisterShowTablesTool(server pkg.Server) {
 			return
 		}
 
+		var workingDatabase string
+		workingDatabase, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		config := server.DBConfig()
+
 		var tx db.DatabaseTransaction
-		tx, err = db.NewDatabaseTransaction(ctx, config)
+		tx, err = NewDatabaseTransactionOnBranchUsingDatabase(ctx, config, workingBranch, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -48,12 +60,6 @@ func RegisterShowTablesTool(server pkg.Server) {
 		defer func() {
 			tx.Rollback(ctx)
 		}()
-
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
-		if err != nil {
-			result = mcp.NewToolResultError(err.Error())
-			return
-		}
 
 		var formattedResult string
 		formattedResult, err = tx.QueryContext(ctx, ShowTablesToolSQLQuery, db.ResultFormatMarkdown)

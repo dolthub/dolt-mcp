@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testShowTablesToolInvalidArguments(s *testSuite, _ string) {
+func testShowTablesToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -32,6 +32,9 @@ func testShowTablesToolInvalidArguments(s *testSuite, _ string) {
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.ShowTablesToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+					},
 				},
 			},
 		},
@@ -42,7 +45,8 @@ func testShowTablesToolInvalidArguments(s *testSuite, _ string) {
 				Params: mcp.CallToolParams{
 					Name: tools.ShowTablesToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "",
+						tools.WorkingBranchCallToolArgumentName:   "",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -54,7 +58,46 @@ func testShowTablesToolInvalidArguments(s *testSuite, _ string) {
 				Params: mcp.CallToolParams{
 					Name: tools.ShowTablesToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.ShowTablesToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.ShowTablesToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.ShowTablesToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -92,7 +135,8 @@ func testShowTablesToolSuccess(s *testSuite, testBranchName string) {
 	showTablesCallToolParams := mcp.CallToolParams{
 		Name: tools.ShowTablesToolName,
 		Arguments: map[string]any{
-			tools.WorkingBranchCallToolArgumentName: testBranchName,
+			tools.WorkingBranchCallToolArgumentName:   testBranchName,
+			tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 		},
 	}
 
@@ -109,4 +153,3 @@ func testShowTablesToolSuccess(s *testSuite, testBranchName string) {
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultStr, "people")
 }
-

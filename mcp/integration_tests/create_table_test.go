@@ -65,13 +65,55 @@ func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 			},
 		},
 		{
-			description:   "Missing query argument",
+			description:   "Missing working_database argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.CreateTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:         "CREATE TABLE `t1` (pk int primary key);",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.QueryCallToolArgumentName:           "CREATE TABLE `t1` (pk int primary key);",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.QueryCallToolArgumentName:           "CREATE TABLE `t1` (pk int primary key);",
+					},
+				},
+			},
+		},
+		{
+			description:   "Missing query argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -83,8 +125,9 @@ func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.CreateTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:         "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:           "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -96,8 +139,9 @@ func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.CreateTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:         "insert into people values (uuid(), 'homer', 'simpson');",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:           "insert into people values (uuid(), 'homer', 'simpson');",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -136,7 +180,8 @@ func testCreateTableToolSuccess(s *testSuite, testBranchName string) {
 		Params: mcp.CallToolParams{
 			Name: tools.CreateTableToolName,
 			Arguments: map[string]any{
-				tools.WorkingBranchCallToolArgumentName: testBranchName,
+				tools.WorkingBranchCallToolArgumentName:   testBranchName,
+				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 				tools.QueryCallToolArgumentName: `
 CREATE TABLE ` + "`" + `places` + "`" + `(
 	` + "`" + `id` + "`" + `VARCHAR(36) PRIMARY KEY,

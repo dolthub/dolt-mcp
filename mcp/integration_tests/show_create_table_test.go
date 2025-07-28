@@ -33,7 +33,8 @@ func testShowCreateTableToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.ShowCreateTableToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName: "people",
+						tools.TableCallToolArgumentName:           "people",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -45,8 +46,9 @@ func testShowCreateTableToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.ShowCreateTableToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "",
-						tools.TableCallToolArgumentName:         "people",
+						tools.WorkingBranchCallToolArgumentName:   "",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.TableCallToolArgumentName:           "people",
 					},
 				},
 			},
@@ -58,8 +60,50 @@ func testShowCreateTableToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.ShowCreateTableToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.TableCallToolArgumentName:           "people",
+					},
+				},
+			},
+		},
+		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.ShowCreateTableToolName,
+					Arguments: map[string]any{
 						tools.TableCallToolArgumentName:         "people",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.ShowCreateTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.TableCallToolArgumentName:           "people",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.ShowCreateTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.TableCallToolArgumentName:           "people",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -71,7 +115,8 @@ func testShowCreateTableToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.ShowCreateTableToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -83,8 +128,9 @@ func testShowCreateTableToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.ShowCreateTableToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName:         "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.TableCallToolArgumentName:           "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -96,8 +142,9 @@ func testShowCreateTableToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.ShowCreateTableToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName:         "missing",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.TableCallToolArgumentName:           "missing",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -135,8 +182,9 @@ func testShowCreateTableToolSuccess(s *testSuite, testBranchName string) {
 	showCreateTableCallToolParams := mcp.CallToolParams{
 		Name: tools.ShowCreateTableToolName,
 		Arguments: map[string]any{
-			tools.TableCallToolArgumentName: "people",
-			tools.WorkingBranchCallToolArgumentName: testBranchName,
+			tools.TableCallToolArgumentName:           "people",
+			tools.WorkingBranchCallToolArgumentName:   testBranchName,
+			tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 		},
 	}
 

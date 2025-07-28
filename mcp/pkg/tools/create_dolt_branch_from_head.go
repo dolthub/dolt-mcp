@@ -60,8 +60,9 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 		force := GetBooleanArgumentFromCallToolRequest(request, ForceCallToolArgumentName)
 
 		config := server.DBConfig()
+
 		var tx db.DatabaseTransaction
-		tx, err = db.NewDatabaseTransaction(ctx, config)
+		tx, err = NewDatabaseTransactionOnBranch(ctx, config, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -73,12 +74,6 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 				result = mcp.NewToolResultError(rerr.Error())
 			}
 		}()
-
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
-		if err != nil {
-			result = mcp.NewToolResultError(err.Error())
-			return
-		}
 
 		if force {
 			err = tx.ExecContext(ctx, fmt.Sprintf(CreateDoltBranchFromHeadToolForceSQLQueryFormatString, newBranch))

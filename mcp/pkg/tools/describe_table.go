@@ -23,6 +23,11 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		DescribeTableToolName,
 		mcp.WithDescription(DescribeTableToolDescription),
 		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
 			WorkingBranchCallToolArgumentName,
 			mcp.Required(),
 			mcp.Description(WorkingBranchCallToolArgumentDescription),
@@ -43,6 +48,13 @@ func RegisterDescribeTableTool(server pkg.Server) {
 			return
 		}
 
+		var workingDatabase string
+		workingDatabase, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		var tableToDescribe string
 		tableToDescribe, err = GetRequiredStringArgumentFromCallToolRequest(request, TableCallToolArgumentName)
 		if err != nil {
@@ -51,8 +63,9 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
+
 		var tx db.DatabaseTransaction
-		tx, err = db.NewDatabaseTransaction(ctx, config)
+		tx, err = NewDatabaseTransactionOnBranchUsingDatabase(ctx, config, workingBranch, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -61,12 +74,6 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		defer func() {
 			tx.Rollback(ctx)
 		}()
-
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
-		if err != nil {
-			result = mcp.NewToolResultError(err.Error())
-			return
-		}
 
 		var formattedResult string
 		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(DescribeTableToolSQLQueryFormatString, tableToDescribe), db.ResultFormatMarkdown)

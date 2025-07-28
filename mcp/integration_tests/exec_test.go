@@ -34,6 +34,7 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
 						tools.QueryCallToolArgumentName: "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -46,6 +47,7 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: "",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
 					},
 				},
@@ -59,6 +61,48 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+					},
+				},
+			},
+		},
+		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.ExecToolName,
+					Arguments: map[string]any{
+						tools.QueryCallToolArgumentName: "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.ExecToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AlterTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
 						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
 					},
 				},
@@ -72,6 +116,7 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -85,6 +130,7 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 					Arguments: map[string]any{
 						tools.QueryCallToolArgumentName:         "",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -98,6 +144,7 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 					Arguments: map[string]any{
 						tools.QueryCallToolArgumentName:         "this is not sql",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -138,6 +185,7 @@ func testExecToolSuccess(s *testSuite, testBranchName string) {
 			Arguments: map[string]any{
 				tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
 				tools.WorkingBranchCallToolArgumentName: testBranchName,
+				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},
 	}

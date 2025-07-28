@@ -3,7 +3,6 @@ package tools
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -46,6 +45,11 @@ func RegisterQueryTool(server pkg.Server) {
 			mcp.Description(WorkingBranchCallToolArgumentDescription),
 		),
 		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
 			QueryCallToolArgumentName,
 			mcp.Required(),
 			mcp.Description(QueryToolQueryArgumentDescription),
@@ -56,6 +60,13 @@ func RegisterQueryTool(server pkg.Server) {
 		var err error
 		var workingBranch string
 		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		var workingDatabase string
+		workingDatabase, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -75,8 +86,9 @@ func RegisterQueryTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
+
 		var tx db.DatabaseTransaction
-		tx, err = db.NewDatabaseTransaction(ctx, config)
+		tx, err = NewDatabaseTransactionOnBranchUsingDatabase(ctx, config, workingBranch, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -85,12 +97,6 @@ func RegisterQueryTool(server pkg.Server) {
 		defer func() {
 			tx.Rollback(ctx)
 		}()
-
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
-		if err != nil {
-			result = mcp.NewToolResultError(err.Error())
-			return
-		}
 
 		var formattedResult string
 		formattedResult, err = tx.QueryContext(ctx, query, db.ResultFormatMarkdown)

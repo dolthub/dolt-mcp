@@ -3,7 +3,6 @@ package tools
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -41,6 +40,11 @@ func RegisterAlterTableTool(server pkg.Server) {
 		AlterTableToolName,
 		mcp.WithDescription(AlterTableToolDescription),
 		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
 			WorkingBranchCallToolArgumentName,
 			mcp.Required(),
 			mcp.Description(WorkingBranchCallToolArgumentDescription),
@@ -61,6 +65,13 @@ func RegisterAlterTableTool(server pkg.Server) {
 			return
 		}
 
+		var workingDatabase string
+		workingDatabase, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		var alterTableStatement string
 		alterTableStatement, err = GetRequiredStringArgumentFromCallToolRequest(request, QueryCallToolArgumentName)
 		if err != nil {
@@ -75,8 +86,9 @@ func RegisterAlterTableTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
+
 		var tx db.DatabaseTransaction
-		tx, err = db.NewDatabaseTransaction(ctx, config)
+		tx, err = NewDatabaseTransactionOnBranchUsingDatabase(ctx, config, workingBranch, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -88,12 +100,6 @@ func RegisterAlterTableTool(server pkg.Server) {
 				result = mcp.NewToolResultError(rerr.Error())
 			}
 		}()
-
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
-		if err != nil {
-			result = mcp.NewToolResultError(err.Error())
-			return
-		}
 
 		err = tx.ExecContext(ctx, alterTableStatement)
 		if err != nil {

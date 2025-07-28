@@ -26,6 +26,11 @@ func RegisterDropTableTool(server pkg.Server) {
 		DropTableToolName,
 		mcp.WithDescription(DropTableToolDescription),
 		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
 			WorkingBranchCallToolArgumentName,
 			mcp.Required(),
 			mcp.Description(WorkingBranchCallToolArgumentDescription),
@@ -50,6 +55,13 @@ func RegisterDropTableTool(server pkg.Server) {
 			return
 		}
 
+		var workingDatabase string
+		workingDatabase, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		var tableToDrop string
 		tableToDrop, err = GetRequiredStringArgumentFromCallToolRequest(request, TableCallToolArgumentName)
 		if err != nil {
@@ -67,8 +79,9 @@ func RegisterDropTableTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
+
 		var tx db.DatabaseTransaction
-		tx, err = db.NewDatabaseTransaction(ctx, config)
+		tx, err = NewDatabaseTransactionOnBranchUsingDatabase(ctx, config, workingBranch, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -80,12 +93,6 @@ func RegisterDropTableTool(server pkg.Server) {
 				result = mcp.NewToolResultError(rerr.Error())
 			}
 		}()
-
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
-		if err != nil {
-			result = mcp.NewToolResultError(err.Error())
-			return
-		}
 
 		err = tx.ExecContext(ctx, query)
 		if err != nil {
