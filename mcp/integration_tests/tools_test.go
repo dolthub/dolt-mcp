@@ -38,5 +38,9 @@ func TestTools(t *testing.T) {
 	})
 	RunTest(t, "TestSelectVersionTool", testSelectVersionTool)
 	RunTest(t, "TestSelectActiveBranchTool", testSelectActiveBranchTool)
+	t.Run("TestQueryTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testQueryToolInvalidArguments)
+		RunTest(t, "TestSuccess", testQueryToolSuccess)
+	})
 }
 
