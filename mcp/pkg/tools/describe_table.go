@@ -23,6 +23,11 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		DescribeTableToolName,
 		mcp.WithDescription(DescribeTableToolDescription),
 		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
 			TableCallToolArgumentName,
 			mcp.Required(),
 			mcp.Description(DescribeTableToolTableArgumentDescription),
@@ -31,6 +36,13 @@ func RegisterDescribeTableTool(server pkg.Server) {
 
 	mcpServer.AddTool(describeTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
+		var workingBranch string
+		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		var tableToDescribe string
 		tableToDescribe, err = GetRequiredStringArgumentFromCallToolRequest(request, TableCallToolArgumentName)
 		if err != nil {
@@ -39,6 +51,8 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
+		config.Branch = workingBranch
+
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {

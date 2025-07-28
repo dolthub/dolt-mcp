@@ -17,7 +17,10 @@ const (
 func RegisterSelectVersionTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
-	selectVersionTool := mcp.NewTool(SelectVersionToolName, mcp.WithDescription(SelectVersionToolDescription))
+	selectVersionTool := mcp.NewTool(
+		SelectVersionToolName,
+		mcp.WithDescription(SelectVersionToolDescription),
+	)
 	mcpServer.AddTool(selectVersionTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 

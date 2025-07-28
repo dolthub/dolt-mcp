@@ -41,6 +41,11 @@ func RegisterExecTool(server pkg.Server) {
 		ExecToolName,
 		mcp.WithDescription(ExecToolDescription),
 		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
 			QueryCallToolArgumentName,
 			mcp.Required(),
 			mcp.Description(ExecToolQueryArgumentDescription),
@@ -49,6 +54,13 @@ func RegisterExecTool(server pkg.Server) {
 
 	mcpServer.AddTool(execTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
+		var workingBranch string
+		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		var query string
 		query, err = GetRequiredStringArgumentFromCallToolRequest(request, QueryCallToolArgumentName)
 		if err != nil {
@@ -63,6 +75,8 @@ func RegisterExecTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
+		config.Branch = workingBranch
+
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {

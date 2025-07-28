@@ -17,11 +17,26 @@ const (
 func RegisterSelectActiveBranchTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
-	selectActiveBranchTool := mcp.NewTool(SelectActiveBranchToolName, mcp.WithDescription(SelectActiveBranchToolDescription))
+	selectActiveBranchTool := mcp.NewTool(
+		SelectActiveBranchToolName,
+		mcp.WithDescription(SelectActiveBranchToolDescription),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+	)
 	mcpServer.AddTool(selectActiveBranchTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
+		var workingBranch string
+		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
 
 		config := server.DBConfig()
+		config.Branch = workingBranch
 
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)

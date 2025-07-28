@@ -17,11 +17,27 @@ const (
 func RegisterShowTablesTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
-	showTablesTool := mcp.NewTool(ShowTablesToolName, mcp.WithDescription(ShowTablesToolDescription))
+	showTablesTool := mcp.NewTool(
+		ShowTablesToolName,
+		mcp.WithDescription(ShowTablesToolDescription),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+	)
+
 	mcpServer.AddTool(showTablesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
+		var workingBranch string
+		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
 
 		config := server.DBConfig()
+		config.Branch = workingBranch
 
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)

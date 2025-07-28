@@ -42,5 +42,9 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testQueryToolInvalidArguments)
 		RunTest(t, "TestSuccess", testQueryToolSuccess)
 	})
+	t.Run("TestExecTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testExecToolInvalidArguments)
+		RunTest(t, "TestSuccess", testExecToolSuccess)
+	})
 }
 

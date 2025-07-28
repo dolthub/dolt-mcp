@@ -129,6 +129,7 @@ func (s *testSuite) Setup(newBranchName, setupSQL string) {
 		s.t.Fatalf("failed checkout main branch during test setup: %s", err.Error())
 	}
 
+	fmt.Println("DUSTIN: running test on branch:", newBranchName)
 	if setupSQL != "" {
 		err = s.exec(setupSQL)
 		if err != nil {
@@ -175,6 +176,49 @@ func (s *testSuite) Teardown(branchName, teardownSQL string) {
 	err = s.deleteBranch(branchName)
 	if err != nil {
 		s.t.Fatalf("failed delete branch during test teardown: %s", err.Error())
+	}
+
+	fmt.Println("DUSTIN: deleted branch:", branchName)
+
+	rows, err := s.testDb.QueryContext(context.Background(), "select active_branch();")
+	if err != nil {
+		s.t.Fatal("failed to select active branch during teardown")
+	}
+
+	for rows.Next() {
+		var activeBranch string
+
+		if err := rows.Scan(&activeBranch); err != nil {
+			s.t.Fatalf("failed to select active branch during teardown: %s", err.Error())
+		}
+
+		fmt.Printf("Active Branch: %s\n", activeBranch)
+	}
+
+	if err := rows.Err(); err != nil {
+		s.t.Fatalf("failed to query rows: %s", err.Error())
+	}
+
+	rows.Close()
+
+	rows, err = s.testDb.QueryContext(context.Background(), "show create table people;")
+	if err != nil {
+		s.t.Fatal("failed to query people during teardown")
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var tableName string
+		var createStmt string
+
+		if err := rows.Scan(&tableName, &createStmt); err != nil {
+			s.t.Fatalf("failed to query people during teardown: %s", err.Error())
+		}
+
+		fmt.Printf("Table: %s\nCreate Statement:\n%s\n", tableName, createStmt)
+	}
+	if err := rows.Err(); err != nil {
+		s.t.Fatalf("failed to query rows: %s", err.Error())
 	}
 }
 

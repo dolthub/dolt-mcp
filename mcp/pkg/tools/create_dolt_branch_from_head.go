@@ -26,6 +26,11 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 		CreateDoltBranchFromHeadToolName,
 		mcp.WithDescription(CreateDoltBranchFromHeadToolDescription),
 		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
 			NewBranchCallToolArgumentName,
 			mcp.Required(),
 			mcp.Description(CreateDoltBranchToolNewBranchArgumentDescription),
@@ -38,6 +43,13 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 
 	mcpServer.AddTool(createDoltBranchFromHeadTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
+		var workingBranch string
+		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		var newBranch string
 		newBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, NewBranchCallToolArgumentName)
 		if err != nil {
@@ -48,6 +60,7 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 		force := GetBooleanArgumentFromCallToolRequest(request, ForceCallToolArgumentName)
 
 		config := server.DBConfig()
+		config.Branch = workingBranch
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
