@@ -77,7 +77,7 @@ func testShowTablesToolInvalidArguments(s *testSuite, testBranchName string) {
 			},
 		},
 		{
-			description:   "Empty working_branch argument",
+			description:   "Empty working_database argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
@@ -90,7 +90,7 @@ func testShowTablesToolInvalidArguments(s *testSuite, testBranchName string) {
 			},
 		},
 		{
-			description:   "Non-existent working_branch argument",
+			description:   "Non-existent working_database argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
