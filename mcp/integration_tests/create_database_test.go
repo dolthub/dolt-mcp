@@ -10,7 +10,7 @@ import (
 
 var testCreateDatabaseTeardownSQL = "DROP DATABASE foo;"
 
-func testCreateDatabaseToolInvalidArguments(s *testSuite) {
+func testCreateDatabaseToolInvalidArguments(s *testSuite, _ string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -78,7 +78,7 @@ func testCreateDatabaseToolInvalidArguments(s *testSuite) {
 	}
 }
 
-func testCreateDatabaseToolSuccess(s *testSuite) {
+func testCreateDatabaseToolSuccess(s *testSuite, _ string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)

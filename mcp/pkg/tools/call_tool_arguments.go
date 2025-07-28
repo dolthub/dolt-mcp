@@ -15,5 +15,6 @@ const (
 	ForceCallToolArgumentName          = "force"
 )
 
+var DoltCheckoutWorkingBranchSQLQueryFormatString = "CALL DOLT_CHECKOUT('%s');"
 var WorkingBranchCallToolArgumentDescription = "The name of the working branch to checkout before prior to making the tool call."
 

@@ -67,8 +67,6 @@ func RegisterDropTableTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
-		config.Branch = workingBranch
-
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
@@ -82,6 +80,12 @@ func RegisterDropTableTool(server pkg.Server) {
 				result = mcp.NewToolResultError(rerr.Error())
 			}
 		}()
+
+		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
 
 		err = tx.ExecContext(ctx, query)
 		if err != nil {

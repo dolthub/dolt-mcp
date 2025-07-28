@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testCreateTableToolInvalidArguments(s *testSuite) {
+func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -27,11 +27,52 @@ func testCreateTableToolInvalidArguments(s *testSuite) {
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateTableToolName,
+					Arguments: map[string]any{
+						tools.QueryCallToolArgumentName: "CREATE TABLE `t1` (pk int primary key);",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "",
+						tools.QueryCallToolArgumentName:         "CREATE TABLE `t1` (pk int primary key);",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.QueryCallToolArgumentName:         "CREATE TABLE `t1` (pk int primary key);",
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing query argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.CreateTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
 				},
 			},
 		},
@@ -42,7 +83,8 @@ func testCreateTableToolInvalidArguments(s *testSuite) {
 				Params: mcp.CallToolParams{
 					Name: tools.CreateTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "",
+						tools.QueryCallToolArgumentName:         "",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -54,7 +96,8 @@ func testCreateTableToolInvalidArguments(s *testSuite) {
 				Params: mcp.CallToolParams{
 					Name: tools.CreateTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "insert into people values (uuid(), 'homer', 'simpson');",
+						tools.QueryCallToolArgumentName:         "insert into people values (uuid(), 'homer', 'simpson');",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -76,7 +119,7 @@ func testCreateTableToolInvalidArguments(s *testSuite) {
 	}
 }
 
-func testCreateTableToolSuccess(s *testSuite) {
+func testCreateTableToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -93,6 +136,7 @@ func testCreateTableToolSuccess(s *testSuite) {
 		Params: mcp.CallToolParams{
 			Name: tools.CreateTableToolName,
 			Arguments: map[string]any{
+				tools.WorkingBranchCallToolArgumentName: testBranchName,
 				tools.QueryCallToolArgumentName: `
 CREATE TABLE ` + "`" + `places` + "`" + `(
 	` + "`" + `id` + "`" + `VARCHAR(36) PRIMARY KEY,
@@ -114,4 +158,3 @@ CREATE TABLE ` + "`" + `places` + "`" + `(
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultStr, "successfully created table")
 }
-

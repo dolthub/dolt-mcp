@@ -18,12 +18,18 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testDropDatabaseToolInvalidArguments)
 		RunTestWithSetupSQL(t, "TestSuccess", testDropDatabaseSetupSQL, testDropDatabaseToolSuccess)
 	})
-	RunTest(t, "TestShowTablesTool", testShowTablesTool)
+	t.Run("TestShowTablesTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testShowTablesToolInvalidArguments)
+		RunTest(t, "TestSuccess", testShowTablesToolSuccess)
+	})
 	t.Run("TestDescribeTableTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testDescribeTableToolInvalidArguments)
 		RunTest(t, "TestSuccess", testDescribeTableToolSuccess)
 	})
-	RunTest(t, "TestShowCreateTableTool", testShowCreateTableTool)
+	t.Run("TestShowCreateTableTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testShowCreateTableToolInvalidArguments)
+		RunTest(t, "TestSuccess", testShowCreateTableToolSuccess)
+	})
 	t.Run("TestCreateTableTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testCreateTableToolInvalidArguments)
 		RunTest(t, "TestSuccess", testCreateTableToolSuccess)
@@ -37,7 +43,10 @@ func TestTools(t *testing.T) {
 		RunTestWithSetupSQL(t, "TestSuccess", testDropTableSetupSQL, testDropTableToolSuccess)
 	})
 	RunTest(t, "TestSelectVersionTool", testSelectVersionTool)
-	RunTest(t, "TestSelectActiveBranchTool", testSelectActiveBranchTool)
+	t.Run("TestSelectActiveBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testSelectActiveBranchToolInvalidArguments)
+		RunTest(t, "TestSuccess", testSelectActiveBranchToolSuccess)
+	})
 	t.Run("TestQueryTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testQueryToolInvalidArguments)
 		RunTest(t, "TestSuccess", testQueryToolSuccess)

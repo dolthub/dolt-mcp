@@ -51,8 +51,6 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
-		config.Branch = workingBranch
-
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
@@ -63,6 +61,12 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		defer func() {
 			tx.Rollback(ctx)
 		}()
+
+		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
 
 		var formattedResult string
 		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(DescribeTableToolSQLQueryFormatString, tableToDescribe), db.ResultFormatMarkdown)

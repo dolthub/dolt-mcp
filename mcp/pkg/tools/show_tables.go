@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -37,8 +38,6 @@ func RegisterShowTablesTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
-		config.Branch = workingBranch
-
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
@@ -49,6 +48,12 @@ func RegisterShowTablesTool(server pkg.Server) {
 		defer func() {
 			tx.Rollback(ctx)
 		}()
+
+		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
 
 		var formattedResult string
 		formattedResult, err = tx.QueryContext(ctx, ShowTablesToolSQLQuery, db.ResultFormatMarkdown)

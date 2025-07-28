@@ -2,14 +2,13 @@ package integration_tests
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-func testExecToolInvalidArguments(s *testSuite) {
+func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -28,11 +27,52 @@ func testExecToolInvalidArguments(s *testSuite) {
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.ExecToolName,
+					Arguments: map[string]any{
+						tools.QueryCallToolArgumentName: "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.ExecToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "",
+						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AlterTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing query argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.ExecToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
 				},
 			},
 		},
@@ -43,7 +83,8 @@ func testExecToolInvalidArguments(s *testSuite) {
 				Params: mcp.CallToolParams{
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "",
+						tools.QueryCallToolArgumentName:         "",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -55,7 +96,8 @@ func testExecToolInvalidArguments(s *testSuite) {
 				Params: mcp.CallToolParams{
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "this is not sql",
+						tools.QueryCallToolArgumentName:         "this is not sql",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -77,7 +119,7 @@ func testExecToolInvalidArguments(s *testSuite) {
 	}
 }
 
-func testExecToolSuccess(s *testSuite) {
+func testExecToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -94,23 +136,18 @@ func testExecToolSuccess(s *testSuite) {
 		Params: mcp.CallToolParams{
 			Name: tools.ExecToolName,
 			Arguments: map[string]any{
-				tools.QueryCallToolArgumentName: "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+				tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+				tools.WorkingBranchCallToolArgumentName: testBranchName,
 			},
 		},
 	}
 
 	execCallToolResult, err := client.CallTool(ctx, execToolCallRequest)
 	require.NoError(s.t, err)
-	resultStr, err := resultToString(execCallToolResult)
-	require.NoError(s.t, err)
-	fmt.Println("DUSTIN:", resultStr)
 	require.False(s.t, execCallToolResult.IsError)
 	require.NotNil(s.t, execCallToolResult)
 	require.NotEmpty(s.t, execCallToolResult.Content)
-	// resultStr, err := resultToString(execCallToolResult)
-	// require.NoError(s.t, err)
-	require.Contains(s.t, resultStr, "tim")
-	require.Contains(s.t, resultStr, "aaron")
-	require.Contains(s.t, resultStr, "brian")
+	resultStr, err := resultToString(execCallToolResult)
+	require.NoError(s.t, err)
+	require.Contains(s.t, resultStr, "successfully executed write")
 }
-

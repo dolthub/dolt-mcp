@@ -41,55 +41,55 @@ func generateTestBranchName() string {
 	return uuid.NewString()
 }
 
-func RunTest(t *testing.T, testName string, testFunc func(s *testSuite)) {
+func RunTest(t *testing.T, testName string, testFunc func(s *testSuite, testBranchName string)) {
 	t.Run(testName, func(t *testing.T) {
 		if suite == nil {
 			t.Fatalf("no test suite")
 		}
 		suite.t = t
-		testBranchName := generateTestBranchName()
-		suite.Setup(testBranchName, "")
-		defer suite.Teardown(testBranchName, "")
-		testFunc(suite)
+		generatedTestBranchName := generateTestBranchName()
+		suite.Setup(generatedTestBranchName, "")
+		defer suite.Teardown(generatedTestBranchName, "")
+		testFunc(suite, generatedTestBranchName)
 	})
 }
 
-func RunTestWithSetupSQL(t *testing.T, testName, setupSQL string, testFunc func(s *testSuite)) {
+func RunTestWithSetupSQL(t *testing.T, testName, setupSQL string, testFunc func(s *testSuite, testBranchName string)) {
 	t.Run(testName, func(t *testing.T) {
 		if suite == nil {
 			t.Fatalf("no test suite")
 		}
 		suite.t = t
-		testBranchName := generateTestBranchName()
-		suite.Setup(testBranchName, setupSQL)
-		defer suite.Teardown(testBranchName, "")
-		testFunc(suite)
+		generatedTestBranchName := generateTestBranchName()
+		suite.Setup(generatedTestBranchName, setupSQL)
+		defer suite.Teardown(generatedTestBranchName, "")
+		testFunc(suite, generatedTestBranchName)
 	})
 }
 
-func RunTestWithTeardownSQL(t *testing.T, testName, teardownSQL string, testFunc func(s *testSuite)) {
+func RunTestWithTeardownSQL(t *testing.T, testName, teardownSQL string, testFunc func(s *testSuite, testBranchName string)) {
 	t.Run(testName, func(t *testing.T) {
 		if suite == nil {
 			t.Fatalf("no test suite")
 		}
 		suite.t = t
-		testBranchName := generateTestBranchName()
-		suite.Setup(testBranchName, "")
-		defer suite.Teardown(testBranchName, teardownSQL)
-		testFunc(suite)
+		generatedTestBranchName := generateTestBranchName()
+		suite.Setup(generatedTestBranchName, "")
+		defer suite.Teardown(generatedTestBranchName, teardownSQL)
+		testFunc(suite, generatedTestBranchName)
 	})
 }
 
-func RunTestWithSetupAndTeardownSQL(t *testing.T, testName, setupSQL, teardownSQL string, testFunc func(s *testSuite)) {
+func RunTestWithSetupAndTeardownSQL(t *testing.T, testName, setupSQL, teardownSQL string, testFunc func(s *testSuite, testBranchName string)) {
 	t.Run(testName, func(t *testing.T) {
 		if suite == nil {
 			t.Fatalf("no test suite")
 		}
 		suite.t = t
-		testBranchName := generateTestBranchName()
-		suite.Setup(testBranchName, setupSQL)
-		defer suite.Teardown(testBranchName, teardownSQL)
-		testFunc(suite)
+		generatedTestBranchName := generateTestBranchName()
+		suite.Setup(generatedTestBranchName, setupSQL)
+		defer suite.Teardown(generatedTestBranchName, teardownSQL)
+		testFunc(suite, generatedTestBranchName)
 	})
 }
 

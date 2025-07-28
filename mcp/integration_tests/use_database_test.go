@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testUseDatabaseToolInvalidArguments(s *testSuite) {
+func testUseDatabaseToolInvalidArguments(s *testSuite, _ string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -76,7 +76,7 @@ func testUseDatabaseToolInvalidArguments(s *testSuite) {
 	}
 }
 
-func testUseDatabaseToolSuccess(s *testSuite) {
+func testUseDatabaseToolSuccess(s *testSuite, _ string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)

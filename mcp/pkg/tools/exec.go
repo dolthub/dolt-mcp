@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -14,7 +15,7 @@ const (
 	ExecToolName                     = "exec"
 	ExecToolQueryArgumentDescription = "The query to run."
 	ExecToolDescription              = "Executes a WRITE query."
-	ExecToolCallSuccessMessage = "successfully executed write"
+	ExecToolCallSuccessMessage       = "successfully executed write"
 )
 
 var ErrInvalidSQLWriteQuery = errors.New("invalid write query")
@@ -75,8 +76,6 @@ func RegisterExecTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
-		config.Branch = workingBranch
-
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
@@ -88,6 +87,12 @@ func RegisterExecTool(server pkg.Server) {
 			tx.Rollback(ctx)
 		}()
 
+		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		err = tx.ExecContext(ctx, query)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
@@ -98,4 +103,3 @@ func RegisterExecTool(server pkg.Server) {
 		return
 	})
 }
-

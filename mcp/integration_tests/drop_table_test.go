@@ -15,7 +15,7 @@ var testDropTableSetupSQL = `CREATE TABLE ` + "`" + `places` + "`" + `(
 ` + "`" + `city` + "`" + `VARCHAR(1024) NOT NULL,
 ` + "`" + `country` + "`" + `VARCHAR(1024) NOT NULL);`
 
-func testDropTableToolInvalidArguments(s *testSuite) {
+func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -34,11 +34,52 @@ func testDropTableToolInvalidArguments(s *testSuite) {
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DropTableToolName,
+					Arguments: map[string]any{
+						tools.TableCallToolArgumentName: "people",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DropTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "",
+						tools.TableCallToolArgumentName: "people",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DropTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.TableCallToolArgumentName: "people",
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing table argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DropTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: testBranchName, 
+					},
 				},
 			},
 		},
@@ -50,6 +91,7 @@ func testDropTableToolInvalidArguments(s *testSuite) {
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
 						tools.TableCallToolArgumentName: "",
+						tools.WorkingBranchCallToolArgumentName: testBranchName, 
 					},
 				},
 			},
@@ -62,6 +104,7 @@ func testDropTableToolInvalidArguments(s *testSuite) {
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
 						tools.TableCallToolArgumentName: "bar",
+						tools.WorkingBranchCallToolArgumentName: testBranchName, 
 					},
 				},
 			},
@@ -83,7 +126,7 @@ func testDropTableToolInvalidArguments(s *testSuite) {
 	}
 }
 
-func testDropTableToolSuccess(s *testSuite) {
+func testDropTableToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -108,6 +151,7 @@ func testDropTableToolSuccess(s *testSuite) {
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
 						tools.TableCallToolArgumentName: "places",
+						tools.WorkingBranchCallToolArgumentName: testBranchName, 
 					},
 				},
 			},
@@ -120,6 +164,7 @@ func testDropTableToolSuccess(s *testSuite) {
 					Arguments: map[string]any{
 						tools.TableCallToolArgumentName: "foo",
 						tools.IfExistsCallToolArgumentName: true,
+						tools.WorkingBranchCallToolArgumentName: testBranchName, 
 					},
 				},
 			},

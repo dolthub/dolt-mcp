@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testQueryToolInvalidArguments(s *testSuite) {
+func testQueryToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -27,11 +27,52 @@ func testQueryToolInvalidArguments(s *testSuite) {
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.QueryToolName,
+					Arguments: map[string]any{
+						tools.QueryCallToolArgumentName: "SELECT * FROM `people`;",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.QueryToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "",
+						tools.QueryCallToolArgumentName:         "SELECT * FROM `people`;",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.QueryToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.QueryCallToolArgumentName:         "SELECT * FROM `people`;",
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing query argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.QueryToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
 				},
 			},
 		},
@@ -42,7 +83,8 @@ func testQueryToolInvalidArguments(s *testSuite) {
 				Params: mcp.CallToolParams{
 					Name: tools.QueryToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "",
+						tools.QueryCallToolArgumentName:         "",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -54,7 +96,8 @@ func testQueryToolInvalidArguments(s *testSuite) {
 				Params: mcp.CallToolParams{
 					Name: tools.QueryToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "this is not sql",
+						tools.QueryCallToolArgumentName:         "this is not sql",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -76,7 +119,7 @@ func testQueryToolInvalidArguments(s *testSuite) {
 	}
 }
 
-func testQueryToolSuccess(s *testSuite) {
+func testQueryToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -93,7 +136,8 @@ func testQueryToolSuccess(s *testSuite) {
 		Params: mcp.CallToolParams{
 			Name: tools.QueryToolName,
 			Arguments: map[string]any{
-				tools.QueryCallToolArgumentName: "SELECT * FROM people;",
+				tools.QueryCallToolArgumentName:         "SELECT * FROM people;",
+				tools.WorkingBranchCallToolArgumentName: testBranchName,
 			},
 		},
 	}
@@ -109,4 +153,3 @@ func testQueryToolSuccess(s *testSuite) {
 	require.Contains(s.t, resultStr, "aaron")
 	require.Contains(s.t, resultStr, "brian")
 }
-

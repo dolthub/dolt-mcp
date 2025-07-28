@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testDescribeTableToolInvalidArguments(s *testSuite) {
+func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -27,11 +27,52 @@ func testDescribeTableToolInvalidArguments(s *testSuite) {
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DescribeTableToolName,
+					Arguments: map[string]any{
+						tools.QueryCallToolArgumentName: "DESCRIBE `people`;",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DescribeTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "",
+						tools.QueryCallToolArgumentName:         "DESCRIBE `people`;",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DescribeTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.QueryCallToolArgumentName:         "DESCRIBE `people`;",
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing table argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DescribeTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
 				},
 			},
 		},
@@ -42,7 +83,8 @@ func testDescribeTableToolInvalidArguments(s *testSuite) {
 				Params: mcp.CallToolParams{
 					Name: tools.DescribeTableToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName: "",
+						tools.TableCallToolArgumentName:         "",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -64,7 +106,7 @@ func testDescribeTableToolInvalidArguments(s *testSuite) {
 	}
 }
 
-func testDescribeTableToolSuccess(s *testSuite) {
+func testDescribeTableToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -81,7 +123,8 @@ func testDescribeTableToolSuccess(s *testSuite) {
 		Params: mcp.CallToolParams{
 			Name: tools.DescribeTableToolName,
 			Arguments: map[string]any{
-				tools.TableCallToolArgumentName: "people",
+				tools.TableCallToolArgumentName:         "people",
+				tools.WorkingBranchCallToolArgumentName: testBranchName,
 			},
 		},
 	}
@@ -97,4 +140,3 @@ func testDescribeTableToolSuccess(s *testSuite) {
 	require.Contains(s.t, resultString, "first_name")
 	require.Contains(s.t, resultString, "last_name")
 }
-

@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -74,7 +75,6 @@ func RegisterAlterTableTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
-		config.Branch = workingBranch
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
@@ -88,6 +88,12 @@ func RegisterAlterTableTool(server pkg.Server) {
 				result = mcp.NewToolResultError(rerr.Error())
 			}
 		}()
+
+		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
 
 		err = tx.ExecContext(ctx, alterTableStatement)
 		if err != nil {

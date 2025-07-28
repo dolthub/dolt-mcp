@@ -3,10 +3,11 @@ package tools
 import (
 	"context"
 	"errors"
+	"fmt"
 
-	"github.com/dolthub/vitess/go/vt/sqlparser"
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
+	"github.com/dolthub/vitess/go/vt/sqlparser"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -75,7 +76,6 @@ func RegisterCreateTableTool(server pkg.Server) {
 		}
 
 		config := server.DBConfig()
-		config.Branch = workingBranch
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
 		if err != nil {
@@ -90,6 +90,12 @@ func RegisterCreateTableTool(server pkg.Server) {
 			}
 		}()
 
+		err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, workingBranch))
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		err = tx.ExecContext(ctx, createTableStatement)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
@@ -100,4 +106,3 @@ func RegisterCreateTableTool(server pkg.Server) {
 		return
 	})
 }
-
