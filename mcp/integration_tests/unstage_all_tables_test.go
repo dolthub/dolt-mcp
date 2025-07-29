@@ -138,11 +138,11 @@ func testUnstageAllTablesToolSuccess(s *testSuite, testBranchName string) {
 
 	requireToolExists(s, ctx, client, serverInfo, tools.UnstageAllTablesToolName)
 
-	stageMeOneIsStaged, err := getTableStagedStatus(s, ctx, "stagemeone")
+	stageMeOneIsStaged, err := getTableStagedStatus(s, ctx, "stagemeone", testDoltStatusNewTable)
 	require.NoError(s.t, err)
 	require.True(s.t, stageMeOneIsStaged)
 
-	stageMeTwoIsStaged, err := getTableStagedStatus(s, ctx, "stagemetwo")
+	stageMeTwoIsStaged, err := getTableStagedStatus(s, ctx, "stagemetwo", testDoltStatusNewTable)
 	require.NoError(s.t, err)
 	require.True(s.t, stageMeTwoIsStaged)
 
@@ -165,11 +165,11 @@ func testUnstageAllTablesToolSuccess(s *testSuite, testBranchName string) {
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultString, "successfully unstaged tables")
 
-	stageMeOneIsStaged, err = getTableStagedStatus(s, ctx, "stagemeone")
+	stageMeOneIsStaged, err = getTableStagedStatus(s, ctx, "stagemeone", testDoltStatusNewTable)
 	require.NoError(s.t, err)
 	require.False(s.t, stageMeOneIsStaged)
 	
-	stageMeTwoIsStaged, err = getTableStagedStatus(s, ctx, "stagemetwo")
+	stageMeTwoIsStaged, err = getTableStagedStatus(s, ctx, "stagemetwo", testDoltStatusNewTable)
 	require.NoError(s.t, err)
 	require.False(s.t, stageMeTwoIsStaged)
 }

@@ -10,6 +10,8 @@ import (
 )
 
 var testSuiteHTTPURL = "http://0.0.0.0:8080/mcp"
+var testDoltStatusNewTable = "new table"
+var testDoltStatusModifiedTable = "modified"
 
 func requireToolExists(s *testSuite, ctx context.Context, client *TestClient, serverInfo *mcp.InitializeResult, toolName string) {
 	require.NotNil(s.t, serverInfo.Capabilities.Tools)
@@ -24,6 +26,20 @@ func requireToolExists(s *testSuite, ctx context.Context, client *TestClient, se
 		}
 	}
 	require.True(s.t, found)
+}
+
+func requireTableHasNRows(s *testSuite, ctx context.Context, tableName string, numberOfRows int) {
+	var actualCount int 
+
+	row := s.testDb.QueryRowContext(ctx, fmt.Sprintf("SELECT COUNT(*) AS count FROM `%s`;", tableName))
+
+	err := row.Scan(&actualCount)
+	require.NoError(s.t, err)
+
+	err = row.Err()
+	require.NoError(s.t, err)
+
+	require.Equal(s.t, numberOfRows, actualCount)
 }
 
 func resultToString(result *mcp.CallToolResult) (string, error) {
@@ -44,10 +60,10 @@ func resultToString(result *mcp.CallToolResult) (string, error) {
 	return b.String(), nil
 }
 
-func getTableStagedStatus(s *testSuite, ctx context.Context, tableName string) (bool, error) {
+func getTableStagedStatus(s *testSuite, ctx context.Context, tableName, status string) (bool, error) {
 	var staged bool
 
-	row := s.testDb.QueryRowContext(ctx, fmt.Sprintf("SELECT staged FROM dolt_status WHERE table_name = '%s' LIMIT 1;", tableName))
+	row := s.testDb.QueryRowContext(ctx, fmt.Sprintf("SELECT staged FROM dolt_status WHERE table_name = '%s' and status = '%s' LIMIT 1;", tableName, status))
 
 	err := row.Scan(&staged)
 	if err != nil {

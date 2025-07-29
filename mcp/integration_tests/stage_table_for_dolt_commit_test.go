@@ -181,7 +181,7 @@ func testStageTableForDoltCommitToolSuccess(s *testSuite, testBranchName string)
 
 	requireToolExists(s, ctx, client, serverInfo, tools.StageTableForDoltCommitToolName)
 
-	stageMeIsStaged, err := getTableStagedStatus(s, ctx, "stageme")
+	stageMeIsStaged, err := getTableStagedStatus(s, ctx, "stageme", testDoltStatusNewTable)
 	require.NoError(s.t, err)
 	require.False(s.t, stageMeIsStaged)
 
@@ -206,7 +206,7 @@ func testStageTableForDoltCommitToolSuccess(s *testSuite, testBranchName string)
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultString, "successfully staged table")
 	
-	stageMeIsStaged, err = getTableStagedStatus(s, ctx, "stageme")
+	stageMeIsStaged, err = getTableStagedStatus(s, ctx, "stageme", testDoltStatusNewTable)
 	require.NoError(s.t, err)
 	require.True(s.t, stageMeIsStaged)
 }
