@@ -6,6 +6,7 @@ import (
 
 func TestTools(t *testing.T) {
 	RunTest(t, "TestListDatabasesTool", testListDatabasesTool)
+	RunTest(t, "TestListDoltBranchesTool", testListDoltBranchesTool)
 	t.Run("TestCreateDatabaseTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testCreateDatabaseToolInvalidArguments)
 		RunTestWithTeardownSQL(t, "TestSuccess", testCreateDatabaseTeardownSQL, testCreateDatabaseToolSuccess)
