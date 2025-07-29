@@ -44,3 +44,21 @@ func resultToString(result *mcp.CallToolResult) (string, error) {
 	return b.String(), nil
 }
 
+func getTableStagedStatus(s *testSuite, ctx context.Context, tableName string) (bool, error) {
+	var staged bool
+
+	row := s.testDb.QueryRowContext(ctx, fmt.Sprintf("SELECT staged FROM dolt_status WHERE table_name = '%s' LIMIT 1;", tableName))
+
+	err := row.Scan(&staged)
+	if err != nil {
+		return false, err
+	}
+
+	err = row.Err()
+	if err != nil {
+		return false, err
+	}
+
+	return staged, nil
+}
+
