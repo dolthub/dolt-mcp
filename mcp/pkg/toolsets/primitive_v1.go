@@ -35,6 +35,7 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterCreateDoltCommitTool(server)
 	// TODO: dolt_reset
 	tools.RegisterDoltResetTableSoftTool(server)
+	tools.RegisterDoltResetAllTablesSoftTool(server)
 	// TODO: dolt_log
 	// TODO: dolt_diff
 	// TODO: dolt_merge
