@@ -62,3 +62,21 @@ func getTableStagedStatus(s *testSuite, ctx context.Context, tableName string) (
 	return staged, nil
 }
 
+func getLastCommitHash(s *testSuite, ctx context.Context) (string, error) {
+	var hash string
+
+	row := s.testDb.QueryRowContext(ctx, "SELECT commit_hash FROM dolt_log ORDER BY date DESC LIMIT 1;")
+
+	err := row.Scan(&hash)
+	if err != nil {
+		return "", err
+	}
+
+	err = row.Err()
+	if err != nil {
+		return "", err
+	}
+
+	return hash, nil
+}
+
