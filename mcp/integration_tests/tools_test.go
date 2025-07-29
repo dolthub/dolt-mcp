@@ -80,5 +80,9 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testUnstageTableToolInvalidArguments)
 		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testUnstageTableSetupSQL, testUnstageTableToolSuccess)
 	})
+	t.Run("TestUnstageAllTablesTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testUnstageAllTablesToolInvalidArguments)
+		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testUnstageAllTablesSetupSQL, testUnstageAllTablesToolSuccess)
+	})
 }
 
