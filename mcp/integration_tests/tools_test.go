@@ -63,9 +63,9 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testMoveDoltBranchToolInvalidArguments)
 		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testMoveDoltBranchSetupSQL, testMoveDoltBranchTeardownSQL, testMoveDoltBranchToolSuccess)
 	})
-	// t.Run("TestDeleteDoltBranchTool", func(t *testing.T) {
-	// 	RunTest(t, "TestInvalidArguments", testDeleteDoltBranchToolInvalidArguments)
-	// 	RunTestWithSetupSQL(t, "TestSuccess", testDeleteDoltBranchSetupSQL, testDeleteDoltBranchToolSuccess)
-	// })
+	t.Run("TestDeleteDoltBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDeleteDoltBranchToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testDeleteDoltBranchSetupSQL, testDeleteDoltBranchToolSuccess)
+	})
 }
 
