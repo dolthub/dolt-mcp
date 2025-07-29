@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -19,7 +20,7 @@ func RegisterUnstageAllTablesTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
 	unstageAllTablesTool := mcp.NewTool(
-		UnstageTableToolName,
+		UnstageAllTablesToolName,
 		mcp.WithDescription(UnstageAllTablesToolDescription),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
@@ -34,6 +35,7 @@ func RegisterUnstageAllTablesTool(server pkg.Server) {
 	)
 
 	mcpServer.AddTool(unstageAllTablesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+		fmt.Println("DUSTIN: this is NOT running")
 		var err error
 		var workingBranch string
 		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
