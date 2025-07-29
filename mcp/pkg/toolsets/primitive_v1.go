@@ -11,7 +11,6 @@ var _ ToolSet = &PrimitiveToolSetV1{}
 
 func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterListDatabasesTool(server)
-	tools.RegisterUseDatabaseTool(server)
 	tools.RegisterCreateDatabaseTool(server)
 	tools.RegisterDropDatabaseTool(server)
 	tools.RegisterShowTablesTool(server)
@@ -20,12 +19,13 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterCreateTableTool(server)
 	tools.RegisterDropTableTool(server)
 	tools.RegisterAlterTableTool(server)
-
-	// TODO: select active branch
-	// TODO: select version
-	// TODO: query
-	// TODO: exec
+	tools.RegisterQueryTool(server)
+	tools.RegisterExecTool(server)
+	tools.RegisterSelectActiveBranchTool(server)
+	tools.RegisterSelectVersionTool(server)
 	// TODO: dolt_branch
+	tools.RegisterCreateDoltBranchFromHeadTool(server)
+	tools.RegisterCreateDoltBranchTool(server)
 	// TODO: dolt_checkout
 	// TODO: dolt_add
 	// TODO: dolt_commit

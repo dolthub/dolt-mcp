@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) {
+func testQueryToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -19,7 +19,7 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.DescribeTableToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.QueryToolName)
 
 	requests := []struct {
 		description   string
@@ -31,9 +31,9 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DescribeTableToolName,
+					Name: tools.QueryToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:           "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName:           "SELECT * FROM `people`;",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -44,11 +44,11 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DescribeTableToolName,
+					Name: tools.QueryToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "",
+						tools.QueryCallToolArgumentName:           "SELECT * FROM `people`;",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-						tools.QueryCallToolArgumentName:           "DESCRIBE `people`;",
 					},
 				},
 			},
@@ -58,11 +58,11 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DescribeTableToolName,
+					Name: tools.QueryToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-						tools.QueryCallToolArgumentName:           "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName:           "SELECT * FROM `people`;",
 					},
 				},
 			},
@@ -72,9 +72,9 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DescribeTableToolName,
+					Name: tools.QueryToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:         "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName: "SELECT * FROM `people`;",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
@@ -85,11 +85,11 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DescribeTableToolName,
+					Name: tools.QueryToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
-						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.QueryCallToolArgumentName:           "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName:         "SELECT * FROM `people`;",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -99,38 +99,52 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DescribeTableToolName,
+					Name: tools.QueryToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
-						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.QueryCallToolArgumentName:           "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName:         "SELECT * FROM `people`;",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
 			},
 		},
 		{
-			description:   "Missing table argument",
+			description:   "Missing query argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DescribeTableToolName,
+					Name: tools.QueryToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
 		},
 		{
-			description:   "Empty table argument",
+			description:   "Empty query argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DescribeTableToolName,
+					Name: tools.QueryToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName:           "",
-						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.QueryCallToolArgumentName:           "",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Invalid SQL READ query",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.QueryToolName,
+					Arguments: map[string]any{
+						tools.QueryCallToolArgumentName:           "this is not sql",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -138,21 +152,21 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 	}
 
 	for _, request := range requests {
-		describeTableCallToolResult, err := client.CallTool(ctx, request.request)
+		queryCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
 		if request.errorExpected {
-			require.True(s.t, describeTableCallToolResult.IsError)
+			require.True(s.t, queryCallToolResult.IsError)
 		} else {
-			require.False(s.t, describeTableCallToolResult.IsError)
+			require.False(s.t, queryCallToolResult.IsError)
 		}
 
-		require.NotNil(s.t, describeTableCallToolResult)
-		require.NotEmpty(s.t, describeTableCallToolResult.Content)
+		require.NotNil(s.t, queryCallToolResult)
+		require.NotEmpty(s.t, queryCallToolResult.Content)
 	}
 }
 
-func testDescribeTableToolSuccess(s *testSuite, testBranchName string) {
+func testQueryToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -163,27 +177,27 @@ func testDescribeTableToolSuccess(s *testSuite, testBranchName string) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.DescribeTableToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.QueryToolName)
 
-	describeTableRequest := mcp.CallToolRequest{
+	queryToolCallRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
-			Name: tools.DescribeTableToolName,
+			Name: tools.QueryToolName,
 			Arguments: map[string]any{
-				tools.TableCallToolArgumentName:           "people",
+				tools.QueryCallToolArgumentName:           "SELECT * FROM people;",
 				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},
 	}
 
-	dropDatabaseCallToolResult, err := client.CallTool(ctx, describeTableRequest)
+	queryCallToolResult, err := client.CallTool(ctx, queryToolCallRequest)
 	require.NoError(s.t, err)
-	require.False(s.t, dropDatabaseCallToolResult.IsError)
-	require.NotNil(s.t, dropDatabaseCallToolResult)
-	require.NotEmpty(s.t, dropDatabaseCallToolResult.Content)
-	resultString, err := resultToString(dropDatabaseCallToolResult)
+	require.False(s.t, queryCallToolResult.IsError)
+	require.NotNil(s.t, queryCallToolResult)
+	require.NotEmpty(s.t, queryCallToolResult.Content)
+	resultStr, err := resultToString(queryCallToolResult)
 	require.NoError(s.t, err)
-	require.Contains(s.t, resultString, "id")
-	require.Contains(s.t, resultString, "first_name")
-	require.Contains(s.t, resultString, "last_name")
+	require.Contains(s.t, resultStr, "tim")
+	require.Contains(s.t, resultStr, "aaron")
+	require.Contains(s.t, resultStr, "brian")
 }

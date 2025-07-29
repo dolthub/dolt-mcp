@@ -165,6 +165,14 @@ func (s *testSuite) Teardown(branchName, teardownSQL string) {
 		if err != nil {
 			s.t.Fatalf("failed to execute teardown sql: %s", err.Error())
 		}
+
+		err = s.addAndCommitChanges("teardown test changes")
+		if err != nil {
+			if !strings.Contains(err.Error(), "nothing to commit") {
+
+				s.t.Fatalf("failed add and commit changes during test teardown: %s", err.Error())
+			}
+		}
 	}
 
 	err = s.checkoutBranch("main")
@@ -253,6 +261,10 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 
 	if len(seedSQLBytes) > 0 {
 		_, err = testDb.ExecContext(ctx, string(seedSQLBytes))
+		if err != nil {
+			return nil, err
+		}
+		_, err = testDb.ExecContext(ctx, "CALL DOLT_COMMIT('-Am', 'seed test database');")
 		if err != nil {
 			return nil, err
 		}

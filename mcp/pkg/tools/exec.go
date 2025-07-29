@@ -11,34 +11,35 @@ import (
 )
 
 const (
-	AlterTableToolName                     = "alter_table"
-	AlterTableToolQueryArgumentDescription = "The ALTER TABLE statement to run."
-	AlterTableToolDescription              = "Alters a table."
-	AlterTableToolCallSuccessMessage       = "successfully altered table"
+	ExecToolName                     = "exec"
+	ExecToolQueryArgumentDescription = "The query to run."
+	ExecToolDescription              = "Executes a WRITE query."
+	ExecToolCallSuccessMessage       = "successfully executed write"
 )
 
-var ErrInvalidAlterTableSQLQuery = errors.New("invalid alter table statement")
+var ErrInvalidSQLWriteQuery = errors.New("invalid write query")
 
-func ValidateAlterTableQuery(query string) error {
+func ValidateWriteQuery(query string) error {
 	sqlStatement, err := ParseSQLQuery(query)
 	if err != nil {
 		return err
 	}
 
 	switch sqlStatement.(type) {
-	case *sqlparser.AlterTable:
+	case *sqlparser.Insert, *sqlparser.Update, *sqlparser.Delete:
+		// TODO: make sure we're covering all valid writes here
 		return nil
 	}
 
-	return ErrInvalidAlterTableSQLQuery
+	return ErrInvalidSQLWriteQuery
 }
 
-func RegisterAlterTableTool(server pkg.Server) {
+func RegisterExecTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
-	alterTableTool := mcp.NewTool(
-		AlterTableToolName,
-		mcp.WithDescription(AlterTableToolDescription),
+	execTool := mcp.NewTool(
+		ExecToolName,
+		mcp.WithDescription(ExecToolDescription),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),
@@ -52,11 +53,11 @@ func RegisterAlterTableTool(server pkg.Server) {
 		mcp.WithString(
 			QueryCallToolArgumentName,
 			mcp.Required(),
-			mcp.Description(AlterTableToolQueryArgumentDescription),
+			mcp.Description(ExecToolQueryArgumentDescription),
 		),
 	)
 
-	mcpServer.AddTool(alterTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+	mcpServer.AddTool(execTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		var workingBranch string
 		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
@@ -72,14 +73,14 @@ func RegisterAlterTableTool(server pkg.Server) {
 			return
 		}
 
-		var alterTableStatement string
-		alterTableStatement, err = GetRequiredStringArgumentFromCallToolRequest(request, QueryCallToolArgumentName)
+		var query string
+		query, err = GetRequiredStringArgumentFromCallToolRequest(request, QueryCallToolArgumentName)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
 
-		err = ValidateAlterTableQuery(alterTableStatement)
+		err = ValidateWriteQuery(query)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -95,19 +96,16 @@ func RegisterAlterTableTool(server pkg.Server) {
 		}
 
 		defer func() {
-			rerr := CommitTransactionOrRollbackOnError(ctx, tx, err)
-			if rerr != nil {
-				result = mcp.NewToolResultError(rerr.Error())
-			}
+			tx.Rollback(ctx)
 		}()
 
-		err = tx.ExecContext(ctx, alterTableStatement)
+		err = tx.ExecContext(ctx, query)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
 
-		result = mcp.NewToolResultText(AlterTableToolCallSuccessMessage)
+		result = mcp.NewToolResultText(ExecToolCallSuccessMessage)
 		return
 	})
 }

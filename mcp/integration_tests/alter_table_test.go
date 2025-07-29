@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testAlterTableToolInvalidArguments(s *testSuite) {
+func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -27,11 +27,97 @@ func testAlterTableToolInvalidArguments(s *testSuite) {
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AlterTableToolName,
+					Arguments: map[string]any{
+						tools.QueryCallToolArgumentName: "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AlterTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "",
+						tools.QueryCallToolArgumentName:         "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_branch argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AlterTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.QueryCallToolArgumentName:         "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AlterTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:         "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AlterTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AlterTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.QueryCallToolArgumentName:         "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing query argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
+					Arguments: map[string]any{
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+					},
 				},
 			},
 		},
@@ -42,7 +128,9 @@ func testAlterTableToolInvalidArguments(s *testSuite) {
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "",
+						tools.QueryCallToolArgumentName:         "",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -54,7 +142,9 @@ func testAlterTableToolInvalidArguments(s *testSuite) {
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "insert into people values (uuid(), 'homer', 'simpson');",
+						tools.QueryCallToolArgumentName:         "insert into people values (uuid(), 'homer', 'simpson');",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -76,7 +166,7 @@ func testAlterTableToolInvalidArguments(s *testSuite) {
 	}
 }
 
-func testAlterTableToolSuccess(s *testSuite) {
+func testAlterTableToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -93,7 +183,9 @@ func testAlterTableToolSuccess(s *testSuite) {
 		Params: mcp.CallToolParams{
 			Name: tools.AlterTableToolName,
 			Arguments: map[string]any{
-				tools.QueryCallToolArgumentName: "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;", 
+				tools.QueryCallToolArgumentName:         "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+				tools.WorkingBranchCallToolArgumentName: testBranchName,
+				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},
 	}
@@ -107,4 +199,3 @@ func testAlterTableToolSuccess(s *testSuite) {
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultStr, "successfully altered table")
 }
-

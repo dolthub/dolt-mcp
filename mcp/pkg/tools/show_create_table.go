@@ -23,6 +23,16 @@ func RegisterShowCreateTableTool(server pkg.Server) {
 		ShowCreateTableToolName,
 		mcp.WithDescription(ShowCreateTableToolDescription),
 		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
 			TableCallToolArgumentName,
 			mcp.Required(),
 			mcp.Description(ShowCreateTableTableArgumentDescription),
@@ -31,9 +41,21 @@ func RegisterShowCreateTableTool(server pkg.Server) {
 
 	mcpServer.AddTool(showCreateTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
+		var workingBranch string
+		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		var workingDatabase string
+		workingDatabase, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
 
 		var table string
-
 		table, err = GetRequiredStringArgumentFromCallToolRequest(request, TableCallToolArgumentName)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
@@ -43,7 +65,7 @@ func RegisterShowCreateTableTool(server pkg.Server) {
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = db.NewDatabaseTransaction(ctx, config)
+		tx, err = NewDatabaseTransactionOnBranchUsingDatabase(ctx, config, workingBranch, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
