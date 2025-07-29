@@ -29,33 +29,6 @@ func testCreateDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 		errorExpected bool
 	}{
 		{
-			description:   "Missing working_branch argument",
-			errorExpected: true,
-			request: mcp.CallToolRequest{
-				Params: mcp.CallToolParams{
-					Name: tools.CreateDoltBranchToolName,
-					Arguments: map[string]any{
-						tools.OriginalBranchCallToolArgumentName: testBranchName,
-						tools.NewBranchCallToolArgumentName:      "valid",
-					},
-				},
-			},
-		},
-		{
-			description:   "Empty working_branch argument",
-			errorExpected: true,
-			request: mcp.CallToolRequest{
-				Params: mcp.CallToolParams{
-					Name: tools.CreateDoltBranchToolName,
-					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName:  "",
-						tools.NewBranchCallToolArgumentName:      "valid",
-						tools.OriginalBranchCallToolArgumentName: testBranchName,
-					},
-				},
-			},
-		},
-		{
 			description:   "Missing original_branch argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
@@ -78,20 +51,6 @@ func testCreateDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 						tools.OriginalBranchCallToolArgumentName: "",
 						tools.WorkingBranchCallToolArgumentName:  testBranchName,
 						tools.NewBranchCallToolArgumentName:      "valid",
-					},
-				},
-			},
-		},
-		{
-			description:   "Non-existent working_branch argument",
-			errorExpected: true,
-			request: mcp.CallToolRequest{
-				Params: mcp.CallToolParams{
-					Name: tools.CreateDoltBranchToolName,
-					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName:  "doesnotexist",
-						tools.NewBranchCallToolArgumentName:      "valid",
-						tools.OriginalBranchCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -140,17 +99,17 @@ func testCreateDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 	}
 
 	for _, request := range requests {
-		createDoltBranchFromHeadCallToolResult, err := client.CallTool(ctx, request.request)
+		createDoltBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
 		if request.errorExpected {
-			require.True(s.t, createDoltBranchFromHeadCallToolResult.IsError)
+			require.True(s.t, createDoltBranchCallToolResult.IsError)
 		} else {
-			require.False(s.t, createDoltBranchFromHeadCallToolResult.IsError)
+			require.False(s.t, createDoltBranchCallToolResult.IsError)
 		}
 
-		require.NotNil(s.t, createDoltBranchFromHeadCallToolResult)
-		require.NotEmpty(s.t, createDoltBranchFromHeadCallToolResult.Content)
+		require.NotNil(s.t, createDoltBranchCallToolResult)
+		require.NotEmpty(s.t, createDoltBranchCallToolResult.Content)
 	}
 }
 

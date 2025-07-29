@@ -1,0 +1,95 @@
+package tools
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/dolthub/dolt-mcp/mcp/pkg"
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
+	"github.com/mark3labs/mcp-go/mcp"
+)
+
+const (
+	DeleteDoltBranchToolName                      = "delete_dolt_branch"
+	DeleteDoltBranchToolBranchArgumentDescription = "The name of the branch to delete."
+	DeleteDoltBranchToolForceArgumentDescription  = "If true, will force the deletion of the specified branch even if it has uncommitted changes."
+	DeleteDoltBranchToolDescription               = "Deletes a branch."
+	DeleteDoltBranchToolCallSuccessFormatString   = "successfully deleted branch: %s"
+	DeleteDoltBranchToolSQLQueryFormatString      = "CALL DOLT_BRANCH('-d', '%s');"
+	DeleteDoltBranchToolForceSQLQueryFormatString = "CALL DOLT_BRANCH('-f', '-d', '%s');"
+)
+
+func RegisterDeleteDoltBranchTool(server pkg.Server) {
+	mcpServer := server.MCP()
+
+	deleteDoltBranchTool := mcp.NewTool(
+		DeleteDoltBranchToolName,
+		mcp.WithDescription(DeleteDoltBranchToolDescription),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			BranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(DeleteDoltBranchToolBranchArgumentDescription),
+		),
+		mcp.WithBoolean(
+			ForceCallToolArgumentName,
+			mcp.Description(DeleteDoltBranchToolForceArgumentDescription),
+		),
+	)
+
+	mcpServer.AddTool(deleteDoltBranchTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+		var err error
+		var workingBranch string
+		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		var branch string
+		branch, err = GetRequiredStringArgumentFromCallToolRequest(request, BranchCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		force := GetBooleanArgumentFromCallToolRequest(request, ForceCallToolArgumentName)
+
+		config := server.DBConfig()
+
+		var tx db.DatabaseTransaction
+		tx, err = NewDatabaseTransactionOnBranch(ctx, config, workingBranch)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		defer func() {
+			rerr := CommitTransactionOrRollbackOnError(ctx, tx, err)
+			if rerr != nil {
+				result = mcp.NewToolResultError(rerr.Error())
+			}
+		}()
+
+		if force {
+			err = tx.ExecContext(ctx, fmt.Sprintf(DeleteDoltBranchToolForceSQLQueryFormatString, branch))
+			if err != nil {
+				result = mcp.NewToolResultError(err.Error())
+				return
+			}
+		} else {
+			err = tx.ExecContext(ctx, fmt.Sprintf(DeleteDoltBranchToolSQLQueryFormatString, branch))
+			if err != nil {
+				result = mcp.NewToolResultError(err.Error())
+				return
+			}
+		}
+
+		result = mcp.NewToolResultText(fmt.Sprintf(DeleteDoltBranchToolCallSuccessFormatString, branch))
+		return
+	})
+}
