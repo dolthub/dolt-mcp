@@ -104,7 +104,7 @@ func (s *testSuite) exec(sql string) error {
 	return err
 }
 
-func (s *testSuite) Setup(newBranchName, setupSQL string) {
+func (s *testSuite) Setup(newBranchName, setupSQL string, skipDoltCommit bool) {
 	if newBranchName == "" {
 		s.t.Fatalf("no new branch name provided")
 	}
@@ -135,17 +135,19 @@ func (s *testSuite) Setup(newBranchName, setupSQL string) {
 			s.t.Fatalf("failed setup database with setup sql: %s", err.Error())
 		}
 
-		err = s.addAndCommitChanges("add test setup changes")
-		if err != nil {
-			if !strings.Contains(err.Error(), "nothing to commit") {
+		if !skipDoltCommit {
+			err = s.addAndCommitChanges("add test setup changes")
+			if err != nil {
+				if !strings.Contains(err.Error(), "nothing to commit") {
 
-				s.t.Fatalf("failed add and commit changes during test setup: %s", err.Error())
+					s.t.Fatalf("failed add and commit changes during test setup: %s", err.Error())
+				}
 			}
 		}
 	}
 }
 
-func (s *testSuite) Teardown(branchName, teardownSQL string) {
+func (s *testSuite) Teardown(branchName, teardownSQL string, skipDoltCommit bool) {
 	if branchName == "" {
 		s.t.Fatalf("no new branch name provided")
 	}
@@ -166,11 +168,13 @@ func (s *testSuite) Teardown(branchName, teardownSQL string) {
 			s.t.Fatalf("failed to execute teardown sql: %s", err.Error())
 		}
 
-		err = s.addAndCommitChanges("teardown test changes")
-		if err != nil {
-			if !strings.Contains(err.Error(), "nothing to commit") {
+		if !skipDoltCommit {
+			err = s.addAndCommitChanges("teardown test changes")
+			if err != nil {
+				if !strings.Contains(err.Error(), "nothing to commit") {
 
-				s.t.Fatalf("failed add and commit changes during test teardown: %s", err.Error())
+					s.t.Fatalf("failed add and commit changes during test teardown: %s", err.Error())
+				}
 			}
 		}
 	}

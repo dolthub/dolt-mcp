@@ -11,6 +11,7 @@ var _ ToolSet = &PrimitiveToolSetV1{}
 
 func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterListDatabasesTool(server)
+	tools.RegisterListDoltBranchesTool(server)
 	tools.RegisterCreateDatabaseTool(server)
 	tools.RegisterDropDatabaseTool(server)
 	tools.RegisterShowTablesTool(server)
@@ -27,14 +28,18 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterCreateDoltBranchTool(server)
 	tools.RegisterMoveDoltBranchTool(server)
 	tools.RegisterDeleteDoltBranchTool(server)
-	// TODO: dolt_add
-	// TODO: dolt_commit
+	tools.RegisterStageTableForDoltCommitTool(server)
+	tools.RegisterStageAllTablesForDoltCommitTool(server)
+	tools.RegisterUnstageTableTool(server)
+	tools.RegisterUnstageAllTablesTool(server)
+	tools.RegisterCreateDoltCommitTool(server)
+	// TODO: dolt_reset
+	// TODO: dolt_log
+	// TODO: dolt_diff
+	// TODO: dolt_merge
 	// TODO: dolt_remote
 	// TODO: dolt_clone
 	// TODO: dolt_push
 	// TODO: dolt_pull
-	// TODO: dolt_log
-	// TODO: dolt_diff
-	// TODO: dolt_merge
 }
 

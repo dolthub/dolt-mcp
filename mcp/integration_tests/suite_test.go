@@ -48,8 +48,8 @@ func RunTest(t *testing.T, testName string, testFunc func(s *testSuite, testBran
 		}
 		suite.t = t
 		generatedTestBranchName := generateTestBranchName()
-		suite.Setup(generatedTestBranchName, "")
-		defer suite.Teardown(generatedTestBranchName, "")
+		suite.Setup(generatedTestBranchName, "", false)
+		defer suite.Teardown(generatedTestBranchName, "", false)
 		testFunc(suite, generatedTestBranchName)
 	})
 }
@@ -61,8 +61,21 @@ func RunTestWithSetupSQL(t *testing.T, testName, setupSQL string, testFunc func(
 		}
 		suite.t = t
 		generatedTestBranchName := generateTestBranchName()
-		suite.Setup(generatedTestBranchName, setupSQL)
-		defer suite.Teardown(generatedTestBranchName, "")
+		suite.Setup(generatedTestBranchName, setupSQL, false)
+		defer suite.Teardown(generatedTestBranchName, "", false)
+		testFunc(suite, generatedTestBranchName)
+	})
+}
+
+func RunTestWithSetupSQLSkipDoltCommit(t *testing.T, testName, setupSQL string, testFunc func(s *testSuite, testBranchName string)) {
+	t.Run(testName, func(t *testing.T) {
+		if suite == nil {
+			t.Fatalf("no test suite")
+		}
+		suite.t = t
+		generatedTestBranchName := generateTestBranchName()
+		suite.Setup(generatedTestBranchName, setupSQL, true)
+		defer suite.Teardown(generatedTestBranchName, "", false)
 		testFunc(suite, generatedTestBranchName)
 	})
 }
@@ -74,8 +87,8 @@ func RunTestWithTeardownSQL(t *testing.T, testName, teardownSQL string, testFunc
 		}
 		suite.t = t
 		generatedTestBranchName := generateTestBranchName()
-		suite.Setup(generatedTestBranchName, "")
-		defer suite.Teardown(generatedTestBranchName, teardownSQL)
+		suite.Setup(generatedTestBranchName, "", false)
+		defer suite.Teardown(generatedTestBranchName, teardownSQL, false)
 		testFunc(suite, generatedTestBranchName)
 	})
 }
@@ -87,8 +100,8 @@ func RunTestWithSetupAndTeardownSQL(t *testing.T, testName, setupSQL, teardownSQ
 		}
 		suite.t = t
 		generatedTestBranchName := generateTestBranchName()
-		suite.Setup(generatedTestBranchName, setupSQL)
-		defer suite.Teardown(generatedTestBranchName, teardownSQL)
+		suite.Setup(generatedTestBranchName, setupSQL, false)
+		defer suite.Teardown(generatedTestBranchName, teardownSQL, false)
 		testFunc(suite, generatedTestBranchName)
 	})
 }

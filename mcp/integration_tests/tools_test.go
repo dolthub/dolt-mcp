@@ -6,6 +6,7 @@ import (
 
 func TestTools(t *testing.T) {
 	RunTest(t, "TestListDatabasesTool", testListDatabasesTool)
+	RunTest(t, "TestListDoltBranchesTool", testListDoltBranchesTool)
 	t.Run("TestCreateDatabaseTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testCreateDatabaseToolInvalidArguments)
 		RunTestWithTeardownSQL(t, "TestSuccess", testCreateDatabaseTeardownSQL, testCreateDatabaseToolSuccess)
@@ -66,6 +67,26 @@ func TestTools(t *testing.T) {
 	t.Run("TestDeleteDoltBranchTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testDeleteDoltBranchToolInvalidArguments)
 		RunTestWithSetupSQL(t, "TestSuccess", testDeleteDoltBranchSetupSQL, testDeleteDoltBranchToolSuccess)
+	})
+	t.Run("TestStageTableForDoltCommitTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testStageTableForDoltCommitToolInvalidArguments)
+		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testStageTableForDoltCommitSetupSQL, testStageTableForDoltCommitToolSuccess)
+	})
+	t.Run("TestStageAllTablesForDoltCommitTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testStageAllTablesForDoltCommitToolInvalidArguments)
+		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testStageAllTablesForDoltCommitSetupSQL, testStageAllTablesForDoltCommitToolSuccess)
+	})
+	t.Run("TestUnstageTableTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testUnstageTableToolInvalidArguments)
+		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testUnstageTableSetupSQL, testUnstageTableToolSuccess)
+	})
+	t.Run("TestUnstageAllTablesTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testUnstageAllTablesToolInvalidArguments)
+		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testUnstageAllTablesSetupSQL, testUnstageAllTablesToolSuccess)
+	})
+	t.Run("TestCreateDoltCommitTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testCreateDoltCommitToolInvalidArguments)
+		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testCreateDoltCommitSetupSQL, testCreateDoltCommitToolSuccess)
 	})
 }
 
