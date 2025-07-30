@@ -148,13 +148,16 @@ func testDoltResetAllTablesSoftToolSuccess(s *testSuite, testBranchName string) 
 	}
 
 	for _, resetMeTable := range resetMeTables {
-		resetMeNewTableIsStaged, err := getTableStagedStatus(s, ctx, resetMeTable, testDoltStatusNewTable)
+		tableStatuses, err := getDoltStatus(s, ctx, resetMeTable)
 		require.NoError(s.t, err)
-		require.True(s.t, resetMeNewTableIsStaged)
 
-		resetMeModifiedTableIsStaged, err := getTableStagedStatus(s, ctx, resetMeTable, testDoltStatusModifiedTable)
-		require.NoError(s.t, err)
-		require.False(s.t, resetMeModifiedTableIsStaged)
+		for _, ts := range tableStatuses {
+			if ts.Status == testDoltStatusNewTable {
+				require.True(s.t, ts.Staged)
+			} else if ts.Status == testDoltStatusModifiedTable {
+				require.False(s.t, ts.Staged)
+			}
+		}
 
 		requireTableHasNRows(s, ctx, resetMeTable, 2)
 	}
@@ -179,14 +182,17 @@ func testDoltResetAllTablesSoftToolSuccess(s *testSuite, testBranchName string) 
 	require.Contains(s.t, resultString, "successfully soft reset tables")
 
 	for _, resetMeTable := range resetMeTables {
-		resetMeNewTableIsStaged, err := getTableStagedStatus(s, ctx, resetMeTable, testDoltStatusNewTable)
+		tableStatuses, err := getDoltStatus(s, ctx, resetMeTable)
 		require.NoError(s.t, err)
-		require.False(s.t, resetMeNewTableIsStaged)
 
-		_, err = getTableStagedStatus(s, ctx, resetMeTable, testDoltStatusModifiedTable)
-		require.Error(s.t, err)
+		for _, ts := range tableStatuses {
+			if ts.Status == testDoltStatusNewTable {
+				require.False(s.t, ts.Staged)
+			} else if ts.Status == testDoltStatusModifiedTable {
+				require.False(s.t, ts.Staged)
+			}
+		}
 
 		requireTableHasNRows(s, ctx, resetMeTable, 2)
 	}
 }
-

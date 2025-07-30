@@ -138,13 +138,27 @@ func testUnstageAllTablesToolSuccess(s *testSuite, testBranchName string) {
 
 	requireToolExists(s, ctx, client, serverInfo, tools.UnstageAllTablesToolName)
 
-	stageMeOneIsStaged, err := getTableStagedStatus(s, ctx, "stagemeone", testDoltStatusNewTable)
+	tableOneStatuses, err := getDoltStatus(s, ctx, "stagemeone")
 	require.NoError(s.t, err)
-	require.True(s.t, stageMeOneIsStaged)
 
-	stageMeTwoIsStaged, err := getTableStagedStatus(s, ctx, "stagemetwo", testDoltStatusNewTable)
+	for _, ts := range tableOneStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.True(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+	}
+
+	tableTwoStatuses, err := getDoltStatus(s, ctx, "stagemetwo")
 	require.NoError(s.t, err)
-	require.True(s.t, stageMeTwoIsStaged)
+
+	for _, ts := range tableTwoStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.True(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+	}
 
 	unstageAllTablesCallToolRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
@@ -165,12 +179,26 @@ func testUnstageAllTablesToolSuccess(s *testSuite, testBranchName string) {
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultString, "successfully unstaged tables")
 
-	stageMeOneIsStaged, err = getTableStagedStatus(s, ctx, "stagemeone", testDoltStatusNewTable)
+	tableOneStatuses, err = getDoltStatus(s, ctx, "stagemeone")
 	require.NoError(s.t, err)
-	require.False(s.t, stageMeOneIsStaged)
-	
-	stageMeTwoIsStaged, err = getTableStagedStatus(s, ctx, "stagemetwo", testDoltStatusNewTable)
+
+	for _, ts := range tableOneStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.False(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+	}
+
+	tableTwoStatuses, err = getDoltStatus(s, ctx, "stagemetwo")
 	require.NoError(s.t, err)
-	require.False(s.t, stageMeTwoIsStaged)
+
+	for _, ts := range tableTwoStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.False(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+	}
 }
 

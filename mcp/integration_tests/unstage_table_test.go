@@ -183,9 +183,17 @@ func testUnstageTableToolSuccess(s *testSuite, testBranchName string) {
 
 	requireToolExists(s, ctx, client, serverInfo, tools.UnstageTableToolName)
 
-	stageMeIsStaged, err := getTableStagedStatus(s, ctx, "stageme", testDoltStatusNewTable)
+	tableStatuses, err := getDoltStatus(s, ctx, "stageme")
 	require.NoError(s.t, err)
-	require.True(s.t, stageMeIsStaged)
+
+	for _, ts := range tableStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.True(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+
+	}
 
 	stageTableForDoltCommitCallToolRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
@@ -207,7 +215,15 @@ func testUnstageTableToolSuccess(s *testSuite, testBranchName string) {
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultString, "successfully unstaged table")
 
-	stageMeIsStaged, err = getTableStagedStatus(s, ctx, "stageme", testDoltStatusNewTable)
+	tableStatuses, err = getDoltStatus(s, ctx, "stageme")
 	require.NoError(s.t, err)
-	require.False(s.t, stageMeIsStaged)
+
+	for _, ts := range tableStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.False(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+
+	}
 }

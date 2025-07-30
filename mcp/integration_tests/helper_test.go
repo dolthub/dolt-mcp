@@ -13,6 +13,12 @@ var testSuiteHTTPURL = "http://0.0.0.0:8080/mcp"
 var testDoltStatusNewTable = "new table"
 var testDoltStatusModifiedTable = "modified"
 
+type TableStatus struct {
+	Status string
+	Staged bool
+	TableName string
+}
+
 func requireToolExists(s *testSuite, ctx context.Context, client *TestClient, serverInfo *mcp.InitializeResult, toolName string) {
 	require.NotNil(s.t, serverInfo.Capabilities.Tools)
 	listToolsResult, err := client.ListTools(ctx)
@@ -60,22 +66,35 @@ func resultToString(result *mcp.CallToolResult) (string, error) {
 	return b.String(), nil
 }
 
-func getTableStagedStatus(s *testSuite, ctx context.Context, tableName, status string) (bool, error) {
-	var staged bool
-
-	row := s.testDb.QueryRowContext(ctx, fmt.Sprintf("SELECT staged FROM dolt_status WHERE table_name = '%s' and status = '%s' LIMIT 1;", tableName, status))
-
-	err := row.Scan(&staged)
+func getDoltStatus(s *testSuite, ctx context.Context, tableName string) ([]*TableStatus, error) {
+	rows, err := s.testDb.QueryContext(ctx, fmt.Sprintf("SELECT * FROM dolt_status WHERE table_name = '%s';", tableName))
 	if err != nil {
-		return false, err
+		return nil, err
+	}
+	defer rows.Close()
+
+	tableStatuses := make([]*TableStatus, 0)
+	for rows.Next() {
+		var tableName string
+		var staged bool
+		var status string
+		if err := rows.Scan(&tableName, &staged, &status); err != nil {
+			return nil, err
+		}
+
+		tableStatuses = append(tableStatuses, &TableStatus{
+			TableName: tableName,
+			Staged: staged,
+			Status: status,
+		})
 	}
 
-	err = row.Err()
+	err = rows.Err()
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	return staged, nil
+	return tableStatuses, nil
 }
 
 func getLastCommitHash(s *testSuite, ctx context.Context) (string, error) {
