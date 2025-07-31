@@ -161,8 +161,6 @@ func testDoltResetHardToolInvalidArguments(s *testSuite, testBranchName string) 
 	for _, request := range requests {
 		doltResetHardCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
-		// _, err = resultToString(doltResetHardCallToolResult)
-		// require.NoError(s.t, err)
 		if request.errorExpected {
 			require.True(s.t, doltResetHardCallToolResult.IsError)
 		} else {
