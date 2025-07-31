@@ -8,13 +8,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testUnstageAllTablesSetupSQL = `CREATE TABLE ` + "`" + `stagemeone` + "`" + ` (pk int primary key);
-CREATE TABLE ` + "`" + `stagemetwo` + "`" + ` (pk int primary key);
-CALL DOLT_ADD('stagemeone');
-CALL DOLT_ADD('stagemetwo');
+var testDoltResetAllTablesSoftSetupSQL = `CREATE TABLE ` + "`" + `resetmeone` + "`" + ` (pk int primary key);
+CREATE TABLE ` + "`" + `resetmetwo` + "`" + ` (pk int primary key);
+INSERT INTO ` + "`" + `resetmeone` + "`" + ` VALUES (1);
+INSERT INTO ` + "`" + `resetmetwo` + "`" + ` VALUES (1);
+CALL DOLT_ADD('resetmeone');
+CALL DOLT_ADD('resetmetwo');
+INSERT INTO ` + "`" + `resetmeone` + "`" + ` VALUES (2);
+INSERT INTO ` + "`" + `resetmetwo` + "`" + ` VALUES (2);
 `
 
-func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName string) {
+func testDoltResetAllTablesSoftToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -25,7 +29,7 @@ func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName strin
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.UnstageAllTablesToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.DoltResetAllTablesSoftToolName)
 
 	requests := []struct {
 		description   string
@@ -37,7 +41,7 @@ func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName strin
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.UnstageAllTablesToolName,
+					Name: tools.DoltResetAllTablesSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
@@ -49,7 +53,7 @@ func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName strin
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.UnstageAllTablesToolName,
+					Name: tools.DoltResetAllTablesSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
@@ -62,7 +66,7 @@ func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName strin
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.UnstageAllTablesToolName,
+					Name: tools.DoltResetAllTablesSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
@@ -74,7 +78,7 @@ func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName strin
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.UnstageAllTablesToolName,
+					Name: tools.DoltResetAllTablesSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
@@ -87,7 +91,7 @@ func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName strin
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.UnstageAllTablesToolName,
+					Name: tools.DoltResetAllTablesSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
@@ -100,7 +104,7 @@ func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName strin
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.UnstageAllTablesToolName,
+					Name: tools.DoltResetAllTablesSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
@@ -111,21 +115,21 @@ func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName strin
 	}
 
 	for _, request := range requests {
-		unstageAllTablesCallToolResult, err := client.CallTool(ctx, request.request)
+		doltResetAllTablesSoftCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
 		if request.errorExpected {
-			require.True(s.t, unstageAllTablesCallToolResult.IsError)
+			require.True(s.t, doltResetAllTablesSoftCallToolResult.IsError)
 		} else {
-			require.False(s.t, unstageAllTablesCallToolResult.IsError)
+			require.False(s.t, doltResetAllTablesSoftCallToolResult.IsError)
 		}
 
-		require.NotNil(s.t, unstageAllTablesCallToolResult)
-		require.NotEmpty(s.t, unstageAllTablesCallToolResult.Content)
+		require.NotNil(s.t, doltResetAllTablesSoftCallToolResult)
+		require.NotEmpty(s.t, doltResetAllTablesSoftCallToolResult.Content)
 	}
 }
 
-func testUnstageAllTablesToolSuccess(s *testSuite, testBranchName string) {
+func testDoltResetAllTablesSoftToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -136,33 +140,31 @@ func testUnstageAllTablesToolSuccess(s *testSuite, testBranchName string) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.UnstageAllTablesToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.DoltResetAllTablesSoftToolName)
 
-	tableOneStatuses, err := getDoltStatus(s, ctx, "stagemeone")
-	require.NoError(s.t, err)
-
-	for _, ts := range tableOneStatuses {
-		if ts.Status == testDoltStatusNewTable {
-			require.True(s.t, ts.Staged)
-		} else if ts.Status == testDoltStatusModifiedTable {
-			require.False(s.t, ts.Staged)
-		}
+	resetMeTables := []string{
+		"resetmeone",
+		"resetmetwo",
 	}
 
-	tableTwoStatuses, err := getDoltStatus(s, ctx, "stagemetwo")
-	require.NoError(s.t, err)
+	for _, resetMeTable := range resetMeTables {
+		tableStatuses, err := getDoltStatus(s, ctx, resetMeTable)
+		require.NoError(s.t, err)
 
-	for _, ts := range tableTwoStatuses {
-		if ts.Status == testDoltStatusNewTable {
-			require.True(s.t, ts.Staged)
-		} else if ts.Status == testDoltStatusModifiedTable {
-			require.False(s.t, ts.Staged)
+		for _, ts := range tableStatuses {
+			if ts.Status == testDoltStatusNewTable {
+				require.True(s.t, ts.Staged)
+			} else if ts.Status == testDoltStatusModifiedTable {
+				require.False(s.t, ts.Staged)
+			}
 		}
+
+		requireTableHasNRows(s, ctx, resetMeTable, 2)
 	}
 
-	unstageAllTablesCallToolRequest := mcp.CallToolRequest{
+	doltResetAllTablesSoftCallToolRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
-			Name: tools.UnstageAllTablesToolName,
+			Name: tools.DoltResetAllTablesSoftToolName,
 			Arguments: map[string]any{
 				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
@@ -170,35 +172,27 @@ func testUnstageAllTablesToolSuccess(s *testSuite, testBranchName string) {
 		},
 	}
 
-	unstageAllTablesCallToolResult, err := client.CallTool(ctx, unstageAllTablesCallToolRequest)
+	doltResetAllTablesSoftCallToolResult, err := client.CallTool(ctx, doltResetAllTablesSoftCallToolRequest)
 	require.NoError(s.t, err)
-	require.False(s.t, unstageAllTablesCallToolResult.IsError)
-	require.NotNil(s.t, unstageAllTablesCallToolResult)
-	require.NotEmpty(s.t, unstageAllTablesCallToolResult.Content)
-	resultString, err := resultToString(unstageAllTablesCallToolResult)
+	require.False(s.t, doltResetAllTablesSoftCallToolResult.IsError)
+	require.NotNil(s.t, doltResetAllTablesSoftCallToolResult)
+	require.NotEmpty(s.t, doltResetAllTablesSoftCallToolResult.Content)
+	resultString, err := resultToString(doltResetAllTablesSoftCallToolResult)
 	require.NoError(s.t, err)
-	require.Contains(s.t, resultString, "successfully unstaged tables")
+	require.Contains(s.t, resultString, "successfully soft reset tables")
 
-	tableOneStatuses, err = getDoltStatus(s, ctx, "stagemeone")
-	require.NoError(s.t, err)
+	for _, resetMeTable := range resetMeTables {
+		tableStatuses, err := getDoltStatus(s, ctx, resetMeTable)
+		require.NoError(s.t, err)
 
-	for _, ts := range tableOneStatuses {
-		if ts.Status == testDoltStatusNewTable {
-			require.False(s.t, ts.Staged)
-		} else if ts.Status == testDoltStatusModifiedTable {
-			require.False(s.t, ts.Staged)
+		for _, ts := range tableStatuses {
+			if ts.Status == testDoltStatusNewTable {
+				require.False(s.t, ts.Staged)
+			} else if ts.Status == testDoltStatusModifiedTable {
+				require.False(s.t, ts.Staged)
+			}
 		}
-	}
 
-	tableTwoStatuses, err = getDoltStatus(s, ctx, "stagemetwo")
-	require.NoError(s.t, err)
-
-	for _, ts := range tableTwoStatuses {
-		if ts.Status == testDoltStatusNewTable {
-			require.False(s.t, ts.Staged)
-		} else if ts.Status == testDoltStatusModifiedTable {
-			require.False(s.t, ts.Staged)
-		}
+		requireTableHasNRows(s, ctx, resetMeTable, 2)
 	}
 }
-

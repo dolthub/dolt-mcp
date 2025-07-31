@@ -8,9 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testStageTableForDoltCommitSetupSQL = "CREATE TABLE `stageme` (pk int primary key);"
+var testDoltResetTableSoftSetupSQL = `CREATE TABLE ` + "`" + `resetme` + "`" + ` (pk int primary key);
+INSERT INTO ` + "`" + `resetme` + "`" + ` VALUES (1);
+CALL DOLT_ADD('resetme');
+INSERT INTO ` + "`" + `resetme` + "`" + ` VALUES (2);
+`
 
-func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchName string) {
+func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -21,7 +25,7 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.StageTableForDoltCommitToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.DoltResetTableSoftToolName)
 
 	requests := []struct {
 		description   string
@@ -33,9 +37,9 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.StageTableForDoltCommitToolName,
+					Name: tools.DoltResetTableSoftToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName:           "stageme",
+						tools.TableCallToolArgumentName:           "resetme",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -46,10 +50,10 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.StageTableForDoltCommitToolName,
+					Name: tools.DoltResetTableSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "",
-						tools.TableCallToolArgumentName:           "stageme",
+						tools.TableCallToolArgumentName:           "resetme",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -60,9 +64,9 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.StageTableForDoltCommitToolName,
+					Name: tools.DoltResetTableSoftToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName:         "stageme",
+						tools.TableCallToolArgumentName:         "resetme",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
@@ -73,11 +77,11 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.StageTableForDoltCommitToolName,
+					Name: tools.DoltResetTableSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.TableCallToolArgumentName:           "stageme",
+						tools.TableCallToolArgumentName:           "resetme",
 					},
 				},
 			},
@@ -87,11 +91,11 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.StageTableForDoltCommitToolName,
+					Name: tools.DoltResetTableSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.TableCallToolArgumentName:           "stageme",
+						tools.TableCallToolArgumentName:           "resetme",
 					},
 				},
 			},
@@ -101,10 +105,10 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.StageTableForDoltCommitToolName,
+					Name: tools.DoltResetTableSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
-						tools.TableCallToolArgumentName:           "stageme",
+						tools.TableCallToolArgumentName:           "resetme",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -115,7 +119,7 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.StageTableForDoltCommitToolName,
+					Name: tools.DoltResetTableSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
@@ -128,7 +132,7 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.StageTableForDoltCommitToolName,
+					Name: tools.DoltResetTableSoftToolName,
 					Arguments: map[string]any{
 						tools.TableCallToolArgumentName:           "",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
@@ -142,7 +146,7 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.StageTableForDoltCommitToolName,
+					Name: tools.DoltResetTableSoftToolName,
 					Arguments: map[string]any{
 						tools.TableCallToolArgumentName:           "bar",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
@@ -154,21 +158,21 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 	}
 
 	for _, request := range requests {
-		stageTableForDoltCommitCallToolResult, err := client.CallTool(ctx, request.request)
+		doltResetTableSoftCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
 		if request.errorExpected {
-			require.True(s.t, stageTableForDoltCommitCallToolResult.IsError)
+			require.True(s.t, doltResetTableSoftCallToolResult.IsError)
 		} else {
-			require.False(s.t, stageTableForDoltCommitCallToolResult.IsError)
+			require.False(s.t, doltResetTableSoftCallToolResult.IsError)
 		}
 
-		require.NotNil(s.t, stageTableForDoltCommitCallToolResult)
-		require.NotEmpty(s.t, stageTableForDoltCommitCallToolResult.Content)
+		require.NotNil(s.t, doltResetTableSoftCallToolResult)
+		require.NotEmpty(s.t, doltResetTableSoftCallToolResult.Content)
 	}
 }
 
-func testStageTableForDoltCommitToolSuccess(s *testSuite, testBranchName string) {
+func testDoltResetTableSoftToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -179,40 +183,9 @@ func testStageTableForDoltCommitToolSuccess(s *testSuite, testBranchName string)
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.StageTableForDoltCommitToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.DoltResetTableSoftToolName)
 
-	tableStatuses, err := getDoltStatus(s, ctx, "stageme")
-	require.NoError(s.t, err)
-
-	for _, ts := range tableStatuses {
-		if ts.Status == testDoltStatusNewTable {
-			require.False(s.t, ts.Staged)
-		} else if ts.Status == testDoltStatusModifiedTable {
-			require.False(s.t, ts.Staged)
-		}
-	}
-
-	stageTableForDoltCommitCallToolRequest := mcp.CallToolRequest{
-		Params: mcp.CallToolParams{
-			Name: tools.StageTableForDoltCommitToolName,
-			Arguments: map[string]any{
-				tools.TableCallToolArgumentName:           "stageme",
-				tools.WorkingBranchCallToolArgumentName:   testBranchName,
-				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-			},
-		},
-	}
-
-	stageTableForDoltCommitCallToolResult, err := client.CallTool(ctx, stageTableForDoltCommitCallToolRequest)
-	require.NoError(s.t, err)
-	require.False(s.t, stageTableForDoltCommitCallToolResult.IsError)
-	require.NotNil(s.t, stageTableForDoltCommitCallToolResult)
-	require.NotEmpty(s.t, stageTableForDoltCommitCallToolResult.Content)
-	resultString, err := resultToString(stageTableForDoltCommitCallToolResult)
-	require.NoError(s.t, err)
-	require.Contains(s.t, resultString, "successfully staged table")
-
-	tableStatuses, err = getDoltStatus(s, ctx, "stageme")
+	tableStatuses, err := getDoltStatus(s, ctx, "resetme")
 	require.NoError(s.t, err)
 
 	for _, ts := range tableStatuses {
@@ -222,4 +195,39 @@ func testStageTableForDoltCommitToolSuccess(s *testSuite, testBranchName string)
 			require.False(s.t, ts.Staged)
 		}
 	}
+
+	requireTableHasNRows(s, ctx, "resetme", 2)
+
+	doltResetTableSoftCallToolRequest := mcp.CallToolRequest{
+		Params: mcp.CallToolParams{
+			Name: tools.DoltResetTableSoftToolName,
+			Arguments: map[string]any{
+				tools.TableCallToolArgumentName:           "resetme",
+				tools.WorkingBranchCallToolArgumentName:   testBranchName,
+				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+			},
+		},
+	}
+
+	doltResetTableSoftCallToolResult, err := client.CallTool(ctx, doltResetTableSoftCallToolRequest)
+	require.NoError(s.t, err)
+	require.False(s.t, doltResetTableSoftCallToolResult.IsError)
+	require.NotNil(s.t, doltResetTableSoftCallToolResult)
+	require.NotEmpty(s.t, doltResetTableSoftCallToolResult.Content)
+	resultString, err := resultToString(doltResetTableSoftCallToolResult)
+	require.NoError(s.t, err)
+	require.Contains(s.t, resultString, "successfully soft reset table")
+
+	tableStatuses, err = getDoltStatus(s, ctx, "resetme")
+	require.NoError(s.t, err)
+
+	for _, ts := range tableStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.False(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+	}
+
+	requireTableHasNRows(s, ctx, "resetme", 2)
 }

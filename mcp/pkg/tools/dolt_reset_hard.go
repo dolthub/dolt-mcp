@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -9,18 +10,19 @@ import (
 )
 
 const (
-	UnstageAllTablesToolName               = "unstage_all_tables"
-	UnstageAllTablesToolDescription        = "Removes all staged tables from the staging area."
-	UnstageAllTablesToolSQLQuery           = "CALL DOLT_RESET('.');"
-	UnstageAllTablesToolCallSuccessMessage = "successfully unstaged tables"
+	DoltResetHardToolName                                 = "dolt_reset_hard"
+	DoltResetHardToolBranchOrCommitSHAArgumentDescription = "The branch or commit sha to hard reset."
+	DoltResetHardToolDescription                          = "Hard resets the specified branch."
+	DoltResetHardToolSQLQueryFormatString                 = "CALL DOLT_RESET('--hard', '%s');"
+	DoltResetHardToolCallSuccessFormatString              = "successfully hard reset: %s"
 )
 
-func RegisterUnstageAllTablesTool(server pkg.Server) {
+func RegisterDoltResetHardTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
-	unstageAllTablesTool := mcp.NewTool(
-		UnstageAllTablesToolName,
-		mcp.WithDescription(UnstageAllTablesToolDescription),
+	resetHardTool := mcp.NewTool(
+		DoltResetHardToolName,
+		mcp.WithDescription(DoltResetHardToolDescription),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),
@@ -31,9 +33,14 @@ func RegisterUnstageAllTablesTool(server pkg.Server) {
 			mcp.Required(),
 			mcp.Description(WorkingBranchCallToolArgumentDescription),
 		),
+		mcp.WithString(
+			BranchOrCommitSHACallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(DoltResetHardToolBranchOrCommitSHAArgumentDescription),
+		),
 	)
 
-	mcpServer.AddTool(unstageAllTablesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+	mcpServer.AddTool(resetHardTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		var workingBranch string
 		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
@@ -44,6 +51,13 @@ func RegisterUnstageAllTablesTool(server pkg.Server) {
 
 		var workingDatabase string
 		workingDatabase, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		var branchOrCommitSHA string
+		branchOrCommitSHA, err = GetRequiredStringArgumentFromCallToolRequest(request, BranchOrCommitSHACallToolArgumentName)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -65,14 +79,13 @@ func RegisterUnstageAllTablesTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, UnstageAllTablesToolSQLQuery)
+		err = tx.ExecContext(ctx, fmt.Sprintf(DoltResetHardToolSQLQueryFormatString, branchOrCommitSHA))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
 
-		result = mcp.NewToolResultText(UnstageAllTablesToolCallSuccessMessage)
+		result = mcp.NewToolResultText(fmt.Sprintf(DoltResetHardToolCallSuccessFormatString, branchOrCommitSHA))
 		return
 	})
 }
-

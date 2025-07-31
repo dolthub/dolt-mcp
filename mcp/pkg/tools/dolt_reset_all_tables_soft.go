@@ -9,18 +9,18 @@ import (
 )
 
 const (
-	UnstageAllTablesToolName               = "unstage_all_tables"
-	UnstageAllTablesToolDescription        = "Removes all staged tables from the staging area."
-	UnstageAllTablesToolSQLQuery           = "CALL DOLT_RESET('.');"
-	UnstageAllTablesToolCallSuccessMessage = "successfully unstaged tables"
+	DoltResetAllTablesSoftToolName           = "dolt_reset_all_tables_soft"
+	DoltResetAllTablesSoftToolDescription    = "Soft resets all tables."
+	DoltResetAllTablesSoftToolSQLQuery       = "CALL DOLT_RESET('.');"
+	DoltResetAllTablesSoftToolCallSuccessMessage = "successfully soft reset tables"
 )
 
-func RegisterUnstageAllTablesTool(server pkg.Server) {
+func RegisterDoltResetAllTablesSoftTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
-	unstageAllTablesTool := mcp.NewTool(
-		UnstageAllTablesToolName,
-		mcp.WithDescription(UnstageAllTablesToolDescription),
+	resetAllTablesSoftTool := mcp.NewTool(
+		DoltResetAllTablesSoftToolName,
+		mcp.WithDescription(DoltResetAllTablesSoftToolDescription),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),
@@ -33,7 +33,7 @@ func RegisterUnstageAllTablesTool(server pkg.Server) {
 		),
 	)
 
-	mcpServer.AddTool(unstageAllTablesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+	mcpServer.AddTool(resetAllTablesSoftTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		var workingBranch string
 		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
@@ -65,14 +65,13 @@ func RegisterUnstageAllTablesTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, UnstageAllTablesToolSQLQuery)
+		err = tx.ExecContext(ctx, DoltResetAllTablesSoftToolSQLQuery)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
 
-		result = mcp.NewToolResultText(UnstageAllTablesToolCallSuccessMessage)
+		result = mcp.NewToolResultText(DoltResetAllTablesSoftToolCallSuccessMessage)
 		return
 	})
 }
-

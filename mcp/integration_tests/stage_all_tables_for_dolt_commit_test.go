@@ -49,7 +49,7 @@ func testStageAllTablesForDoltCommitToolInvalidArguments(s *testSuite, testBranc
 				Params: mcp.CallToolParams{
 					Name: tools.StageAllTablesForDoltCommitToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "",
+						tools.WorkingBranchCallToolArgumentName:   "",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -75,7 +75,7 @@ func testStageAllTablesForDoltCommitToolInvalidArguments(s *testSuite, testBranc
 					Name: tools.StageAllTablesForDoltCommitToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -88,7 +88,7 @@ func testStageAllTablesForDoltCommitToolInvalidArguments(s *testSuite, testBranc
 					Name: tools.StageAllTablesForDoltCommitToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -100,7 +100,7 @@ func testStageAllTablesForDoltCommitToolInvalidArguments(s *testSuite, testBranc
 				Params: mcp.CallToolParams{
 					Name: tools.StageAllTablesForDoltCommitToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -136,25 +136,39 @@ func testStageAllTablesForDoltCommitToolSuccess(s *testSuite, testBranchName str
 
 	requireToolExists(s, ctx, client, serverInfo, tools.StageAllTablesForDoltCommitToolName)
 
-	stageMeOneIsStaged, err := getTableStagedStatus(s, ctx, "stagemeone")
+	tableOneStatuses, err := getDoltStatus(s, ctx, "stagemeone")
 	require.NoError(s.t, err)
-	require.False(s.t, stageMeOneIsStaged)
 
-	stageMeTwoIsStaged, err := getTableStagedStatus(s, ctx, "stagemetwo")
+	for _, ts := range tableOneStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.False(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+	}
+
+	tableTwoStatuses, err := getDoltStatus(s, ctx, "stagemetwo")
 	require.NoError(s.t, err)
-	require.False(s.t, stageMeTwoIsStaged)
+
+	for _, ts := range tableTwoStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.False(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+	}
 
 	stageAllTablesForDoltCommitCallToolRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: tools.StageAllTablesForDoltCommitToolName,
 			Arguments: map[string]any{
-				tools.WorkingBranchCallToolArgumentName: testBranchName, 
+				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},
 	}
 
-	stageAllTablesForDoltCommitCallToolResult, err := client.CallTool(ctx, stageAllTablesForDoltCommitCallToolRequest )
+	stageAllTablesForDoltCommitCallToolResult, err := client.CallTool(ctx, stageAllTablesForDoltCommitCallToolRequest)
 	require.NoError(s.t, err)
 	require.False(s.t, stageAllTablesForDoltCommitCallToolResult.IsError)
 	require.NotNil(s.t, stageAllTablesForDoltCommitCallToolResult)
@@ -162,13 +176,27 @@ func testStageAllTablesForDoltCommitToolSuccess(s *testSuite, testBranchName str
 	resultString, err := resultToString(stageAllTablesForDoltCommitCallToolResult)
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultString, "successfully staged tables")
-	
-	stageMeOneIsStaged, err = getTableStagedStatus(s, ctx, "stagemeone")
-	require.NoError(s.t, err)
-	require.True(s.t, stageMeOneIsStaged)
 
-	stageMeTwoIsStaged, err = getTableStagedStatus(s, ctx, "stagemetwo")
+	tableOneStatuses, err = getDoltStatus(s, ctx, "stagemeone")
 	require.NoError(s.t, err)
-	require.True(s.t, stageMeTwoIsStaged)
+
+	for _, ts := range tableOneStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.True(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+	}
+
+	tableTwoStatuses, err = getDoltStatus(s, ctx, "stagemetwo")
+	require.NoError(s.t, err)
+
+	for _, ts := range tableTwoStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.True(s.t, ts.Staged)
+		} else if ts.Status == testDoltStatusModifiedTable {
+			require.False(s.t, ts.Staged)
+		}
+	}
 }
 

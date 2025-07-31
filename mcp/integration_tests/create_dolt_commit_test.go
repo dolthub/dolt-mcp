@@ -169,9 +169,14 @@ func testCreateDoltCommitToolSuccess(s *testSuite, testBranchName string) {
 
 	requireToolExists(s, ctx, client, serverInfo, tools.CreateDoltCommitToolName)
 
-	commitMeIsStaged, err := getTableStagedStatus(s, ctx, "commitme")
+	tableStatuses, err := getDoltStatus(s, ctx, "commitme")
 	require.NoError(s.t, err)
-	require.True(s.t, commitMeIsStaged)
+
+	for _, ts := range tableStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.True(s.t, ts.Staged)
+		}
+	}
 
 	preCommitSha, err := getLastCommitHash(s, ctx)
 	require.NoError(s.t, err)
@@ -198,8 +203,14 @@ func testCreateDoltCommitToolSuccess(s *testSuite, testBranchName string) {
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultStr, "successfully committed changes")
 
-	_, err = getTableStagedStatus(s, ctx, "commitme")
-	require.Error(s.t, err)
+	tableStatuses, err = getDoltStatus(s, ctx, "commitme")
+	require.NoError(s.t, err)
+
+	for _, ts := range tableStatuses {
+		if ts.Status == testDoltStatusNewTable {
+			require.False(s.t, ts.Staged)
+		}
+	}
 
 	postCommitSha, err := getLastCommitHash(s, ctx)
 	require.NoError(s.t, err)
