@@ -19,6 +19,10 @@ const (
 	MoveCallToolArgumentName              = "move"
 	DeleteCallToolArgumentName            = "delete"
 	ForceCallToolArgumentName             = "force"
+	StartDateCallToolArgumentName         = "start"
+	EndDateCallToolArgumentName           = "end"
+	FromCommitCallToolArgumentName        = "from_commit"
+	ToCommitCallToolArgumentName          = "to_commit"
 )
 
 var DoltUseWorkingDatabaseSQLQueryFormatString = "USE %s;"
