@@ -40,15 +40,15 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterListDoltDiffChangesInWorkingSetTool(server)
 	tools.RegisterListDoltDiffChangesByTableNameTool(server)
 	tools.RegisterListDoltDiffChangesInDateRangeTool(server)
-	// TODO: dolt_merge
 	tools.RegisterGetDoltMergeStatusTool(server)
 	tools.RegisterListDoltMergeConflictsTool(server)
 	tools.RegisterListDoltMergeConflictsByTableNameTool(server)
 	tools.RegisterMergeDoltBranchNoFastForwardTool(server)
 	tools.RegisterMergeDoltBranchTool(server)
 	tools.RegisterAbortDoltMergeTool(server)
-
-	// TODO: dolt_remote
+	tools.RegisterListDoltRemotesTool(server)
+	tools.RegisterAddDoltRemoteTool(server)
+	tools.RegisterRemoveDoltRemoteTool(server)
 	// TODO: dolt_clone
 	// TODO: dolt_push
 	// TODO: dolt_pull

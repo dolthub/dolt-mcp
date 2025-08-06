@@ -23,6 +23,8 @@ const (
 	EndDateCallToolArgumentName           = "end"
 	FromCommitCallToolArgumentName        = "from_commit"
 	ToCommitCallToolArgumentName          = "to_commit"
+	NameCallToolArgumentName              = "name"
+	URLCallToolArgumentName               = "url"
 )
 
 var DoltUseWorkingDatabaseSQLQueryFormatString = "USE %s;"
