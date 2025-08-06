@@ -9,17 +9,18 @@ import (
 )
 
 const (
-	ListDoltDiffChangesInWorkingSetToolName        = "list_dolt_diff_changes_in_working_set"
-	ListDoltDiffChangesInWorkingSetToolSQLQuery    = "SELECT * FROM dolt_diff WHERE commit_hash='WORKING';"
-	ListDoltDiffChangesInWorkingSetToolDescription = "Lists all dolt_diff changes in the current working set."
+	AbortDoltMergeToolName               = "abort_dolt_merge"
+	AbortDoltMergeToolDescription        = "Aborts the current merge."
+	AbortDoltMergeToolSQLQuery           = "CALL DOLT_MERGE('--abort');"
+	AbortDoltMergeToolCallSuccessMessage = "successfully aborted merge"
 )
 
-func RegisterListDoltDiffChangesInWorkingSetTool(server pkg.Server) {
+func RegisterAbortDoltMergeTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
-	listDoltDiffChangesInWorkingSetTool := mcp.NewTool(
-		ListDoltDiffChangesInWorkingSetToolName,
-		mcp.WithDescription(ListDoltDiffChangesInWorkingSetToolDescription),
+	abortDoltMergeTool := mcp.NewTool(
+		AbortDoltMergeToolName,
+		mcp.WithDescription(AbortDoltMergeToolDescription),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),
@@ -31,7 +32,8 @@ func RegisterListDoltDiffChangesInWorkingSetTool(server pkg.Server) {
 			mcp.Description(WorkingBranchCallToolArgumentDescription),
 		),
 	)
-	mcpServer.AddTool(listDoltDiffChangesInWorkingSetTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+
+	mcpServer.AddTool(abortDoltMergeTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		var workingBranch string
 		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
@@ -57,17 +59,19 @@ func RegisterListDoltDiffChangesInWorkingSetTool(server pkg.Server) {
 		}
 
 		defer func() {
-			tx.Rollback(ctx)
+			rerr := CommitTransactionOrRollbackOnError(ctx, tx, err)
+			if rerr != nil {
+				result = mcp.NewToolResultError(rerr.Error())
+			}
 		}()
 
-		var formattedResult string
-		formattedResult, err = tx.QueryContext(ctx, ListDoltDiffChangesInWorkingSetToolSQLQuery, db.ResultFormatMarkdown)
+		err = tx.ExecContext(ctx, AbortDoltMergeToolSQLQuery)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
 
-		result = mcp.NewToolResultText(formattedResult)
+		result = mcp.NewToolResultText(AbortDoltMergeToolCallSuccessMessage)
 		return
 	})
 }

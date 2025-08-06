@@ -9,17 +9,17 @@ import (
 )
 
 const (
-	ListDoltDiffChangesInWorkingSetToolName        = "list_dolt_diff_changes_in_working_set"
-	ListDoltDiffChangesInWorkingSetToolSQLQuery    = "SELECT * FROM dolt_diff WHERE commit_hash='WORKING';"
-	ListDoltDiffChangesInWorkingSetToolDescription = "Lists all dolt_diff changes in the current working set."
+	ListDoltMergeConflictsToolName        = "list_dolt_merge_conflicts"
+	ListDoltMergeConflictsToolSQLQuery    = "SELECT * FROM dolt_merge_conflicts;"
+	ListDoltMergeConflictsToolDescription = "Lists all conflicts in the current Dolt merge."
 )
 
-func RegisterListDoltDiffChangesInWorkingSetTool(server pkg.Server) {
+func RegisterListDoltMergeConflictsTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
-	listDoltDiffChangesInWorkingSetTool := mcp.NewTool(
-		ListDoltDiffChangesInWorkingSetToolName,
-		mcp.WithDescription(ListDoltDiffChangesInWorkingSetToolDescription),
+	listDoltMergeConflictsTool := mcp.NewTool(
+		ListDoltMergeConflictsToolName,
+		mcp.WithDescription(ListDoltMergeConflictsToolDescription),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),
@@ -31,7 +31,8 @@ func RegisterListDoltDiffChangesInWorkingSetTool(server pkg.Server) {
 			mcp.Description(WorkingBranchCallToolArgumentDescription),
 		),
 	)
-	mcpServer.AddTool(listDoltDiffChangesInWorkingSetTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+
+	mcpServer.AddTool(listDoltMergeConflictsTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		var workingBranch string
 		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
@@ -61,7 +62,7 @@ func RegisterListDoltDiffChangesInWorkingSetTool(server pkg.Server) {
 		}()
 
 		var formattedResult string
-		formattedResult, err = tx.QueryContext(ctx, ListDoltDiffChangesInWorkingSetToolSQLQuery, db.ResultFormatMarkdown)
+		formattedResult, err = tx.QueryContext(ctx, ListDoltMergeConflictsToolSQLQuery, db.ResultFormatMarkdown)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

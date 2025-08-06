@@ -23,7 +23,7 @@ func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
 
 	listDoltDiffChangesByTableNameTool := mcp.NewTool(
 		ListDoltDiffChangesByTableNameToolName,
-		mcp.WithDescription(CreateDoltBranchToolDescription),
+		mcp.WithDescription(ListDoltDiffChangesByTableNameToolDescription),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),
