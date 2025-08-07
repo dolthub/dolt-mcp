@@ -38,9 +38,9 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterDoltResetHardTool(server)
 	tools.RegisterListDoltCommitsTool(server)
 	tools.RegisterListDoltDiffChangesInWorkingSetTool(server)
-	// TODO: add tests for the stuff below
 	tools.RegisterListDoltDiffChangesByTableNameTool(server)
 	tools.RegisterListDoltDiffChangesInDateRangeTool(server)
+	// TODO: add tests for the stuff below
 	tools.RegisterGetDoltMergeStatusTool(server)
 	tools.RegisterListDoltMergeConflictsTool(server)
 	tools.RegisterListDoltMergeConflictsByTableNameTool(server)

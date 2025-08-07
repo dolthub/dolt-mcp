@@ -112,5 +112,9 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testListDoltDiffChangesByTableNameToolInvalidArguments)
 		RunTestWithSetupSQL(t, "TestSuccess", testListDoltDiffChangesByTableNameSetupSQL, testListDoltDiffChangesByTableNameToolSuccess)
 	})
+	t.Run("TestListDoltDiffChangesInDateRangeTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testListDoltDiffChangesInDateRangeToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testListDoltDiffChangesInDateRangeSetupSQL, testListDoltDiffChangesInDateRangeToolSuccess)
+	})
 }
 
