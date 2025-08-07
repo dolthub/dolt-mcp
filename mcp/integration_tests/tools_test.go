@@ -104,5 +104,9 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testListDoltCommitsToolInvalidArguments)
 		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testListDoltCommitsSetupSQL, testListDoltCommitsToolSuccess)
 	})
+	t.Run("TestListDoltDiffChangesInWorkingSetTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testListDoltDiffChangesInWorkingSetToolInvalidArguments)
+		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testListDoltDiffChangesInWorkingSetSetupSQL, testListDoltDiffChangesInWorkingSetToolSuccess)
+	})
 }
 

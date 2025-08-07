@@ -8,15 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testListDoltCommitsSetupSQL = `CREATE TABLE ` + "`" + `t1` + "`" + ` (pk int primary key);
+var testListDoltDiffChangesInWorkingSetSetupSQL = `CREATE TABLE ` + "`" + `t1` + "`" + ` (pk int primary key);
 CALL DOLT_COMMIT('-Am', 'add t1');
 INSERT INTO ` + "`" + `t1` + "`" + ` VALUES (1);
-CALL DOLT_COMMIT('-Am', 'insert 1');
 INSERT INTO ` + "`" + `t1` + "`" + ` VALUES (2);
-CALL DOLT_COMMIT('-Am', 'insert 2');
 `
 
-func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string) {
+func testListDoltDiffChangesInWorkingSetToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -27,7 +25,7 @@ func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.ListDoltCommitsToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.ListDoltDiffChangesInWorkingSetToolName)
 
 	requests := []struct {
 		description   string
@@ -39,7 +37,7 @@ func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.ListDoltCommitsToolName,
+					Name: tools.ListDoltDiffChangesInWorkingSetToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
@@ -51,7 +49,7 @@ func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.ListDoltCommitsToolName,
+					Name: tools.ListDoltDiffChangesInWorkingSetToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
@@ -64,7 +62,7 @@ func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.ListDoltCommitsToolName,
+					Name: tools.ListDoltDiffChangesInWorkingSetToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
@@ -76,7 +74,7 @@ func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.ListDoltCommitsToolName,
+					Name: tools.ListDoltDiffChangesInWorkingSetToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
@@ -89,7 +87,7 @@ func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.ListDoltCommitsToolName,
+					Name: tools.ListDoltDiffChangesInWorkingSetToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
@@ -102,7 +100,7 @@ func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.ListDoltCommitsToolName,
+					Name: tools.ListDoltDiffChangesInWorkingSetToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
@@ -113,21 +111,21 @@ func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string
 	}
 
 	for _, request := range requests {
-		listDoltCommitsCallToolResult, err := client.CallTool(ctx, request.request)
+		listDoltDiffChangesInWorkingSetCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
 		if request.errorExpected {
-			require.True(s.t, listDoltCommitsCallToolResult.IsError)
+			require.True(s.t, listDoltDiffChangesInWorkingSetCallToolResult.IsError)
 		} else {
-			require.False(s.t, listDoltCommitsCallToolResult.IsError)
+			require.False(s.t, listDoltDiffChangesInWorkingSetCallToolResult.IsError)
 		}
 
-		require.NotNil(s.t, listDoltCommitsCallToolResult)
-		require.NotEmpty(s.t, listDoltCommitsCallToolResult.Content)
+		require.NotNil(s.t, listDoltDiffChangesInWorkingSetCallToolResult)
+		require.NotEmpty(s.t, listDoltDiffChangesInWorkingSetCallToolResult.Content)
 	}
 }
 
-func testListDoltCommitsToolSuccess(s *testSuite, testBranchName string) {
+func testListDoltDiffChangesInWorkingSetToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -138,11 +136,11 @@ func testListDoltCommitsToolSuccess(s *testSuite, testBranchName string) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.ListDoltCommitsToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.ListDoltDiffChangesInWorkingSetToolName)
 
 	listDoltCommitsCallToolRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
-			Name: tools.ListDoltCommitsToolName,
+			Name: tools.ListDoltDiffChangesInWorkingSetToolName,
 			Arguments: map[string]any{
 				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
@@ -150,14 +148,13 @@ func testListDoltCommitsToolSuccess(s *testSuite, testBranchName string) {
 		},
 	}
 
-	listDoltCommitsCallToolResult, err := client.CallTool(ctx, listDoltCommitsCallToolRequest)
+	listDoltDiffChangesInWorkingSetCallToolResult, err := client.CallTool(ctx, listDoltCommitsCallToolRequest)
 	require.NoError(s.t, err)
-	require.False(s.t, listDoltCommitsCallToolResult.IsError)
-	require.NotNil(s.t, listDoltCommitsCallToolResult)
-	require.NotEmpty(s.t, listDoltCommitsCallToolResult.Content)
-	resultString, err := resultToString(listDoltCommitsCallToolResult)
+	require.False(s.t, listDoltDiffChangesInWorkingSetCallToolResult.IsError)
+	require.NotNil(s.t, listDoltDiffChangesInWorkingSetCallToolResult)
+	require.NotEmpty(s.t, listDoltDiffChangesInWorkingSetCallToolResult.Content)
+	resultString, err := resultToString(listDoltDiffChangesInWorkingSetCallToolResult)
 	require.NoError(s.t, err)
-	require.Contains(s.t, resultString, "add t1")
-	require.Contains(s.t, resultString, "insert 1")
-	require.Contains(s.t, resultString, "insert 2")
+	require.Contains(s.t, resultString, "WORKING")
+	require.Contains(s.t, resultString, "t1")
 }
