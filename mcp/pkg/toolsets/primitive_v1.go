@@ -36,6 +36,7 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterDoltResetTableSoftTool(server)
 	tools.RegisterDoltResetAllTablesSoftTool(server)
 	tools.RegisterDoltResetHardTool(server)
+	// TODO: add tests for the stuff below
 	tools.RegisterListDoltCommitsTool(server)
 	tools.RegisterListDoltDiffChangesInWorkingSetTool(server)
 	tools.RegisterListDoltDiffChangesByTableNameTool(server)
