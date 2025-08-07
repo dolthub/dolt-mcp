@@ -11,8 +11,8 @@ import (
 
 const (
 	AddDoltRemoteToolName                    = "add_dolt_remote"
-	AddDoltRemoteToolNameArgumentDescription = "The name of the remote to add."
-	AddDoltRemoteToolURLArgumentDescription  = "The URL of the remote to add."
+	AddDoltRemoteToolRemoteNameArgumentDescription = "The name of the remote to add."
+	AddDoltRemoteToolRemoteURLArgumentDescription  = "The URL of the remote to add."
 	AddDoltRemoteToolSQLQueryFormatString    = "CALL DOLT_REMOTE('add', '%s', '%s');"
 	AddDoltRemoteToolDescription             = "Adds a remote to the Dolt server."
 	AddDoltRemoteToolCallSuccessFormatString = "successfully added remote: %s"
@@ -25,28 +25,28 @@ func RegisterAddDoltRemoteTool(server pkg.Server) {
 		AddDoltRemoteToolName,
 		mcp.WithDescription(AddDoltRemoteToolDescription),
 		mcp.WithString(
-			NameCallToolArgumentName,
+			RemoteNameCallToolArgumentName,
 			mcp.Required(),
-			mcp.Description(AddDoltRemoteToolNameArgumentDescription),
+			mcp.Description(AddDoltRemoteToolRemoteNameArgumentDescription),
 		),
 		mcp.WithString(
-			URLCallToolArgumentName,
+			RemoteURLCallToolArgumentName,
 			mcp.Required(),
-			mcp.Description(AddDoltRemoteToolURLArgumentDescription),
+			mcp.Description(AddDoltRemoteToolRemoteURLArgumentDescription),
 		),
 	)
 
 	mcpServer.AddTool(addDoltRemoteTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		var name string
-		name, err = GetRequiredStringArgumentFromCallToolRequest(request, NameCallToolArgumentName)
+		name, err = GetRequiredStringArgumentFromCallToolRequest(request, RemoteNameCallToolArgumentName)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
 
 		var url string
-		url, err = GetRequiredStringArgumentFromCallToolRequest(request, URLCallToolArgumentName)
+		url, err = GetRequiredStringArgumentFromCallToolRequest(request, RemoteURLCallToolArgumentName)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

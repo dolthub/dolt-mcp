@@ -24,7 +24,9 @@ const (
 	FromCommitCallToolArgumentName        = "from_commit"
 	ToCommitCallToolArgumentName          = "to_commit"
 	NameCallToolArgumentName              = "name"
+	RemoteNameCallToolArgumentName        = "remote_name"
 	URLCallToolArgumentName               = "url"
+	RemoteURLCallToolArgumentName         = "remote_url"
 )
 
 var DoltUseWorkingDatabaseSQLQueryFormatString = "USE %s;"

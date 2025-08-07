@@ -49,8 +49,10 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterListDoltRemotesTool(server)
 	tools.RegisterAddDoltRemoteTool(server)
 	tools.RegisterRemoveDoltRemoteTool(server)
-	// TODO: dolt_clone
-	// TODO: dolt_push
-	// TODO: dolt_pull
+	tools.RegisterCloneDatabaseTool(server)
+	tools.RegisterDoltFetchBranchTool(server)
+	tools.RegisterDoltFetchAllBranchesTool(server)
+	tools.RegisterDoltPushBranchTool(server)
+	tools.RegisterDoltPullBranchTool(server)
 }
 

@@ -11,7 +11,7 @@ import (
 
 const (
 	RemoveDoltRemoteToolName                 = "remove_dolt_remote"
-	RemoveDoltRemoteToolNameArgumentDescription = "The name of the remote to remove."
+	RemoveDoltRemoteToolRemoteNameArgumentDescription = "The name of the remote to remove."
 	RemoveDoltRemoteToolSQLQueryFormatString    = "CALL DOLT_REMOTE('remove', '%s');"
 	RemoveDoltRemoteToolDescription             = "Removes a remote from the Dolt server."
 	RemoveDoltRemoteToolCallSuccessFormatString = "successfully removed remote: %s"
@@ -24,16 +24,16 @@ func RegisterRemoveDoltRemoteTool(server pkg.Server) {
 		RemoveDoltRemoteToolName,
 		mcp.WithDescription(RemoveDoltRemoteToolDescription),
 		mcp.WithString(
-			NameCallToolArgumentName,
+			RemoteNameCallToolArgumentName,
 			mcp.Required(),
-			mcp.Description(RemoveDoltRemoteToolNameArgumentDescription),
+			mcp.Description(RemoveDoltRemoteToolRemoteNameArgumentDescription),
 		),
 	)
 
 	mcpServer.AddTool(removeDoltRemoteTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		var name string
-		name, err = GetRequiredStringArgumentFromCallToolRequest(request, NameCallToolArgumentName)
+		name, err = GetRequiredStringArgumentFromCallToolRequest(request, RemoteNameCallToolArgumentName)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
