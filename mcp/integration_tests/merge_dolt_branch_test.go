@@ -16,6 +16,8 @@ CALL DOLT_COMMIT('-Am', 'insert mark twain');
 CALL DOLT_CHECKOUT(@current_branch);
 `
 
+var testMergeDoltBranchTeardownSQL = "CALL DOLT_BRANCH('-D', 'mergeme');"
+
 func testMergeDoltBranchToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
