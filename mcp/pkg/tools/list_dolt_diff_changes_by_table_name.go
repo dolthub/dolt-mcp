@@ -10,13 +10,20 @@ import (
 )
 
 const (
-	ListDoltDiffChangesByTableNameToolName                          = "list_dolt_diff_changes_by_table_name"
-	ListDoltDiffChangesByTableNameToolTableArgumentDescription      = "The name of the table."
-	ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription = "The 'from' commit of the Dolt diff."
-	ListDoltDiffChangesByTableNameToolToCommitArgumentDescription   = "The 'to' commit of the Dolt diff."
-	ListDoltDiffChangesByTableNameToolDescription                   = "Lists dolt_diff changes for the specified table between two Dolt commits."
-	ListDoltDiffChangesByTableNameToolSQLQueryFormatString          = "SELECT * FROM dolt_diff_%s WHERE from_commit = '%s' AND to_commit = '%s';"
+	ListDoltDiffChangesByTableNameToolName                                = "list_dolt_diff_changes_by_table_name"
+	ListDoltDiffChangesByTableNameToolTableArgumentDescription            = "The name of the table."
+	ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription       = "The 'from' commit of the Dolt diff."
+	ListDoltDiffChangesByTableNameToolHashOfFromCommitArgumentDescription = "The value to supply to the HASHOF() function for the 'from' commit."
+	ListDoltDiffChangesByTableNameToolHashOfToCommitArgumentDescription   = "The value to supply to the HASHOF() function for the 'to' commit."
+	ListDoltDiffChangesByTableNameToolToCommitArgumentDescription         = "The 'to' commit of the Dolt diff."
+	ListDoltDiffChangesByTableNameToolDescription                         = "Lists dolt_diff changes for the specified table between two Dolt commits."
+	ListDoltDiffChangesByTableNameToolSQLQueryFormatString                = "SELECT * FROM dolt_diff_%s WHERE from_commit = %s AND to_commit = %s;"
 )
+
+var ErrFromCommitOrHashOfFromCommitArgumentRequiredMessage = "from_commit or hash_of_from_commit argument required"
+var ErrSpecifyEitherFromCommitOrHashOfFromCommitMessage = "specify either from_commit or hash_of_from_commit arguments, not both "
+var ErrToCommitOrHashOfToCommitArgumentRequiredMessage = "to_commit or hash_of_to_commit argument required"
+var ErrSpecifyEitherToCommitOrHashOfToCommitMessage = "specify either to_commit or hash_of_to_commit arguments, not both "
 
 func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
 	mcpServer := server.MCP()
@@ -41,12 +48,18 @@ func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
 		),
 		mcp.WithString(
 			FromCommitCallToolArgumentName,
-			mcp.Required(),
 			mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
 		),
 		mcp.WithString(
 			ToCommitCallToolArgumentName,
-			mcp.Required(),
+			mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
+		),
+		mcp.WithString(
+			HashOfFromCommitCallToolArgumentName,
+			mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
+		),
+		mcp.WithString(
+			HashOfToCommitCallToolArgumentName,
 			mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
 		),
 	)
@@ -74,18 +87,44 @@ func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
 			return
 		}
 
-		var fromCommit string
-		fromCommit, err = GetRequiredStringArgumentFromCallToolRequest(request, FromCommitCallToolArgumentName)
-		if err != nil {
-			result = mcp.NewToolResultError(err.Error())
+		fromCommit := GetStringArgumentFromCallToolRequest(request, FromCommitCallToolArgumentName)
+		hashOfFromCommit := GetStringArgumentFromCallToolRequest(request, HashOfFromCommitCallToolArgumentName)
+
+		if fromCommit == "" && hashOfFromCommit == "" {
+			result = mcp.NewToolResultError(ErrFromCommitOrHashOfFromCommitArgumentRequiredMessage)
 			return
 		}
 
-		var toCommit string
-		toCommit, err = GetRequiredStringArgumentFromCallToolRequest(request, ToCommitCallToolArgumentName)
-		if err != nil {
-			result = mcp.NewToolResultError(err.Error())
+		if fromCommit != "" && hashOfFromCommit != "" {
+			result = mcp.NewToolResultError(ErrSpecifyEitherFromCommitOrHashOfFromCommitMessage)
 			return
+		}
+
+		toCommit := GetStringArgumentFromCallToolRequest(request, ToCommitCallToolArgumentName)
+		hashOfToCommit := GetStringArgumentFromCallToolRequest(request, HashOfToCommitCallToolArgumentName)
+
+		if toCommit == "" && hashOfToCommit == "" {
+			result = mcp.NewToolResultError(ErrToCommitOrHashOfToCommitArgumentRequiredMessage)
+			return
+		}
+
+		if toCommit != "" && hashOfToCommit != "" {
+			result = mcp.NewToolResultError(ErrSpecifyEitherToCommitOrHashOfToCommitMessage)
+			return
+		}
+
+		var fromValue string
+		if fromCommit != "" {
+			fromValue = fmt.Sprintf("'%s'", fromCommit)
+		} else {
+			fromValue = fmt.Sprintf("HASHOF('%s')", hashOfFromCommit)
+		}
+
+		var toValue string
+		if toCommit != "" {
+			toValue = fmt.Sprintf("'%s'", toCommit)
+		} else {
+			toValue = fmt.Sprintf("HASHOF('%s')", hashOfToCommit)
 		}
 
 		config := server.DBConfig()
@@ -105,7 +144,7 @@ func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
 		}()
 
 		var formattedResult string
-		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(ListDoltDiffChangesByTableNameToolSQLQueryFormatString, table, fromCommit, toCommit), db.ResultFormatMarkdown)
+		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(ListDoltDiffChangesByTableNameToolSQLQueryFormatString, table, fromValue, toValue), db.ResultFormatMarkdown)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
