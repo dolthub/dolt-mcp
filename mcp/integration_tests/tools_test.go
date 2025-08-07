@@ -120,5 +120,12 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testGetDoltMergeStatusToolInvalidArguments)
 		RunTest(t, "TestSuccess", testGetDoltMergeStatusToolSuccess)
 	})
+	t.Run("TestMergeDoltBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testMergeDoltBranchToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testMergeDoltBranchSetupSQL, testMergeDoltBranchToolSuccess)
+	})
+	t.Run("TestMergeDoltBranchNoFastForwardTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testMergeDoltBranchNoFastForwardToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testMergeDoltBranchNoFastForwardSetupSQL, testMergeDoltBranchNoFastForwardToolSuccess)
+	})
 }
-
