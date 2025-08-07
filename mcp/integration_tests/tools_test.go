@@ -116,5 +116,9 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testListDoltDiffChangesInDateRangeToolInvalidArguments)
 		RunTestWithSetupSQL(t, "TestSuccess", testListDoltDiffChangesInDateRangeSetupSQL, testListDoltDiffChangesInDateRangeToolSuccess)
 	})
+	t.Run("TestGetDoltMergeStatusTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testGetDoltMergeStatusToolInvalidArguments)
+		RunTest(t, "TestSuccess", testGetDoltMergeStatusToolSuccess)
+	})
 }
 
