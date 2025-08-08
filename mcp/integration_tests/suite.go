@@ -346,7 +346,7 @@ func (r *FileRemoteDatabase) Setup (ctx context.Context, setupSQL string) error 
 		return err
 	}
 
-	doltDatabaseDir, err := benchmark_runner.InitDoltRepo(ctx, doltDatabaseParentDir, r.s.doltBinPath, constants.FormatDefaultString, "alt")
+	doltDatabaseDir, err := benchmark_runner.InitDoltRepo(ctx, doltDatabaseParentDir, r.s.doltBinPath, constants.FormatDefaultString, r.name)
 	if err != nil {
 		return err
 	}
@@ -379,7 +379,7 @@ func (r *FileRemoteDatabase) Setup (ctx context.Context, setupSQL string) error 
 		return err
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?multiStatements=true&parseTime=true", mcpTestRootUserName, mcpTestRootPassword, doltServerHost, altServerPort, "alt")
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?multiStatements=true&parseTime=true", mcpTestRootUserName, mcpTestRootPassword, doltServerHost, altServerPort, r.name)
 
 	testDb, err := sql.Open("mysql", dsn)
 	if err != nil {

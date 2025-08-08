@@ -13,11 +13,9 @@ const (
 	DoltFetchBranchToolName                          = "dolt_fetch_branch"
 	DoltFetchBranchToolRemoteNameArgumentDescription = "The name of the remote to fetch the branch from."
 	DoltFetchBranchToolBranchArgumentDescription     = "The name of the remote branch to fetch."
-	DoltFetchBranchToolForceArgumentDescription      = "If true, the specified branch is force fetched."
 	DoltFetchBranchToolDescription                   = "Fetches the specified branch from the remote."
 	DoltFetchBranchToolCallSuccessFormatString       = "successfully fetched branch: %s"
 	DoltFetchBranchToolSQLQueryFormatString          = "CALL DOLT_FETCH('%s', '%s');"
-	DoltFetchBranchToolForceSQLQueryFormatString     = "CALL DOLT_FETCH('%s', '%s', '--force');"
 )
 
 func RegisterDoltFetchBranchTool(server pkg.Server) {
@@ -35,10 +33,6 @@ func RegisterDoltFetchBranchTool(server pkg.Server) {
 			BranchCallToolArgumentName,
 			mcp.Required(),
 			mcp.Description(DoltFetchBranchToolBranchArgumentDescription),
-		),
-		mcp.WithBoolean(
-			ForceCallToolArgumentName,
-			mcp.Description(DoltFetchBranchToolForceArgumentDescription),
 		),
 	)
 
@@ -58,8 +52,6 @@ func RegisterDoltFetchBranchTool(server pkg.Server) {
 			return
 		}
 
-		force := GetBooleanArgumentFromCallToolRequest(request, ForceCallToolArgumentName)
-
 		config := server.DBConfig()
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
@@ -75,20 +67,19 @@ func RegisterDoltFetchBranchTool(server pkg.Server) {
 			}
 		}()
 
-		if force {
-			err = tx.ExecContext(ctx, fmt.Sprintf(DoltFetchBranchToolForceSQLQueryFormatString, remote, branch))
-			if err != nil {
-				result = mcp.NewToolResultError(err.Error())
-				return
-			}
-		} else {
-			err = tx.ExecContext(ctx, fmt.Sprintf(DoltFetchBranchToolSQLQueryFormatString, remote, branch))
-			if err != nil {
-				result = mcp.NewToolResultError(err.Error())
-				return
-			}
+		err = tx.ExecContext(ctx, fmt.Sprintf(DoltFetchBranchToolSQLQueryFormatString, remote, branch))
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
 		}
 
+		branchesStr, err := tx.QueryContext(ctx, "select * from dolt_branches;", db.ResultFormatMarkdown)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
+		fmt.Println("DUSTIN: branchesStr:", branchesStr)
 		result = mcp.NewToolResultText(fmt.Sprintf(DoltFetchBranchToolCallSuccessFormatString, branch))
 		return
 	})
