@@ -128,4 +128,5 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testMergeDoltBranchNoFastForwardToolInvalidArguments)
 		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testMergeDoltBranchNoFastForwardSetupSQL, testMergeDoltBranchNoFastForwardTeardownSQL, testMergeDoltBranchNoFastForwardToolSuccess)
 	})
+	RunTestWithSetupAndTeardownSQL(t, "TestListDoltRemotesTool", testListDoltRemotesSetupSQL, testListDoltRemotesTeardownSQL, testListDoltRemotesToolSuccess)
 }
