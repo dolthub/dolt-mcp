@@ -42,11 +42,8 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterListDoltDiffChangesInDateRangeTool(server)
 	tools.RegisterGetDoltMergeStatusTool(server)
 	tools.RegisterMergeDoltBranchTool(server)
-	// TODO: add tests for the stuff below
-	tools.RegisterListDoltMergeConflictsTool(server)
-	tools.RegisterListDoltMergeConflictsByTableNameTool(server)
 	tools.RegisterMergeDoltBranchNoFastForwardTool(server)
-	tools.RegisterAbortDoltMergeTool(server)
+	// TODO: add tests for the stuff below
 	tools.RegisterListDoltRemotesTool(server)
 	tools.RegisterAddDoltRemoteTool(server)
 	tools.RegisterRemoveDoltRemoteTool(server)
