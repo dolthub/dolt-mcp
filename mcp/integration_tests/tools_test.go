@@ -145,4 +145,8 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testDoltFetchBranchToolInvalidArguments)
 		RunTestWithSetupAndTeardownSQL(t, "TestSuccess",testDoltFetchBranchSetupSQL, testDoltFetchBranchTeardownSQL, testDoltFetchBranchToolSuccess)
 	})
+	t.Run("TestDoltFetchAllBranchesTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDoltFetchAllBranchesToolInvalidArguments)
+		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testDoltFetchAllBranchesSetupSQL, testDoltFetchAllBranchesTeardownSQL, testDoltFetchAllBranchesToolSuccess)
+	})
 }

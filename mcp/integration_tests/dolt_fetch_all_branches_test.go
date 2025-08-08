@@ -9,12 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testDoltFetchBranchSetupSQL = "CALL DOLT_REMOTE('add', 'origin', 'http://localhost:2222/test');"
-var testDoltFetchBranchTeardownSQL = `CALL DOLT_REMOTE('remove', 'origin');
-CALL DOLT_BRANCH('-D', 'fetchme');
-`
+var testDoltFetchAllBranchesSetupSQL = "CALL DOLT_REMOTE('add', 'origin', 'http://localhost:2222/test');"
 
-func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string) {
+var testDoltFetchAllBranchesTeardownSQL = `CALL DOLT_REMOTE('remove', 'origin');
+CALL DOLT_BRANCH('-D', 'fetchme');
+CALL DOLT_BRANCH('-D', 'fetchme2');
+CALL DOLT_BRANCH('-D', 'fetchme3');
+`
+func testDoltFetchAllBranchesToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -25,7 +27,7 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.DoltFetchBranchToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.DoltFetchAllBranchesToolName)
 
 	requests := []struct {
 		description   string
@@ -37,7 +39,7 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltFetchBranchToolName,
+					Name: tools.DoltFetchAllBranchesToolName,
 					Arguments: map[string]any{
 						tools.BranchCallToolArgumentName: "fetchme",
 					},
@@ -49,7 +51,7 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltFetchBranchToolName,
+					Name: tools.DoltFetchAllBranchesToolName,
 					Arguments: map[string]any{
 						tools.RemoteURLCallToolArgumentName: "",
 						tools.BranchCallToolArgumentName:    "fetchme",
@@ -62,7 +64,7 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltFetchBranchToolName,
+					Name: tools.DoltFetchAllBranchesToolName,
 					Arguments: map[string]any{
 						tools.RemoteURLCallToolArgumentName: "doesnotexist",
 						tools.BranchCallToolArgumentName:    "fetchme",
@@ -70,62 +72,24 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 				},
 			},
 		},
-		{
-			description:   "Missing branch argument",
-			errorExpected: true,
-			request: mcp.CallToolRequest{
-				Params: mcp.CallToolParams{
-					Name: tools.DoltFetchBranchToolName,
-					Arguments: map[string]any{
-						tools.RemoteNameCallToolArgumentName: "origin",
-					},
-				},
-			},
-		},
-		{
-			description:   "Empty branch argument",
-			errorExpected: true,
-			request: mcp.CallToolRequest{
-				Params: mcp.CallToolParams{
-					Name: tools.DoltFetchBranchToolName,
-					Arguments: map[string]any{
-						tools.RemoteNameCallToolArgumentName: "origin",
-						tools.BranchCallToolArgumentName:     "",
-					},
-				},
-			},
-		},
-		{
-			description:   "Nonexistent branch argument",
-			errorExpected: true,
-			request: mcp.CallToolRequest{
-				Params: mcp.CallToolParams{
-					Name: tools.DoltFetchBranchToolName,
-					Arguments: map[string]any{
-						tools.RemoteNameCallToolArgumentName: "origin",
-						tools.BranchCallToolArgumentName:     "doesnotexist",
-					},
-				},
-			},
-		},
 	}
 
 	for _, request := range requests {
-		doltFetchBranchCallToolResult, err := client.CallTool(ctx, request.request)
+		doltFetchAllBranchesCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
 		if request.errorExpected {
-			require.True(s.t, doltFetchBranchCallToolResult.IsError)
+			require.True(s.t, doltFetchAllBranchesCallToolResult.IsError)
 		} else {
-			require.False(s.t, doltFetchBranchCallToolResult.IsError)
+			require.False(s.t, doltFetchAllBranchesCallToolResult.IsError)
 		}
 
-		require.NotNil(s.t, doltFetchBranchCallToolResult)
-		require.NotEmpty(s.t, doltFetchBranchCallToolResult.Content)
+		require.NotNil(s.t, doltFetchAllBranchesCallToolResult)
+		require.NotEmpty(s.t, doltFetchAllBranchesCallToolResult.Content)
 	}
 }
 
-func testDoltFetchBranchToolSuccess(s *testSuite, testBranchName string) {
+func testDoltFetchAllBranchesToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	setupRemoteDatabaseSQL := `CREATE TABLE t1 (pk int PRIMARY KEY);
@@ -133,6 +97,8 @@ INSERT INTO t1 VALUES (1);
 CALL DOLT_COMMIT('-Am', 'add t1 with value 1');
 SELECT ACTIVE_BRANCH() INTO @current_branch;
 CALL DOLT_BRANCH('-c', @current_branch, 'fetchme');
+CALL DOLT_BRANCH('-c', @current_branch, 'fetchme2');
+CALL DOLT_BRANCH('-c', @current_branch, 'fetchme3');
 `
 
 	fileRemoteDatabase := NewFileRemoteDatabase(s, mcpTestDatabaseName)
@@ -147,30 +113,35 @@ CALL DOLT_BRANCH('-c', @current_branch, 'fetchme');
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.DoltFetchBranchToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.DoltFetchAllBranchesToolName)
 
-	doltFetchBranchCallToolRequest := mcp.CallToolRequest{
+	doltFetchAllBranchesCallToolRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
-			Name: tools.DoltFetchBranchToolName,
+			Name: tools.DoltFetchAllBranchesToolName,
 			Arguments: map[string]any{
 				tools.RemoteNameCallToolArgumentName: "origin",
-				tools.BranchCallToolArgumentName:     "fetchme",
 			},
 		},
 	}
 
-	doltFetchBranchCallToolResult, err := client.CallTool(ctx, doltFetchBranchCallToolRequest)
+	doltFetchAllBranchesCallToolResult, err := client.CallTool(ctx, doltFetchAllBranchesCallToolRequest)
 	require.NoError(s.t, err)
-	require.False(s.t, doltFetchBranchCallToolResult.IsError)
-	require.NotNil(s.t, doltFetchBranchCallToolResult)
-	require.NotEmpty(s.t, doltFetchBranchCallToolResult.Content)
-	resultString, err := resultToString(doltFetchBranchCallToolResult)
+	require.False(s.t, doltFetchAllBranchesCallToolResult.IsError)
+	require.NotNil(s.t, doltFetchAllBranchesCallToolResult)
+	require.NotEmpty(s.t, doltFetchAllBranchesCallToolResult.Content)
+	resultString, err := resultToString(doltFetchAllBranchesCallToolResult)
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultString, "successfully fetched branch")
 
+	// checkout the remote branches to show theyve been fetched
 	_, err = s.testDb.ExecContext(ctx, "CALL DOLT_CHECKOUT('fetchme');")
 	require.NoError(s.t, err)
-	
+	_, err = s.testDb.ExecContext(ctx, "CALL DOLT_CHECKOUT('fetchme2');")
+	require.NoError(s.t, err)
+	_, err = s.testDb.ExecContext(ctx, "CALL DOLT_CHECKOUT('fetchme3');")
+	require.NoError(s.t, err)
+
+	// return to test branch before teardown
 	_, err = s.testDb.ExecContext(ctx, fmt.Sprintf("CALL DOLT_CHECKOUT('%s');", testBranchName))
 	require.NoError(s.t, err)
 }
