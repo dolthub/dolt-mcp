@@ -11,7 +11,7 @@ import (
 
 const (
 	CloneDatabaseToolName                              = "clone_database"
-	CloneDatabaseToolRemoteURLArgumentDescription            = "The url of the remote database to clone."
+	CloneDatabaseToolRemoteURLArgumentDescription      = "The url of the remote database to clone."
 	CloneDatabaseToolNameArgumentDescription           = "The local name of the cloned database."
 	CloneDatabaseToolDescription                       = "Clones a database from the specified remote URL."
 	CloneDatabaseToolCallSuccessFormatString           = "successfully cloned database: %s"

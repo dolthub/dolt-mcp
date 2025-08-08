@@ -3,6 +3,7 @@ package integration_tests
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -38,6 +39,7 @@ var ErrNoDatabaseConnection = errors.New("no database connection")
 
 type testSuite struct {
 	t                     *testing.T
+	doltBinPath           string
 	doltDatabaseParentDir string
 	doltDatabaseDir       string
 	dsn                   string
@@ -301,6 +303,7 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 	})
 
 	return &testSuite{
+		doltBinPath:           doltBinPath,
 		dsn:                   dsn,
 		doltServer:            doltServer,
 		doltDatabaseParentDir: doltDatabaseParentDir,
@@ -310,6 +313,158 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 		mcpErrGroup:           eg,
 		mcpErrGroupCancelFunc: cancelFunc,
 	}, nil
+}
+
+type FileRemoteDatabase struct {
+	s                     *testSuite
+	name                  string
+	doltDatabaseDir       string
+	doltDatabaseParentDir string
+	doltServer            benchmark_runner.Server
+	testDB                *sql.DB
+	configFilePath        string
+	remoteServePort       int
+}
+
+func NewFileRemoteDatabase(s *testSuite, name string) *FileRemoteDatabase {
+	return &FileRemoteDatabase{
+		s: s,
+		name:            name,
+		remoteServePort: 2222,
+	}
+}
+
+func (r *FileRemoteDatabase) Setup (ctx context.Context, setupSQL string) error {
+	altServerPort := doltServerPort + 1
+	configFilePath, err := generateFileRemoteDatabaseConfigFile(ctx, altServerPort, r.remoteServePort)
+	if err != nil {
+		return err
+	}
+
+	doltDatabaseParentDir, err := os.MkdirTemp("", "mcp-server-tests-remotes-*")
+	if err != nil {
+		return err
+	}
+
+	doltDatabaseDir, err := benchmark_runner.InitDoltRepo(ctx, doltDatabaseParentDir, r.s.doltBinPath, constants.FormatDefaultString, "alt")
+	if err != nil {
+		return err
+	}
+
+	serverArgs := []string{
+		"--config",
+		configFilePath,
+	}
+
+	doltServerConfig := benchmark_runner.NewDoltServerConfig(
+		"",
+		r.s.doltBinPath,
+		mcpTestRootUserName,
+		doltServerHost,
+		"",
+		"",
+		benchmark_runner.CpuServerProfile,
+		altServerPort,
+		serverArgs,
+	)
+
+	serverParams, err := doltServerConfig.GetServerArgs()
+	if err != nil {
+		return err
+	}
+
+	doltServer := benchmark_runner.NewServer(ctx, doltDatabaseDir, doltServerConfig, syscall.SIGTERM, serverParams)
+	err = doltServer.Start()
+	if err != nil {
+		return err
+	}
+
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?multiStatements=true&parseTime=true", mcpTestRootUserName, mcpTestRootPassword, doltServerHost, altServerPort, "alt")
+
+	testDb, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return err
+	}
+
+	err = testDb.PingContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	if setupSQL != "" {
+		_, err = testDb.ExecContext(ctx, setupSQL)
+		if err != nil {
+			return err
+		}
+	}
+
+	r.configFilePath = configFilePath
+	r.doltDatabaseDir = doltDatabaseDir
+	r.doltDatabaseParentDir = doltDatabaseParentDir
+	r.testDB = testDb
+	r.doltServer = doltServer
+	return nil
+}
+
+func (r *FileRemoteDatabase) Teardown(ctx context.Context) {
+	if r.testDB != nil {
+		r.testDB.Close()
+		r.testDB = nil
+	}
+	if r.doltServer != nil {
+		r.doltServer.Stop()
+		r.doltServer = nil
+	}
+	if r.doltDatabaseParentDir != "" {
+		os.RemoveAll(r.doltDatabaseParentDir)
+		r.doltDatabaseParentDir = ""
+	}
+}
+
+func (r *FileRemoteDatabase) GetRemoteURL() string {
+	return fmt.Sprintf("http://localhost:%d/%s", r.remoteServePort, r.name)
+}
+
+func generateFileRemoteDatabaseConfigFile(ctx context.Context, dbPort, remoteServePort int) (configFilePath string, err error) {
+	configBody := `log_level: debug 
+log_format: text
+
+behavior:
+  read_only: false
+  autocommit: true
+  disable_client_multi_statements: false
+  dolt_transaction_commit: false
+  event_scheduler: "ON"
+  auto_gc_behavior:
+    enable: false
+    archive_level: 0
+
+listener:
+  host: 0.0.0.0 
+  port: ` + fmt.Sprintf("%d", dbPort) + ` 
+remotesapi:
+  port: ` + fmt.Sprintf("%d", remoteServePort) + ` 
+`
+
+	var file *os.File
+	file, err = os.CreateTemp("", "config-*.yaml") // prefix "example-" and random suffix
+	if err != nil {
+		return
+	}
+	defer func(){
+		rerr := file.Close()
+		if err == nil {
+			err = rerr
+		}
+	}()
+
+	_, err = io.Copy(file, strings.NewReader(configBody))
+	if err != nil {
+		return
+	}
+
+	configFilePath = file.Name()
+	return
 }
 
 func teardownMCPDoltServerTestSuite(s *testSuite) {

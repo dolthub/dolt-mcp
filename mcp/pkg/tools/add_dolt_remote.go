@@ -10,12 +10,12 @@ import (
 )
 
 const (
-	AddDoltRemoteToolName                    = "add_dolt_remote"
+	AddDoltRemoteToolName                          = "add_dolt_remote"
 	AddDoltRemoteToolRemoteNameArgumentDescription = "The name of the remote to add."
 	AddDoltRemoteToolRemoteURLArgumentDescription  = "The URL of the remote to add."
-	AddDoltRemoteToolSQLQueryFormatString    = "CALL DOLT_REMOTE('add', '%s', '%s');"
-	AddDoltRemoteToolDescription             = "Adds a remote to the Dolt server."
-	AddDoltRemoteToolCallSuccessFormatString = "successfully added remote: %s"
+	AddDoltRemoteToolSQLQueryFormatString          = "CALL DOLT_REMOTE('add', '%s', '%s');"
+	AddDoltRemoteToolDescription                   = "Adds a remote to the Dolt server."
+	AddDoltRemoteToolCallSuccessFormatString       = "successfully added remote: %s"
 )
 
 func RegisterAddDoltRemoteTool(server pkg.Server) {
