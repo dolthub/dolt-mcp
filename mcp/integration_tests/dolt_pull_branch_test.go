@@ -168,7 +168,12 @@ func testDoltPullBranchToolSuccess(s *testSuite, testBranchName string) {
 
 	remoteSetupSQL := `SELECT ACTIVE_BRANCH() INTO @current_branch;
 CALL DOLT_BRANCH('-c', @current_branch, 'pullme');
+CALL DOLT_BRANCH('-c', @current_branch, 'forcepullme');
 CALL DOLT_CHECKOUT('pullme');
+CREATE TABLE t1 (pk INT PRIMARY KEY);
+INSERT INTO t1 VALUES (1);
+CALL DOLT_COMMIT('-Am', 'add t1 and 1');
+CALL DOLT_CHECKOUT('forcepullme');
 CREATE TABLE t1 (pk INT PRIMARY KEY);
 INSERT INTO t1 VALUES (1);
 CALL DOLT_COMMIT('-Am', 'add t1 and 1');
@@ -188,6 +193,9 @@ CALL DOLT_CHECKOUT(@current_branch);`
 CALL DOLT_CHECKOUT('pullme');
 INSERT INTO t1 VALUES (2);
 CALL DOLT_COMMIT('-Am', 'add 2 to t1');
+CALL DOLT_CHECKOUT('forcepullme');
+INSERT INTO t1 VALUES (2);
+CALL DOLT_COMMIT('-Am', 'add 2 to t1');
 CALL DOLT_CHECKOUT(@current_branch);
 `)
 	require.NoError(s.t, err)
@@ -202,31 +210,58 @@ CALL DOLT_CHECKOUT(@current_branch);
 
 	requireToolExists(s, ctx, client, serverInfo, tools.DoltPullBranchToolName)
 
-	doltPullBranchCallToolRequest := mcp.CallToolRequest{
-		Params: mcp.CallToolParams{
-			Name: tools.DoltPullBranchToolName,
-			Arguments: map[string]any{
-				tools.BranchCallToolArgumentName:     "pullme",
-				tools.RemoteNameCallToolArgumentName: "origin",
-				tools.WorkingDatabaseCallToolArgumentName: "alt",
+	requests := []struct{
+		description string
+		request mcp.CallToolRequest
+		errorExpected bool
+	}{
+		{
+			description: "Should pull remote branch",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DoltPullBranchToolName,
+					Arguments: map[string]any{
+						tools.BranchCallToolArgumentName:     "pullme",
+						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.WorkingDatabaseCallToolArgumentName: "alt",
+					},
+				},
+			},
+		},
+		{
+			description: "Should force pull remote branch",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DoltPullBranchToolName,
+					Arguments: map[string]any{
+						tools.BranchCallToolArgumentName:     "forcepullme",
+						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.WorkingDatabaseCallToolArgumentName: "alt",
+					},
+				},
 			},
 		},
 	}
 
-	doltPullBranchCallToolResult, err := client.CallTool(ctx, doltPullBranchCallToolRequest)
-	require.NoError(s.t, err)
-	require.False(s.t, doltPullBranchCallToolResult.IsError)
-	require.NotNil(s.t, doltPullBranchCallToolResult)
-	require.NotEmpty(s.t, doltPullBranchCallToolResult.Content)
-	resultString, err := resultToString(doltPullBranchCallToolResult)
-	require.NoError(s.t, err)
-	require.Contains(s.t, resultString, "successfully pulled branch")
+	for _, request := range requests {
+		doltPullBranchCallToolResult, err := client.CallTool(ctx, request.request)
+		require.NoError(s.t, err)
+		require.False(s.t, doltPullBranchCallToolResult.IsError)
+		require.NotNil(s.t, doltPullBranchCallToolResult)
+		require.NotEmpty(s.t, doltPullBranchCallToolResult.Content)
+		resultString, err := resultToString(doltPullBranchCallToolResult)
+		require.NoError(s.t, err)
+		require.Contains(s.t, resultString, "successfully pulled branch")
+	}
 
 	_, err = s.testDb.ExecContext(ctx, "USE alt;")
 	require.NoError(s.t, err)
 
 	// checkout the remote branches to show theyve been fetched
 	_, err = s.testDb.ExecContext(ctx, "CALL DOLT_CHECKOUT('pullme');")
+	require.NoError(s.t, err)
+
+	_, err = s.testDb.ExecContext(ctx, "CALL DOLT_CHECKOUT('forcepullme');")
 	require.NoError(s.t, err)
 
 	_, err = s.testDb.ExecContext(ctx, fmt.Sprintf("USE %s;", mcpTestDatabaseName))
