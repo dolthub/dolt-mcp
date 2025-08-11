@@ -36,6 +36,20 @@ func NewDatabaseTransactionOnBranch(ctx context.Context, config db.Config, branc
 	return tx, nil
 }
 
+func NewDatabaseTransactionUsingDatabase(ctx context.Context, config db.Config, database string) (db.DatabaseTransaction, error) {
+	tx, err := db.NewDatabaseTransaction(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.ExecContext(ctx, fmt.Sprintf(DoltUseWorkingDatabaseSQLQueryFormatString, database))
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
+}
+
 func NewDatabaseTransactionOnBranchUsingDatabase(ctx context.Context, config db.Config, branch, database string) (db.DatabaseTransaction, error) {
 	tx, err := db.NewDatabaseTransaction(ctx, config)
 	if err != nil {
@@ -54,4 +68,3 @@ func NewDatabaseTransactionOnBranchUsingDatabase(ctx context.Context, config db.
 
 	return tx, nil
 }
-

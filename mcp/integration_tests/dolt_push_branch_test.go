@@ -17,7 +17,8 @@ CALL DOLT_COMMIT('-Am', 'add t1 and 1');
 CALL DOLT_REMOTE('add', 'origin', 'http://localhost:2222/test');
 CALL DOLT_CHECKOUT(@current_branch);`
 
-var testDoltPushBranchTeardownSQL = "CALL DOLT_BRANCH('-D', 'pushme');"
+var testDoltPushBranchTeardownSQL = `CALL DOLT_BRANCH('-D', 'pushme');
+CALL DOLT_REMOTE('remove', 'origin');`
 
 func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
@@ -38,6 +39,47 @@ func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string)
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DoltPushBranchToolName,
+					Arguments: map[string]any{
+						tools.BranchCallToolArgumentName:     "pushme",
+						tools.RemoteNameCallToolArgumentName: "origin",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DoltPushBranchToolName,
+					Arguments: map[string]any{
+						tools.BranchCallToolArgumentName:     "pushme",
+						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.WorkingDatabaseCallToolArgumentDescription: "",
+					},
+				},
+			},
+		},
+		{
+			description:   "Nonexistent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DoltPushBranchToolName,
+					Arguments: map[string]any{
+						tools.BranchCallToolArgumentName:     "pushme",
+						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.WorkingDatabaseCallToolArgumentDescription: "doesnotexist",
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing remote name argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
@@ -45,6 +87,7 @@ func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string)
 					Name: tools.DoltPushBranchToolName,
 					Arguments: map[string]any{
 						tools.BranchCallToolArgumentName: "pushme",
+						tools.WorkingDatabaseCallToolArgumentDescription: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -58,6 +101,7 @@ func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string)
 					Arguments: map[string]any{
 						tools.RemoteNameCallToolArgumentName: "",
 						tools.BranchCallToolArgumentName:     "pushme",
+						tools.WorkingDatabaseCallToolArgumentDescription: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -71,6 +115,7 @@ func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string)
 					Arguments: map[string]any{
 						tools.RemoteNameCallToolArgumentName: "foo",
 						tools.BranchCallToolArgumentName:     "pushme",
+						tools.WorkingDatabaseCallToolArgumentDescription: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -83,6 +128,7 @@ func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string)
 					Name: tools.DoltPushBranchToolName,
 					Arguments: map[string]any{
 						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.WorkingDatabaseCallToolArgumentDescription: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -95,7 +141,8 @@ func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string)
 					Name: tools.DoltPushBranchToolName,
 					Arguments: map[string]any{
 						tools.RemoteNameCallToolArgumentName: "origin",
-						tools.BranchCallToolArgumentName:     "pushme",
+						tools.BranchCallToolArgumentName:     "",
+						tools.WorkingDatabaseCallToolArgumentDescription: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -109,6 +156,7 @@ func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string)
 					Arguments: map[string]any{
 						tools.BranchCallToolArgumentName:     "foo",
 						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.WorkingDatabaseCallToolArgumentDescription: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -153,6 +201,7 @@ func testDoltPushBranchToolSuccess(s *testSuite, testBranchName string) {
 			Arguments: map[string]any{
 				tools.BranchCallToolArgumentName:     "pushme",
 				tools.RemoteNameCallToolArgumentName: "origin",
+				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},
 	}
