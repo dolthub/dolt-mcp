@@ -10,7 +10,12 @@ import (
 
 var testDoltPushBranchSetupSQL = `SELECT ACTIVE_BRANCH() INTO @current_branch;
 CALL DOLT_BRANCH('-c', @current_branch, 'pushme');
+CALL DOLT_BRANCH('-c', @current_branch, 'forcepushme');
 CALL DOLT_CHECKOUT('pushme');
+CREATE TABLE t1 (pk INT PRIMARY KEY);
+INSERT INTO t1 VALUES (1);
+CALL DOLT_COMMIT('-Am', 'add t1 and 1');
+CALL DOLT_CHECKOUT('forcepushme');
 CREATE TABLE t1 (pk INT PRIMARY KEY);
 INSERT INTO t1 VALUES (1);
 CALL DOLT_COMMIT('-Am', 'add t1 and 1');
@@ -18,6 +23,7 @@ CALL DOLT_REMOTE('add', 'origin', 'http://localhost:2222/test');
 CALL DOLT_CHECKOUT(@current_branch);`
 
 var testDoltPushBranchTeardownSQL = `CALL DOLT_BRANCH('-D', 'pushme');
+CALL DOLT_BRANCH('-D', 'forcepushme');
 CALL DOLT_REMOTE('remove', 'origin');`
 
 func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -195,23 +201,48 @@ func testDoltPushBranchToolSuccess(s *testSuite, testBranchName string) {
 
 	requireToolExists(s, ctx, client, serverInfo, tools.DoltPushBranchToolName)
 
-	doltPushBranchCallToolRequest := mcp.CallToolRequest{
-		Params: mcp.CallToolParams{
-			Name: tools.DoltPushBranchToolName,
-			Arguments: map[string]any{
-				tools.BranchCallToolArgumentName:     "pushme",
-				tools.RemoteNameCallToolArgumentName: "origin",
-				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+	requests := []struct{
+		description string
+		request mcp.CallToolRequest
+		errorExpected bool
+	}{
+		{
+			description: "Should be able to push branch",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DoltPushBranchToolName,
+					Arguments: map[string]any{
+						tools.BranchCallToolArgumentName:     "pushme",
+						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+					},
+				},
+			},
+		},
+		{
+			description: "Should be able to force push a branch",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DoltPushBranchToolName,
+					Arguments: map[string]any{
+						tools.BranchCallToolArgumentName:     "forcepushme",
+						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.ForceCallToolArgumentName: true,
+					},
+				},
 			},
 		},
 	}
 
-	doltPushBranchCallToolResult, err := client.CallTool(ctx, doltPushBranchCallToolRequest)
-	require.NoError(s.t, err)
-	require.False(s.t, doltPushBranchCallToolResult.IsError)
-	require.NotNil(s.t, doltPushBranchCallToolResult)
-	require.NotEmpty(s.t, doltPushBranchCallToolResult.Content)
-	resultString, err := resultToString(doltPushBranchCallToolResult)
-	require.NoError(s.t, err)
-	require.Contains(s.t, resultString, "successfully pushed branch")
+	for _, request := range requests {
+		doltPushBranchCallToolResult, err := client.CallTool(ctx, request.request)
+		require.NoError(s.t, err)
+		require.False(s.t, doltPushBranchCallToolResult.IsError)
+		require.NotNil(s.t, doltPushBranchCallToolResult)
+		require.NotEmpty(s.t, doltPushBranchCallToolResult.Content)
+		resultString, err := resultToString(doltPushBranchCallToolResult)
+		require.NoError(s.t, err)
+		require.Contains(s.t, resultString, "successfully pushed branch")
+	}
 }

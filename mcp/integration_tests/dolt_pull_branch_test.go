@@ -237,6 +237,7 @@ CALL DOLT_CHECKOUT(@current_branch);
 						tools.BranchCallToolArgumentName:     "forcepullme",
 						tools.RemoteNameCallToolArgumentName: "origin",
 						tools.WorkingDatabaseCallToolArgumentName: "alt",
+						tools.ForceCallToolArgumentName: true,
 					},
 				},
 			},
