@@ -96,7 +96,10 @@ func RegisterExecTool(server pkg.Server) {
 		}
 
 		defer func() {
-			tx.Rollback(ctx)
+			rerr := CommitTransactionOrRollbackOnError(ctx, tx, err)
+			if rerr != nil {
+				result = mcp.NewToolResultError(rerr.Error())
+			}
 		}()
 
 		err = tx.ExecContext(ctx, query)
