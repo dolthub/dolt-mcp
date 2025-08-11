@@ -106,3 +106,16 @@ func RunTestWithSetupAndTeardownSQL(t *testing.T, testName, setupSQL, teardownSQ
 	})
 }
 
+func RunTestWithSetupAndTeardownSQLSkipDoltCommit(t *testing.T, testName, setupSQL, teardownSQL string, testFunc func(s *testSuite, testBranchName string)) {
+	t.Run(testName, func(t *testing.T) {
+		if suite == nil {
+			t.Fatalf("no test suite")
+		}
+		suite.t = t
+		generatedTestBranchName := generateTestBranchName()
+		suite.Setup(generatedTestBranchName, setupSQL, true)
+		defer suite.Teardown(generatedTestBranchName, teardownSQL, true)
+		testFunc(suite, generatedTestBranchName)
+	})
+}
+

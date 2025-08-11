@@ -100,5 +100,61 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testDoltResetHardToolInvalidArguments)
 		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testDoltResetHardSetupSQL, testDoltResetHardToolSuccess)
 	})
+	t.Run("TestListDoltCommitsTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testListDoltCommitsToolInvalidArguments)
+		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testListDoltCommitsSetupSQL, testListDoltCommitsToolSuccess)
+	})
+	t.Run("TestListDoltDiffChangesInWorkingSetTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testListDoltDiffChangesInWorkingSetToolInvalidArguments)
+		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testListDoltDiffChangesInWorkingSetSetupSQL, testListDoltDiffChangesInWorkingSetToolSuccess)
+	})
+	t.Run("TestListDoltDiffChangesByTableNameTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testListDoltDiffChangesByTableNameToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testListDoltDiffChangesByTableNameSetupSQL, testListDoltDiffChangesByTableNameToolSuccess)
+	})
+	t.Run("TestListDoltDiffChangesInDateRangeTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testListDoltDiffChangesInDateRangeToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testListDoltDiffChangesInDateRangeSetupSQL, testListDoltDiffChangesInDateRangeToolSuccess)
+	})
+	t.Run("TestGetDoltMergeStatusTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testGetDoltMergeStatusToolInvalidArguments)
+		RunTest(t, "TestSuccess", testGetDoltMergeStatusToolSuccess)
+	})
+	t.Run("TestMergeDoltBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testMergeDoltBranchToolInvalidArguments)
+		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testMergeDoltBranchSetupSQL, testMergeDoltBranchTeardownSQL, testMergeDoltBranchToolSuccess)
+	})
+	t.Run("TestMergeDoltBranchNoFastForwardTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testMergeDoltBranchNoFastForwardToolInvalidArguments)
+		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testMergeDoltBranchNoFastForwardSetupSQL, testMergeDoltBranchNoFastForwardTeardownSQL, testMergeDoltBranchNoFastForwardToolSuccess)
+	})
+	RunTestWithSetupAndTeardownSQL(t, "TestListDoltRemotesTool", testListDoltRemotesSetupSQL, testListDoltRemotesTeardownSQL, testListDoltRemotesToolSuccess)
+	t.Run("TestAddDoltRemoteTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testAddDoltRemoteToolInvalidArguments)
+		RunTestWithTeardownSQL(t, "TestSuccess", testAddDoltRemoteTeardownSQL, testAddDoltRemoteToolSuccess)
+	})
+	t.Run("TestRemoveDoltRemoteTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testRemoveDoltRemoteToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testRemoveDoltRemoteSetupSQL, testRemoveDoltRemoteToolSuccess)
+	})
+	t.Run("TestCloneDatabaseTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testCloneDatabaseToolInvalidArguments)
+		RunTestWithTeardownSQL(t, "TestSuccess", testCloneDatabaseTeardownSQL, testCloneDatabaseToolSuccess)
+	})
+	t.Run("TestDoltFetchBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDoltFetchBranchToolInvalidArguments)
+		RunTestWithSetupAndTeardownSQL(t, "TestSuccess",testDoltFetchBranchSetupSQL, testDoltFetchBranchTeardownSQL, testDoltFetchBranchToolSuccess)
+	})
+	t.Run("TestDoltFetchAllBranchesTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDoltFetchAllBranchesToolInvalidArguments)
+		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testDoltFetchAllBranchesSetupSQL, testDoltFetchAllBranchesTeardownSQL, testDoltFetchAllBranchesToolSuccess)
+	})
+	t.Run("TestDoltPushBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDoltPushBranchToolInvalidArguments)
+		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testDoltPushBranchSetupSQL, testDoltPushBranchTeardownSQL, testDoltPushBranchToolSuccess)
+	})
+	t.Run("TestDoltPullBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDoltPullBranchToolInvalidArguments)
+		RunTestWithTeardownSQL(t, "TestSuccess", testDoltPullBranchTeardownSQL, testDoltPullBranchToolSuccess)
+	})
 }
-

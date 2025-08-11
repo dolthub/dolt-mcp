@@ -19,6 +19,16 @@ const (
 	MoveCallToolArgumentName              = "move"
 	DeleteCallToolArgumentName            = "delete"
 	ForceCallToolArgumentName             = "force"
+	StartDateCallToolArgumentName         = "start"
+	EndDateCallToolArgumentName           = "end"
+	FromCommitCallToolArgumentName        = "from_commit"
+	ToCommitCallToolArgumentName          = "to_commit"
+	HashOfFromCommitCallToolArgumentName  = "hash_of_from_commit"
+	HashOfToCommitCallToolArgumentName    = "hash_of_to_commit"
+	NameCallToolArgumentName              = "name"
+	RemoteNameCallToolArgumentName        = "remote_name"
+	URLCallToolArgumentName               = "url"
+	RemoteURLCallToolArgumentName         = "remote_url"
 )
 
 var DoltUseWorkingDatabaseSQLQueryFormatString = "USE %s;"
