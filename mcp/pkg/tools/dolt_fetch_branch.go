@@ -73,13 +73,6 @@ func RegisterDoltFetchBranchTool(server pkg.Server) {
 			return
 		}
 
-		branchesStr, err := tx.QueryContext(ctx, "select * from dolt_branches;", db.ResultFormatMarkdown)
-		if err != nil {
-			result = mcp.NewToolResultError(err.Error())
-			return
-		}
-
-		fmt.Println("DUSTIN: branchesStr:", branchesStr)
 		result = mcp.NewToolResultText(fmt.Sprintf(DoltFetchBranchToolCallSuccessFormatString, branch))
 		return
 	})

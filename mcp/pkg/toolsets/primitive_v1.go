@@ -48,8 +48,8 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterRemoveDoltRemoteTool(server)
 	tools.RegisterCloneDatabaseTool(server)
 	tools.RegisterDoltFetchBranchTool(server)
-	// TODO: add tests for the stuff below
 	tools.RegisterDoltFetchAllBranchesTool(server)
+	// TODO: add tests for the stuff below
 	tools.RegisterDoltPushBranchTool(server)
 	tools.RegisterDoltPullBranchTool(server)
 }
