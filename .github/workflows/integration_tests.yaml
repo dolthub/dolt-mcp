@@ -3,7 +3,7 @@ name: Run Integration Tests
 on:
   pull_request:
     paths:
-      - "mcp"
+      - "mcp/**"
     branches: [ main ]
   workflow_dispatch:
 

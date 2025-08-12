@@ -19,7 +19,6 @@ RUN go mod download
 # Copy the source code
 COPY . .
 
-# TODO, this version overwrite doesnt work
 # Build the application with optimizations
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s -X github.com/dolthub/dolt-mcp/mcp/pkg.DoltMCPServerVersion=${DOLT_MCP_VERSION}" \
