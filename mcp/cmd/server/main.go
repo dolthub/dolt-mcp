@@ -67,11 +67,19 @@ func main() {
 		os.Exit(0)
 	}
 
+	envDoltPassword := os.Getenv("DOLT_PASSWORD")
+	var finalPassword string
+	if *doltPassword != "" {
+		finalPassword = *doltPassword
+	} else {
+		finalPassword = envDoltPassword
+	}
+
 	config := db.Config{
 		Host:         "0.0.0.0",
 		Port:         *doltPort,
 		User:         *doltUser,
-		Password:     *doltPassword,
+		Password:     finalPassword,
 		DatabaseName: *doltDatabase,
 	}
 

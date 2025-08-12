@@ -38,7 +38,7 @@ The stdio server communicates over standard input/output, making it ideal for in
 ```bash
 ./dolt-mcp-server \
   --stdio \
-  --dolt-host localhost \
+  --dolt-host 0.0.0.0 \
   --dolt-port 3306 \
   --dolt-user root \
   --dolt-database mydb
@@ -55,7 +55,7 @@ Add this configuration to your Claude Desktop MCP settings:
       "command": "/path/to/dolt-mcp-server",
       "args": [
         "--stdio",
-        "--dolt-host", "localhost",
+        "--dolt-host", "0.0.0.0",
         "--dolt-port", "3306", 
         "--dolt-user", "root",
         "--dolt-database", "your_database_name"
@@ -76,7 +76,7 @@ The HTTP server exposes a REST API for MCP tool calls, useful for web applicatio
 ./dolt-mcp-server \
   --http \
   --mcp-port 8080 \
-  --dolt-host localhost \
+  --dolt-host 0.0.0.0 \
   --dolt-port 3306 \
   --dolt-user root \
   --dolt-database mydb
@@ -228,5 +228,6 @@ This project follows the same license as the main Dolt project.
 
 For issues and questions:
 - Create issues in this repository
-- Join the [Dolt Discord](https://discord.com/invite/RnNVw6W) community
+- Join the [Dolt Discord](https://discord.gg/gqr7K4VNKe) community
 - Check the [Dolt documentation](https://docs.dolthub.com/)
+
