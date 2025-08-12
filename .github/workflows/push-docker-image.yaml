@@ -21,7 +21,7 @@ jobs:
         run: |
           release_id="$RELEASE_ID"
           if [ "$EVENT_TYPE" == "workflow_dispatch" ]; then
-            release_id=$(curl -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/dolthub/dolt/releases/tags/v${{ github.event.inputs.version }} | jq '.id')
+            release_id=$(curl -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/dolthub/dolt-mcp/releases/tags/v${{ github.event.inputs.version }} | jq '.id')
           fi
           echo "release_id=$release_id" >> $GITHUB_OUTPUT
         env:
@@ -53,7 +53,7 @@ jobs:
   #         context: .
   #         file: ./docker/Dockerfile
   #         push: true
-  #         tags: dolthub/dolt-mcp:${{ github.event.inputs.version || github.event.client_payload.version }} , dolthub/dolt:latest
+  #         tags: dolthub/dolt-mcp:${{ github.event.inputs.version || github.event.client_payload.version }}, dolthub/dolt-mcp:latest
   #         build-args: |
   #           DOLT_MCP_VERSION=${{ github.event.inputs.version || github.event.client_payload.version }}
   #     - name: Update Docker Hub Readme for Dolt MCP Server image

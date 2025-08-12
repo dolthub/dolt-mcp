@@ -27,11 +27,49 @@ cd dolt-mcp
 go build -o dolt-mcp-server ./mcp/cmd/server
 ```
 
+### Docker Installation
+
+Pull the official Docker image:
+
+```bash
+docker pull dolthub/dolt-mcp:latest
+```
+
 ## Usage
 
-The Dolt MCP Server can run in two modes:
+The Dolt MCP Server can run in two modes and supports multiple deployment methods:
 
-### 1. Stdio Server (Recommended for AI Assistants)
+### Docker Usage (Recommended for Production)
+
+#### HTTP Server with Docker
+
+```bash
+docker run -d \
+  --name dolt-mcp-server \
+  -p 8080:8080 \
+  -e MCP_MODE=http \
+  -e DOLT_HOST=your-dolt-host \
+  -e DOLT_USER=root \
+  -e DOLT_DATABASE=your_database \
+  -e DOLT_PASSWORD=your_password \
+  dolthub/dolt-mcp:latest
+```
+
+#### Stdio Server with Docker
+
+```bash
+docker run -it --rm \
+  -e MCP_MODE=stdio \
+  -e DOLT_HOST=your-dolt-host \
+  -e DOLT_USER=root \
+  -e DOLT_DATABASE=your_database \
+  -e DOLT_PASSWORD=your_password \
+  dolthub/dolt-mcp:latest
+```
+
+### Native Binary Usage
+
+#### 1. Stdio Server (Recommended for AI Assistants)
 
 The stdio server communicates over standard input/output, making it ideal for integration with AI assistants like Claude Desktop.
 
@@ -68,7 +106,7 @@ Add this configuration to your Claude Desktop MCP settings:
 }
 ```
 
-### 2. HTTP Server
+#### 2. HTTP Server
 
 The HTTP server exposes a REST API for MCP tool calls, useful for web applications and custom integrations.
 
@@ -100,6 +138,56 @@ The HTTP server exposes a REST API for MCP tool calls, useful for web applicatio
 ### Environment Variables
 
 - `DOLT_PASSWORD`: Set the password for Dolt server authentication
+
+### Docker Environment Variables
+
+When using Docker, you can configure the server using environment variables:
+
+#### Required
+- `DOLT_HOST`: Hostname of the Dolt SQL server
+- `DOLT_USER`: Username for Dolt server authentication
+- `DOLT_DATABASE`: Name of the database to connect to
+
+#### Optional
+- `DOLT_PASSWORD`: Password for authentication
+- `DOLT_PORT`: Dolt server port (default: 3306)
+- `MCP_MODE`: Server mode: `http` or `stdio` (default: stdio)
+- `MCP_PORT`: HTTP server port (default: 8080, HTTP mode only)
+
+### Docker Compose Example
+
+```yaml
+version: '3.8'
+
+services:
+  dolt-mcp-server:
+    image: dolthub/dolt-mcp:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - MCP_MODE=http
+      - DOLT_HOST=dolt-server
+      - DOLT_PORT=3306
+      - DOLT_USER=root
+      - DOLT_DATABASE=myapp
+      - DOLT_PASSWORD=secret
+    depends_on:
+      - dolt-server
+    restart: unless-stopped
+
+  dolt-server:
+    image: dolthub/dolt-sql-server:latest
+    ports:
+      - "3306:3306"
+    volumes:
+      - dolt_data:/var/lib/dolt
+    environment:
+      - DOLT_ROOT_PATH=/var/lib/dolt
+    restart: unless-stopped
+
+volumes:
+  dolt_data:
+```
 
 ## Available Tools
 
