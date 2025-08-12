@@ -39,7 +39,7 @@ jobs:
         with:
           go-version-file: ./go.mod
       - name: Update version
-        run: sed -i -e 's/	DoltMCPServerVersion = ".*"/	DoltMCPServerVersion = "'"$NEW_VERSION"'"/' "$FILE"
+        run: sed -i -e 's/DoltMCPServerVersion = ".*"/DoltMCPServerVersion = "'"$NEW_VERSION"'"/' "$FILE"
         env:
           FILE: ${{ format('{0}/mcp/pkg/server.go', github.workspace) }}
           NEW_VERSION: ${{ needs.format-version.outputs.version }}
