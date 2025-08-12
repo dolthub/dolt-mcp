@@ -52,11 +52,6 @@ func main() {
 		panic(err)
 	}
 
-	err = validateArgs()
-	if err != nil {
-		logger.Fatal("invalid arguments", zap.Error(err))
-	}
-
 	if *version {
 		logger.Info("Dolt MCP server", zap.String("version", pkg.DoltMCPServerVersion))
 		os.Exit(0)
@@ -65,6 +60,11 @@ func main() {
 	if *help {
 		flag.Usage()
 		os.Exit(0)
+	}
+
+	err = validateArgs()
+	if err != nil {
+		logger.Fatal("invalid arguments", zap.Error(err))
 	}
 
 	envDoltPassword := os.Getenv("DOLT_PASSWORD")
