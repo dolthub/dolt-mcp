@@ -1,0 +1,74 @@
+name: Release Dolt MCP Server
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'SemVer format release tag, i.e. 0.24.5'
+        required: true
+
+jobs:
+  format-version:
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.format_version.outputs.version }}
+    steps:
+      - name: Format Input
+        id: format_version
+        run: |
+          version="${{ github.event.inputs.version }}"
+          if [[ $version == v* ]];
+          then
+            version="${version:1}"
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+  create-release:
+    needs: format-version
+    runs-on: ubuntu-22.04
+    name: Release Dolt MCP Server
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.DOLT_MCP_RELEASE_TOKEN }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
+      - name: Update version
+        run: sed -i -e 's/	DoltMCPServerVersion = ".*"/	DoltMCPServerVersion = "'"$NEW_VERSION"'"/' "$FILE"
+        env:
+          FILE: ${{ format('{0}/mcp/pkg/server.go', github.workspace) }}
+          NEW_VERSION: ${{ needs.format-version.outputs.version }}
+      - uses: EndBug/add-and-commit@v9.1.4
+        with:
+          message: ${{ format('[ga-bump-release] Update Dolt MCP Server version to {0} and release v{0}', needs.format-version.outputs.version) }}
+          add: ${{ format('["{0}/mcp/pkg/server.go"]', github.workspace) }}
+          cwd: "."
+          pull: "--ff"
+      - name: Create Release
+        id: create_release
+        uses: dolthub/create-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.format-version.outputs.version }}
+          release_name: ${{ needs.format-version.outputs.version }}
+          draft: false
+          prerelease: true
+          commitish: ${{ steps.build_binaries.outputs.commitish }}
+
+  docker-image-push:
+    needs: [format-version, create-release]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Trigger Push Docker Image
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: push-docker-image
+          client-payload: '{"version": "${{ needs.format-version.outputs.version }}", "release_id": "${{ needs.create-release.outputs.release_id }}" }'
+
