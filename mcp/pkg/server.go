@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	DoltMCPServerName    = "dolt-mcp"
-	DoltMCPServerVersion = "0.1.0"
+	DoltMCPServerName = "dolt-mcp"
 )
+
+var DoltMCPServerVersion = "0.0.1"
 
 type Server interface {
 	MCP() *server.MCPServer
@@ -16,4 +17,3 @@ type Server interface {
 }
 
 type Option func(Server)
-
