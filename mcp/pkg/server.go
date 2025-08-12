@@ -7,7 +7,7 @@ import (
 
 const (
 	DoltMCPServerName    = "dolt-mcp"
-	DoltMCPServerVersion = "0.0.1"
+	DoltMCPServerVersion = "0.1.0"
 )
 
 type Server interface {
