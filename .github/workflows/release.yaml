@@ -68,7 +68,7 @@ jobs:
       - name: Trigger Push Docker Image
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ secrets.REPO_ACCESS_TOKEN | secrets.GITHUB_TOKEN }}
           event-type: push-docker-image
           client-payload: '{"version": "${{ needs.format-version.outputs.version }}", "release_id": "${{ needs.create-release.outputs.release_id }}" }'
 
