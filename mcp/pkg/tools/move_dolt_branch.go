@@ -26,6 +26,10 @@ func RegisterMoveDoltBranchTool(server pkg.Server) {
 	moveDoltBranchTool := mcp.NewTool(
 		MoveDoltBranchToolName,
 		mcp.WithDescription(MoveDoltBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			OldNameCallToolArgumentName,
 			mcp.Required(),

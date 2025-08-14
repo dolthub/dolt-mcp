@@ -23,6 +23,10 @@ func RegisterUnstageTableTool(server pkg.Server) {
 	unstageTableTool := mcp.NewTool(
 		UnstageTableToolName,
 		mcp.WithDescription(UnstageTableToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

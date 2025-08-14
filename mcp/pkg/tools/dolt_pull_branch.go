@@ -26,6 +26,10 @@ func RegisterDoltPullBranchTool(server pkg.Server) {
 	doltPullBranchTool := mcp.NewTool(
 		DoltPullBranchToolName,
 		mcp.WithDescription(DoltPullBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(true),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

@@ -24,6 +24,10 @@ func RegisterDoltFetchBranchTool(server pkg.Server) {
 	doltFetchBranchTool := mcp.NewTool(
 		DoltFetchBranchToolName,
 		mcp.WithDescription(DoltFetchBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(true),
 		mcp.WithString(
 			RemoteNameCallToolArgumentName,
 			mcp.Required(),

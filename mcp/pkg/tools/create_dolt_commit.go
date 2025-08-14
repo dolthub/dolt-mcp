@@ -23,6 +23,10 @@ func RegisterCreateDoltCommitTool(server pkg.Server) {
 	createDoltCommitTool := mcp.NewTool(
 		CreateDoltCommitToolName,
 		mcp.WithDescription(CreateDoltCommitToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

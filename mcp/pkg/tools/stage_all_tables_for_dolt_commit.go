@@ -21,6 +21,10 @@ func RegisterStageAllTablesForDoltCommitTool(server pkg.Server) {
 	stageAllTablesForDoltCommitTool := mcp.NewTool(
 		StageAllTablesForDoltCommitToolName,
 		mcp.WithDescription(StageAllTablesForDoltCommitToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

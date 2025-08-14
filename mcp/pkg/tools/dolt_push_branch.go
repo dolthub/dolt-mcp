@@ -26,6 +26,10 @@ func RegisterDoltPushBranchTool(server pkg.Server) {
 	doltPushBranchTool := mcp.NewTool(
 		DoltPushBranchToolName,
 		mcp.WithDescription(DoltPushBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(true),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

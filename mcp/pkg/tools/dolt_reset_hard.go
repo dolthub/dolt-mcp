@@ -23,6 +23,10 @@ func RegisterDoltResetHardTool(server pkg.Server) {
 	resetHardTool := mcp.NewTool(
 		DoltResetHardToolName,
 		mcp.WithDescription(DoltResetHardToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

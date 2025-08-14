@@ -25,6 +25,10 @@ func RegisterDeleteDoltBranchTool(server pkg.Server) {
 	deleteDoltBranchTool := mcp.NewTool(
 		DeleteDoltBranchToolName,
 		mcp.WithDescription(DeleteDoltBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingBranchCallToolArgumentName,
 			mcp.Required(),

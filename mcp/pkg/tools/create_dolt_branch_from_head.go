@@ -25,6 +25,10 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 	createDoltBranchFromHeadTool := mcp.NewTool(
 		CreateDoltBranchFromHeadToolName,
 		mcp.WithDescription(CreateDoltBranchFromHeadToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingBranchCallToolArgumentName,
 			mcp.Required(),

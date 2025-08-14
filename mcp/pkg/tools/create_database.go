@@ -25,6 +25,10 @@ func RegisterCreateDatabaseTool(server pkg.Server) {
 	createDatabaseTool := mcp.NewTool(
 		CreateDatabaseToolName,
 		mcp.WithDescription(CreateDatabaseToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			DatabaseCallToolArgumentName,
 			mcp.Required(),

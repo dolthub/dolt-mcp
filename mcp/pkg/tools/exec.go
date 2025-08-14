@@ -40,6 +40,10 @@ func RegisterExecTool(server pkg.Server) {
 	execTool := mcp.NewTool(
 		ExecToolName,
 		mcp.WithDescription(ExecToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

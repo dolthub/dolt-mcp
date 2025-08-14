@@ -21,6 +21,10 @@ func RegisterDoltResetAllTablesSoftTool(server pkg.Server) {
 	resetAllTablesSoftTool := mcp.NewTool(
 		DoltResetAllTablesSoftToolName,
 		mcp.WithDescription(DoltResetAllTablesSoftToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

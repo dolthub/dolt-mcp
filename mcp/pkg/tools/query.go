@@ -42,6 +42,7 @@ func RegisterQueryTool(server pkg.Server) {
 		mcp.WithReadOnlyHintAnnotation(true),
 		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingBranchCallToolArgumentName,
 			mcp.Required(),

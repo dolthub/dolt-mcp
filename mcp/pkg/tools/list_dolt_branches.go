@@ -23,6 +23,7 @@ func RegisterListDoltBranchesTool(server pkg.Server) {
         mcp.WithReadOnlyHintAnnotation(true),
         mcp.WithDestructiveHintAnnotation(false),
         mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
     )
 	mcpServer.AddTool(listDoltBranchesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

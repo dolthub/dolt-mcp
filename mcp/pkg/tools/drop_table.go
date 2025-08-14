@@ -25,6 +25,10 @@ func RegisterDropTableTool(server pkg.Server) {
 	dropTableTool := mcp.NewTool(
 		DropTableToolName,
 		mcp.WithDescription(DropTableToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

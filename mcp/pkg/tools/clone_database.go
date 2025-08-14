@@ -25,6 +25,10 @@ func RegisterCloneDatabaseTool(server pkg.Server) {
 	cloneDatabaseTool := mcp.NewTool(
 		CloneDatabaseToolName,
 		mcp.WithDescription(CloneDatabaseToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(true),
 		mcp.WithString(
 			RemoteURLCallToolArgumentName,
 			mcp.Required(),

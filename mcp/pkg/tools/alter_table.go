@@ -39,6 +39,10 @@ func RegisterAlterTableTool(server pkg.Server) {
 	alterTableTool := mcp.NewTool(
 		AlterTableToolName,
 		mcp.WithDescription(AlterTableToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

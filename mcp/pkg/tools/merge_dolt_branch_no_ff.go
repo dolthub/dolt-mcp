@@ -22,6 +22,10 @@ func RegisterMergeDoltBranchNoFastForwardTool(server pkg.Server) {
 	mergeDoltBranchNoFastForwardTool := mcp.NewTool(
 		MergeDoltBranchNoFastForwardToolName,
 		mcp.WithDescription(MergeDoltBranchNoFastForwardToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

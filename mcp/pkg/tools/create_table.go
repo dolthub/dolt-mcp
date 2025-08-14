@@ -40,6 +40,10 @@ func RegisterCreateTableTool(server pkg.Server) {
 	createTableTool := mcp.NewTool(
 		CreateTableToolName,
 		mcp.WithDescription(CreateTableToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

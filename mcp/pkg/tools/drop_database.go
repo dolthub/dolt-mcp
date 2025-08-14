@@ -25,6 +25,10 @@ func RegisterDropDatabaseTool(server pkg.Server) {
 	dropDatabaseTool := mcp.NewTool(
 		DropDatabaseToolName,
 		mcp.WithDescription(DropDatabaseToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			DatabaseCallToolArgumentName,
 			mcp.Required(),

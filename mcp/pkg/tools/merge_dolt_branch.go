@@ -25,6 +25,10 @@ func RegisterMergeDoltBranchTool(server pkg.Server) {
 	mergeDoltBranchTool := mcp.NewTool(
 		MergeDoltBranchToolName,
 		mcp.WithDescription(MergeDoltBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

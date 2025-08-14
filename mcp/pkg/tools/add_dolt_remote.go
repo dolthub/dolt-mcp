@@ -24,6 +24,10 @@ func RegisterAddDoltRemoteTool(server pkg.Server) {
 	addDoltRemoteTool := mcp.NewTool(
 		AddDoltRemoteToolName,
 		mcp.WithDescription(AddDoltRemoteToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(true),
 		mcp.WithString(
 			RemoteNameCallToolArgumentName,
 			mcp.Required(),
