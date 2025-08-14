@@ -20,6 +20,9 @@ func RegisterSelectActiveBranchTool(server pkg.Server) {
 	selectActiveBranchTool := mcp.NewTool(
 		SelectActiveBranchToolName,
 		mcp.WithDescription(SelectActiveBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 		mcp.WithString(
 			WorkingBranchCallToolArgumentName,
 			mcp.Required(),

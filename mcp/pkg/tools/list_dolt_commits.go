@@ -21,6 +21,9 @@ func RegisterListDoltCommitsTool(server pkg.Server) {
 	listDoltCommitsTool := mcp.NewTool(
 		ListDoltCommitsToolName,
 		mcp.WithDescription(ListDoltCommitsToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

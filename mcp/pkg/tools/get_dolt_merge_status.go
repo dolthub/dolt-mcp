@@ -20,6 +20,9 @@ func RegisterGetDoltMergeStatusTool(server pkg.Server) {
 	getDoltMergeStatusTool := mcp.NewTool(
 		GetDoltMergeStatusToolName,
 		mcp.WithDescription(GetDoltMergeStatusToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

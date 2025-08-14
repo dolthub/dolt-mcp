@@ -39,6 +39,9 @@ func RegisterQueryTool(server pkg.Server) {
 	queryTool := mcp.NewTool(
 		QueryToolName,
 		mcp.WithDescription(QueryToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 		mcp.WithString(
 			WorkingBranchCallToolArgumentName,
 			mcp.Required(),

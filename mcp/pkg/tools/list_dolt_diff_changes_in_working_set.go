@@ -20,6 +20,9 @@ func RegisterListDoltDiffChangesInWorkingSetTool(server pkg.Server) {
 	listDoltDiffChangesInWorkingSetTool := mcp.NewTool(
 		ListDoltDiffChangesInWorkingSetToolName,
 		mcp.WithDescription(ListDoltDiffChangesInWorkingSetToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

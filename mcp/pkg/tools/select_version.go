@@ -20,6 +20,9 @@ func RegisterSelectVersionTool(server pkg.Server) {
 	selectVersionTool := mcp.NewTool(
 		SelectVersionToolName,
 		mcp.WithDescription(SelectVersionToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 	)
 	mcpServer.AddTool(selectVersionTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

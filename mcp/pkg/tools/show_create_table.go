@@ -22,6 +22,9 @@ func RegisterShowCreateTableTool(server pkg.Server) {
 	showCreateTableTool := mcp.NewTool(
 		ShowCreateTableToolName,
 		mcp.WithDescription(ShowCreateTableToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 		mcp.WithString(
 			WorkingBranchCallToolArgumentName,
 			mcp.Required(),

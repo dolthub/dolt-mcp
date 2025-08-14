@@ -15,10 +15,16 @@ const (
 )
 
 func RegisterListDoltRemotesTool(server pkg.Server) {
-	mcpServer := server.MCP()
+    mcpServer := server.MCP()
 
-	listDoltRemotesTool := mcp.NewTool(ListDoltRemotesToolName, mcp.WithDescription(ListDoltRemotesToolDescription))
-	mcpServer.AddTool(listDoltRemotesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+    listDoltRemotesTool := mcp.NewTool(
+        ListDoltRemotesToolName,
+        mcp.WithDescription(ListDoltRemotesToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+    )
+    mcpServer.AddTool(listDoltRemotesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 
 		config := server.DBConfig()

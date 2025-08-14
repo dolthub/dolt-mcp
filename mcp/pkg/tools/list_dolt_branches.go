@@ -17,7 +17,13 @@ const (
 func RegisterListDoltBranchesTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
-	listDoltBranchesTool := mcp.NewTool(ListDoltBranchesToolName, mcp.WithDescription(ListDoltBranchesToolDescription))
+    listDoltBranchesTool := mcp.NewTool(
+        ListDoltBranchesToolName,
+        mcp.WithDescription(ListDoltBranchesToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+    )
 	mcpServer.AddTool(listDoltBranchesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 

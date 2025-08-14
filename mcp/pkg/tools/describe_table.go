@@ -22,6 +22,9 @@ func RegisterDescribeTableTool(server pkg.Server) {
 	describeTableTool := mcp.NewTool(
 		DescribeTableToolName,
 		mcp.WithDescription(DescribeTableToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),

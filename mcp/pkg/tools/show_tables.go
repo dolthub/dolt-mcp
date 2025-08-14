@@ -20,6 +20,9 @@ func RegisterShowTablesTool(server pkg.Server) {
 	showTablesTool := mcp.NewTool(
 		ShowTablesToolName,
 		mcp.WithDescription(ShowTablesToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 		mcp.WithString(
 			WorkingBranchCallToolArgumentName,
 			mcp.Required(),

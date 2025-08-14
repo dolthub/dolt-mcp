@@ -17,7 +17,13 @@ const (
 func RegisterListDatabasesTool(server pkg.Server) {
 	mcpServer := server.MCP()
 
-	listDatabasesTool := mcp.NewTool(ListDatabasesToolName, mcp.WithDescription(ListDatabasesToolDescription))
+	listDatabasesTool := mcp.NewTool(
+		ListDatabasesToolName,
+		mcp.WithDescription(ListDatabasesToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+	)
 	mcpServer.AddTool(listDatabasesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 

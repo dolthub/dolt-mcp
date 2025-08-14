@@ -23,6 +23,9 @@ func RegisterListDoltDiffChangesInDateRangeTool(server pkg.Server) {
 	listDoltDiffChangesInDateRangeTool := mcp.NewTool(
 		ListDoltDiffChangesInDateRangeToolName,
 		mcp.WithDescription(CreateDoltBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),
