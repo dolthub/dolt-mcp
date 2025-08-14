@@ -20,36 +20,39 @@ const (
 	DoltPushBranchToolForceSQLQueryFormatString     = "CALL DOLT_PUSH('--force', '%s', '%s');"
 )
 
-func RegisterDoltPushBranchTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewDoltPushBranchTool() mcp.Tool {
+    return mcp.NewTool(
+        DoltPushBranchToolName,
+        mcp.WithDescription(DoltPushBranchToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(false),
+        mcp.WithOpenWorldHintAnnotation(true),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            RemoteNameCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(DoltPushBranchToolRemoteNameArgumentDescription),
+        ),
+        mcp.WithString(
+            BranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(DoltPushBranchToolBranchArgumentDescription),
+        ),
+        mcp.WithBoolean(
+            ForceCallToolArgumentName,
+            mcp.Description(DoltPushBranchToolForceArgumentDescription),
+        ),
+    )
+}
 
-	doltPushBranchTool := mcp.NewTool(
-		DoltPushBranchToolName,
-		mcp.WithDescription(DoltPushBranchToolDescription),
-		mcp.WithReadOnlyHintAnnotation(false),
-		mcp.WithDestructiveHintAnnotation(false),
-		mcp.WithIdempotentHintAnnotation(false),
-		mcp.WithOpenWorldHintAnnotation(true),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			RemoteNameCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(DoltPushBranchToolRemoteNameArgumentDescription),
-		),
-		mcp.WithString(
-			BranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(DoltPushBranchToolBranchArgumentDescription),
-		),
-		mcp.WithBoolean(
-			ForceCallToolArgumentName,
-			mcp.Description(DoltPushBranchToolForceArgumentDescription),
-		),
-	)
+func RegisterDoltPushBranchTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    doltPushBranchTool := NewDoltPushBranchTool()
 
 	mcpServer.AddTool(doltPushBranchTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

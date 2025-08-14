@@ -19,26 +19,29 @@ const (
 	DropDatabaseToolIfExistsArgumentDescription  = "If true will only drop the specified database if it exists in the Dolt server."
 )
 
-func RegisterDropDatabaseTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewDropDatabaseTool() mcp.Tool {
+    return mcp.NewTool(
+        DropDatabaseToolName,
+        mcp.WithDescription(DropDatabaseToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            DatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(DropDatabaseToolDatabaseArgumentDescription),
+        ),
+        mcp.WithBoolean(
+            IfExistsCallToolArgumentName,
+            mcp.Description(DropDatabaseToolIfExistsArgumentDescription),
+        ),
+    )
+}
 
-	dropDatabaseTool := mcp.NewTool(
-		DropDatabaseToolName,
-		mcp.WithDescription(DropDatabaseToolDescription),
-		mcp.WithReadOnlyHintAnnotation(false),
-		mcp.WithDestructiveHintAnnotation(true),
-		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(false),
-		mcp.WithString(
-			DatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(DropDatabaseToolDatabaseArgumentDescription),
-		),
-		mcp.WithBoolean(
-			IfExistsCallToolArgumentName,
-			mcp.Description(DropDatabaseToolIfExistsArgumentDescription),
-		),
-	)
+func RegisterDropDatabaseTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    dropDatabaseTool := NewDropDatabaseTool()
 
 	mcpServer.AddTool(dropDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
