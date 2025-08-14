@@ -19,27 +19,34 @@ const (
 	CreateDoltBranchFromHeadToolForceSQLQueryFormatString        = "CALL DOLT_BRANCH('-f', '%s');"
 )
 
-func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewCreateDoltBranchFromHeadTool() mcp.Tool {
+    return mcp.NewTool(
+        CreateDoltBranchFromHeadToolName,
+        mcp.WithDescription(CreateDoltBranchFromHeadToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(false),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            NewBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(CreateDoltBranchToolNewBranchArgumentDescription),
+        ),
+        mcp.WithBoolean(
+            ForceCallToolArgumentName,
+            mcp.Description(CreateDoltBranchFromHeadToolForceArgumentDescription),
+        ),
+    )
+}
 
-	createDoltBranchFromHeadTool := mcp.NewTool(
-		CreateDoltBranchFromHeadToolName,
-		mcp.WithDescription(CreateDoltBranchFromHeadToolDescription),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			NewBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(CreateDoltBranchToolNewBranchArgumentDescription),
-		),
-		mcp.WithBoolean(
-			ForceCallToolArgumentName,
-			mcp.Description(CreateDoltBranchFromHeadToolForceArgumentDescription),
-		),
-	)
+func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    createDoltBranchFromHeadTool := NewCreateDoltBranchFromHeadTool()
 
 	mcpServer.AddTool(createDoltBranchFromHeadTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

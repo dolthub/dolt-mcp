@@ -14,18 +14,25 @@ const (
 	SelectActiveBranchToolDescription = "Displays the currently checked out branch."
 )
 
-func RegisterSelectActiveBranchTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewSelectActiveBranchTool() mcp.Tool {
+    return mcp.NewTool(
+        SelectActiveBranchToolName,
+        mcp.WithDescription(SelectActiveBranchToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+    )
+}
 
-	selectActiveBranchTool := mcp.NewTool(
-		SelectActiveBranchToolName,
-		mcp.WithDescription(SelectActiveBranchToolDescription),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-	)
+func RegisterSelectActiveBranchTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    selectActiveBranchTool := NewSelectActiveBranchTool()
 
 	mcpServer.AddTool(selectActiveBranchTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

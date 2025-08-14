@@ -19,22 +19,29 @@ const (
 	CloneDatabaseToolWithLocalNameSQLQueryFormatString = "CALL DOLT_CLONE('%s', '%s');"
 )
 
-func RegisterCloneDatabaseTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewCloneDatabaseTool() mcp.Tool {
+    return mcp.NewTool(
+        CloneDatabaseToolName,
+        mcp.WithDescription(CloneDatabaseToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(true),
+        mcp.WithString(
+            RemoteURLCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(CloneDatabaseToolRemoteURLArgumentDescription),
+        ),
+        mcp.WithString(
+            NameCallToolArgumentName,
+            mcp.Description(CloneDatabaseToolNameArgumentDescription),
+        ),
+    )
+}
 
-	cloneDatabaseTool := mcp.NewTool(
-		CloneDatabaseToolName,
-		mcp.WithDescription(CloneDatabaseToolDescription),
-		mcp.WithString(
-			RemoteURLCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(CloneDatabaseToolRemoteURLArgumentDescription),
-		),
-		mcp.WithString(
-			NameCallToolArgumentName,
-			mcp.Description(CloneDatabaseToolNameArgumentDescription),
-		),
-	)
+func RegisterCloneDatabaseTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    cloneDatabaseTool := NewCloneDatabaseTool()
 
 	mcpServer.AddTool(cloneDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

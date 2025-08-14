@@ -18,23 +18,30 @@ const (
 	AddDoltRemoteToolCallSuccessFormatString       = "successfully added remote: %s"
 )
 
-func RegisterAddDoltRemoteTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewAddDoltRemoteTool() mcp.Tool {
+    return mcp.NewTool(
+        AddDoltRemoteToolName,
+        mcp.WithDescription(AddDoltRemoteToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(true),
+        mcp.WithString(
+            RemoteNameCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(AddDoltRemoteToolRemoteNameArgumentDescription),
+        ),
+        mcp.WithString(
+            RemoteURLCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(AddDoltRemoteToolRemoteURLArgumentDescription),
+        ),
+    )
+}
 
-	addDoltRemoteTool := mcp.NewTool(
-		AddDoltRemoteToolName,
-		mcp.WithDescription(AddDoltRemoteToolDescription),
-		mcp.WithString(
-			RemoteNameCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(AddDoltRemoteToolRemoteNameArgumentDescription),
-		),
-		mcp.WithString(
-			RemoteURLCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(AddDoltRemoteToolRemoteURLArgumentDescription),
-		),
-	)
+func RegisterAddDoltRemoteTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    addDoltRemoteTool := NewAddDoltRemoteTool()
 
 	mcpServer.AddTool(addDoltRemoteTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

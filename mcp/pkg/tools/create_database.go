@@ -19,22 +19,29 @@ const (
 	CreateDatabaseToolIfNotExistsArgumentDescription  = "If true will only create the specified database if it does not exist in the Dolt server."
 )
 
-func RegisterCreateDatabaseTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewCreateDatabaseTool() mcp.Tool {
+    return mcp.NewTool(
+        CreateDatabaseToolName,
+        mcp.WithDescription(CreateDatabaseToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            DatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(CreateDatabaseToolDatabaseArgumentDescription),
+        ),
+        mcp.WithBoolean(
+            IfNotExistsCallToolArgumentName,
+            mcp.Description(CreateDatabaseToolIfNotExistsArgumentDescription),
+        ),
+    )
+}
 
-	createDatabaseTool := mcp.NewTool(
-		CreateDatabaseToolName,
-		mcp.WithDescription(CreateDatabaseToolDescription),
-		mcp.WithString(
-			DatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(CreateDatabaseToolDatabaseArgumentDescription),
-		),
-		mcp.WithBoolean(
-			IfNotExistsCallToolArgumentName,
-			mcp.Description(CreateDatabaseToolIfNotExistsArgumentDescription),
-		),
-	)
+func RegisterCreateDatabaseTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    createDatabaseTool := NewCreateDatabaseTool()
 
 	mcpServer.AddTool(createDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

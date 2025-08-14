@@ -33,28 +33,35 @@ func ValidateAlterTableQuery(query string) error {
 	return ErrInvalidAlterTableSQLQuery
 }
 
-func RegisterAlterTableTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewAlterTableTool() mcp.Tool {
+    return mcp.NewTool(
+        AlterTableToolName,
+        mcp.WithDescription(AlterTableToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithIdempotentHintAnnotation(false),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            QueryCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(AlterTableToolQueryArgumentDescription),
+        ),
+    )
+}
 
-	alterTableTool := mcp.NewTool(
-		AlterTableToolName,
-		mcp.WithDescription(AlterTableToolDescription),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			QueryCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(AlterTableToolQueryArgumentDescription),
-		),
-	)
+func RegisterAlterTableTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    alterTableTool := NewAlterTableTool()
 
 	mcpServer.AddTool(alterTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

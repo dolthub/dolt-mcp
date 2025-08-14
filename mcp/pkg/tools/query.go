@@ -33,28 +33,35 @@ func ValidateReadQuery(query string) error {
 	return ErrInvalidSQLReadQuery
 }
 
-func RegisterQueryTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewQueryTool() mcp.Tool {
+    return mcp.NewTool(
+        QueryToolName,
+        mcp.WithDescription(QueryToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            QueryCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(QueryToolQueryArgumentDescription),
+        ),
+    )
+}
 
-	queryTool := mcp.NewTool(
-		QueryToolName,
-		mcp.WithDescription(QueryToolDescription),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			QueryCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(QueryToolQueryArgumentDescription),
-		),
-	)
+func RegisterQueryTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    queryTool := NewQueryTool()
 
 	mcpServer.AddTool(queryTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

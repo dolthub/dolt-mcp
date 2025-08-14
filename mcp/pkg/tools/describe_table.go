@@ -16,28 +16,35 @@ const (
 	DescribeTableToolDescription                     = "Describes a table in the current database."
 )
 
-func RegisterDescribeTableTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewDescribeTableTool() mcp.Tool {
+    return mcp.NewTool(
+        DescribeTableToolName,
+        mcp.WithDescription(DescribeTableToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            TableCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(DescribeTableToolTableArgumentDescription),
+        ),
+    )
+}
 
-	describeTableTool := mcp.NewTool(
-		DescribeTableToolName,
-		mcp.WithDescription(DescribeTableToolDescription),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			TableCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(DescribeTableToolTableArgumentDescription),
-		),
-	)
+func RegisterDescribeTableTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    describeTableTool := NewDescribeTableTool()
 
 	mcpServer.AddTool(describeTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

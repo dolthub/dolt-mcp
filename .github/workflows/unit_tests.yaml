@@ -1,0 +1,34 @@
+name: Run Unit Tests
+
+on:
+  pull_request:
+    paths:
+      - "mcp/**"
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: unit-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: ./go.mod
+      id: go
+    - name: Test All
+      working-directory: ./mcp/
+      run: |
+         go test -timeout 30m $(go list ./... | grep -v integration_tests)
+
+
+

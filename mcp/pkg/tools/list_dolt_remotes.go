@@ -14,11 +14,21 @@ const (
 	ListDoltRemotesToolDescription = "Lists the Dolt server's remotes."
 )
 
-func RegisterListDoltRemotesTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewListDoltRemotesTool() mcp.Tool {
+    return mcp.NewTool(
+        ListDoltRemotesToolName,
+        mcp.WithDescription(ListDoltRemotesToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+    )
+}
 
-	listDoltRemotesTool := mcp.NewTool(ListDoltRemotesToolName, mcp.WithDescription(ListDoltRemotesToolDescription))
-	mcpServer.AddTool(listDoltRemotesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+func RegisterListDoltRemotesTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    listDoltRemotesTool := NewListDoltRemotesTool()
+    mcpServer.AddTool(listDoltRemotesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 
 		config := server.DBConfig()

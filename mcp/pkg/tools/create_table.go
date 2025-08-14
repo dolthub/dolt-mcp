@@ -34,28 +34,35 @@ func ValidateCreateTableQuery(query string) error {
 	return ErrInvalidCreateTableSQLQuery
 }
 
-func RegisterCreateTableTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewCreateTableTool() mcp.Tool {
+    return mcp.NewTool(
+        CreateTableToolName,
+        mcp.WithDescription(CreateTableToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithIdempotentHintAnnotation(false),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            QueryCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(CreateTableToolQueryArgumentDescription),
+        ),
+    )
+}
 
-	createTableTool := mcp.NewTool(
-		CreateTableToolName,
-		mcp.WithDescription(CreateTableToolDescription),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			QueryCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(CreateTableToolQueryArgumentDescription),
-		),
-	)
+func RegisterCreateTableTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    createTableTool := NewCreateTableTool()
 
 	mcpServer.AddTool(createTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

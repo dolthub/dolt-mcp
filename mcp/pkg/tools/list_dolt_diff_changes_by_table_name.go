@@ -25,44 +25,51 @@ var ErrSpecifyEitherFromCommitOrHashOfFromCommitMessage = "specify either from_c
 var ErrToCommitOrHashOfToCommitArgumentRequiredMessage = "to_commit or hash_of_to_commit argument required"
 var ErrSpecifyEitherToCommitOrHashOfToCommitMessage = "specify either to_commit or hash_of_to_commit arguments, not both "
 
-func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewListDoltDiffChangesByTableNameTool() mcp.Tool {
+    return mcp.NewTool(
+        ListDoltDiffChangesByTableNameToolName,
+        mcp.WithDescription(ListDoltDiffChangesByTableNameToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            TableCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(ListDoltDiffChangesByTableNameToolTableArgumentDescription),
+        ),
+        mcp.WithString(
+            FromCommitCallToolArgumentName,
+            mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
+        ),
+        mcp.WithString(
+            ToCommitCallToolArgumentName,
+            mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
+        ),
+        mcp.WithString(
+            HashOfFromCommitCallToolArgumentName,
+            mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
+        ),
+        mcp.WithString(
+            HashOfToCommitCallToolArgumentName,
+            mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
+        ),
+    )
+}
 
-	listDoltDiffChangesByTableNameTool := mcp.NewTool(
-		ListDoltDiffChangesByTableNameToolName,
-		mcp.WithDescription(ListDoltDiffChangesByTableNameToolDescription),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			TableCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(ListDoltDiffChangesByTableNameToolTableArgumentDescription),
-		),
-		mcp.WithString(
-			FromCommitCallToolArgumentName,
-			mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
-		),
-		mcp.WithString(
-			ToCommitCallToolArgumentName,
-			mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
-		),
-		mcp.WithString(
-			HashOfFromCommitCallToolArgumentName,
-			mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
-		),
-		mcp.WithString(
-			HashOfToCommitCallToolArgumentName,
-			mcp.Description(ListDoltDiffChangesByTableNameToolFromCommitArgumentDescription),
-		),
-	)
+func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    listDoltDiffChangesByTableNameTool := NewListDoltDiffChangesByTableNameTool()
 
 	mcpServer.AddTool(listDoltDiffChangesByTableNameTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

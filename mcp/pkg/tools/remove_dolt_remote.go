@@ -17,18 +17,25 @@ const (
 	RemoveDoltRemoteToolCallSuccessFormatString = "successfully removed remote: %s"
 )
 
-func RegisterRemoveDoltRemoteTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewRemoveDoltRemoteTool() mcp.Tool {
+    return mcp.NewTool(
+        RemoveDoltRemoteToolName,
+        mcp.WithDescription(RemoveDoltRemoteToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(true),
+        mcp.WithString(
+            RemoteNameCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(RemoveDoltRemoteToolRemoteNameArgumentDescription),
+        ),
+    )
+}
 
-	removeDoltRemoteTool := mcp.NewTool(
-		RemoveDoltRemoteToolName,
-		mcp.WithDescription(RemoveDoltRemoteToolDescription),
-		mcp.WithString(
-			RemoteNameCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(RemoveDoltRemoteToolRemoteNameArgumentDescription),
-		),
-	)
+func RegisterRemoveDoltRemoteTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    removeDoltRemoteTool := NewRemoveDoltRemoteTool()
 
 	mcpServer.AddTool(removeDoltRemoteTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

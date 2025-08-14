@@ -20,27 +20,34 @@ const (
 	CreateDoltBranchToolForceSQLQueryFormatString         = "CALL DOLT_BRANCH('-f', '-c', '%s', '%s');"
 )
 
-func RegisterCreateDoltBranchTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewCreateDoltBranchTool() mcp.Tool {
+    return mcp.NewTool(
+        CreateDoltBranchToolName,
+        mcp.WithDescription(CreateDoltBranchToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(false),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            OriginalBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(CreateDoltBranchToolOriginalBranchArgumentDescription),
+        ),
+        mcp.WithString(
+            NewBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(CreateDoltBranchToolNewBranchArgumentDescription),
+        ),
+        mcp.WithBoolean(
+            ForceCallToolArgumentName,
+            mcp.Description(CreateDoltBranchToolForceArgumentDescription),
+        ),
+    )
+}
 
-	createDoltBranchTool := mcp.NewTool(
-		CreateDoltBranchToolName,
-		mcp.WithDescription(CreateDoltBranchToolDescription),
-		mcp.WithString(
-			OriginalBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(CreateDoltBranchToolOriginalBranchArgumentDescription),
-		),
-		mcp.WithString(
-			NewBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(CreateDoltBranchToolNewBranchArgumentDescription),
-		),
-		mcp.WithBoolean(
-			ForceCallToolArgumentName,
-			mcp.Description(CreateDoltBranchToolForceArgumentDescription),
-		),
-	)
+func RegisterCreateDoltBranchTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    createDoltBranchTool := NewCreateDoltBranchTool()
 
 	mcpServer.AddTool(createDoltBranchTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
