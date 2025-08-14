@@ -90,11 +90,11 @@ func TestWriteToolAnnotations(t *testing.T) {
 		ctor func() mcp.Tool
 		ro, destr, idem, open bool
 	}{
-		{"exec", NewExecTool, false, true, false, false},
-		{"create_table", NewCreateTableTool, false, true, false, false},
+		{"exec", NewExecTool, false, false, false, false},
+		{"create_table", NewCreateTableTool, false, false, false, false},
 		{"alter_table", NewAlterTableTool, false, true, false, false},
 		{"drop_table", NewDropTableTool, false, true, true, false},
-		{"create_database", NewCreateDatabaseTool, false, true, true, false},
+		{"create_database", NewCreateDatabaseTool, false, false, true, false},
 		{"drop_database", NewDropDatabaseTool, false, true, true, false},
 		{"create_dolt_commit", NewCreateDoltCommitTool, false, false, true, false},
 	}
@@ -118,8 +118,8 @@ func TestOpenWorldToolAnnotations(t *testing.T) {
 		ctor func() mcp.Tool
 		ro, destr, idem, open bool
 	}{
-		{"add_dolt_remote", NewAddDoltRemoteTool, false, false, true, true},
-		{"remove_dolt_remote", NewRemoveDoltRemoteTool, false, false, true, true},
+		{"add_dolt_remote", NewAddDoltRemoteTool, false, false, true, false},
+		{"remove_dolt_remote", NewRemoveDoltRemoteTool, false, false, true, false},
 		{"clone_database", NewCloneDatabaseTool, false, false, true, true},
 		{"dolt_fetch_branch", NewDoltFetchBranchTool, false, false, true, true},
 		{"dolt_fetch_all_branches", NewDoltFetchAllBranchesTool, false, false, true, true},

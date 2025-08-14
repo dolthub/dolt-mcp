@@ -39,7 +39,7 @@ func NewCreateTableTool() mcp.Tool {
         CreateTableToolName,
         mcp.WithDescription(CreateTableToolDescription),
         mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
         mcp.WithIdempotentHintAnnotation(false),
         mcp.WithOpenWorldHintAnnotation(false),
         mcp.WithString(

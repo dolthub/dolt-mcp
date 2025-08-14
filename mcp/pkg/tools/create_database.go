@@ -24,7 +24,7 @@ func NewCreateDatabaseTool() mcp.Tool {
         CreateDatabaseToolName,
         mcp.WithDescription(CreateDatabaseToolDescription),
         mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
         mcp.WithIdempotentHintAnnotation(true),
         mcp.WithOpenWorldHintAnnotation(false),
         mcp.WithString(

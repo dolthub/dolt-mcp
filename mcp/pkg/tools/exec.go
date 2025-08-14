@@ -39,7 +39,7 @@ func NewExecTool() mcp.Tool {
         ExecToolName,
         mcp.WithDescription(ExecToolDescription),
         mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
         mcp.WithIdempotentHintAnnotation(false),
         mcp.WithOpenWorldHintAnnotation(false),
         mcp.WithString(
