@@ -19,36 +19,39 @@ const (
 	MergeDoltBranchToolCallSuccessMessage              = "successfully merged branch"
 )
 
-func RegisterMergeDoltBranchTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewMergeDoltBranchTool() mcp.Tool {
+    return mcp.NewTool(
+        MergeDoltBranchToolName,
+        mcp.WithDescription(MergeDoltBranchToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithIdempotentHintAnnotation(false),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            BranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(MergeDoltBranchToolBranchArgumentDescription),
+        ),
+        mcp.WithString(
+            MessageCallToolArgumentName,
+            mcp.Description(MergeDoltBranchToolMessageArgumentDescription),
+        ),
+    )
+}
 
-	mergeDoltBranchTool := mcp.NewTool(
-		MergeDoltBranchToolName,
-		mcp.WithDescription(MergeDoltBranchToolDescription),
-		mcp.WithReadOnlyHintAnnotation(false),
-		mcp.WithDestructiveHintAnnotation(true),
-		mcp.WithIdempotentHintAnnotation(false),
-		mcp.WithOpenWorldHintAnnotation(false),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			BranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(MergeDoltBranchToolBranchArgumentDescription),
-		),
-		mcp.WithString(
-			MessageCallToolArgumentName,
-			mcp.Description(MergeDoltBranchToolMessageArgumentDescription),
-		),
-	)
+func RegisterMergeDoltBranchTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    mergeDoltBranchTool := NewMergeDoltBranchTool()
 
 	mcpServer.AddTool(mergeDoltBranchTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

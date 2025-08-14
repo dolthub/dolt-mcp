@@ -17,32 +17,35 @@ const (
 	DoltResetHardToolCallSuccessFormatString              = "successfully hard reset: %s"
 )
 
-func RegisterDoltResetHardTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewDoltResetHardTool() mcp.Tool {
+    return mcp.NewTool(
+        DoltResetHardToolName,
+        mcp.WithDescription(DoltResetHardToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            BranchOrCommitSHACallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(DoltResetHardToolBranchOrCommitSHAArgumentDescription),
+        ),
+    )
+}
 
-	resetHardTool := mcp.NewTool(
-		DoltResetHardToolName,
-		mcp.WithDescription(DoltResetHardToolDescription),
-		mcp.WithReadOnlyHintAnnotation(false),
-		mcp.WithDestructiveHintAnnotation(true),
-		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(false),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			BranchOrCommitSHACallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(DoltResetHardToolBranchOrCommitSHAArgumentDescription),
-		),
-	)
+func RegisterDoltResetHardTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    resetHardTool := NewDoltResetHardTool()
 
 	mcpServer.AddTool(resetHardTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

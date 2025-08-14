@@ -16,36 +16,39 @@ const (
 	MergeDoltBranchNoFastForwardToolWithMessageSQLQueryFormatString = "CALL DOLT_MERGE('%s', '--no-ff', '-m', '%s');"
 )
 
-func RegisterMergeDoltBranchNoFastForwardTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewMergeDoltBranchNoFastForwardTool() mcp.Tool {
+    return mcp.NewTool(
+        MergeDoltBranchNoFastForwardToolName,
+        mcp.WithDescription(MergeDoltBranchNoFastForwardToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithIdempotentHintAnnotation(false),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            BranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(MergeDoltBranchToolBranchArgumentDescription),
+        ),
+        mcp.WithString(
+            MessageCallToolArgumentName,
+            mcp.Description(MergeDoltBranchToolMessageArgumentDescription),
+        ),
+    )
+}
 
-	mergeDoltBranchNoFastForwardTool := mcp.NewTool(
-		MergeDoltBranchNoFastForwardToolName,
-		mcp.WithDescription(MergeDoltBranchNoFastForwardToolDescription),
-		mcp.WithReadOnlyHintAnnotation(false),
-		mcp.WithDestructiveHintAnnotation(true),
-		mcp.WithIdempotentHintAnnotation(false),
-		mcp.WithOpenWorldHintAnnotation(false),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			BranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(MergeDoltBranchToolBranchArgumentDescription),
-		),
-		mcp.WithString(
-			MessageCallToolArgumentName,
-			mcp.Description(MergeDoltBranchToolMessageArgumentDescription),
-		),
-	)
+func RegisterMergeDoltBranchNoFastForwardTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    mergeDoltBranchNoFastForwardTool := NewMergeDoltBranchNoFastForwardTool()
 
 	mcpServer.AddTool(mergeDoltBranchNoFastForwardTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

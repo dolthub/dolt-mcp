@@ -17,32 +17,35 @@ const (
 	DoltResetTableSoftToolCallSuccessFormatString  = "successfully soft reset table: %s"
 )
 
-func RegisterDoltResetTableSoftTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewDoltResetTableSoftTool() mcp.Tool {
+    return mcp.NewTool(
+        DoltResetTableSoftToolName,
+        mcp.WithDescription(DoltResetTableSoftToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            TableCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(DoltResetTableSoftToolTableArgumentDescription),
+        ),
+    )
+}
 
-	resetTableSoftTool := mcp.NewTool(
-		DoltResetTableSoftToolName,
-		mcp.WithDescription(DoltResetTableSoftToolDescription),
-		mcp.WithReadOnlyHintAnnotation(false),
-		mcp.WithDestructiveHintAnnotation(false),
-		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(false),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			TableCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(DoltResetTableSoftToolTableArgumentDescription),
-		),
-	)
+func RegisterDoltResetTableSoftTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    resetTableSoftTool := NewDoltResetTableSoftTool()
 
 	mcpServer.AddTool(resetTableSoftTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

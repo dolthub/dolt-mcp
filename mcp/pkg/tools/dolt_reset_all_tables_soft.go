@@ -15,27 +15,30 @@ const (
 	DoltResetAllTablesSoftToolCallSuccessMessage = "successfully soft reset tables"
 )
 
-func RegisterDoltResetAllTablesSoftTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewDoltResetAllTablesSoftTool() mcp.Tool {
+    return mcp.NewTool(
+        DoltResetAllTablesSoftToolName,
+        mcp.WithDescription(DoltResetAllTablesSoftToolDescription),
+        mcp.WithReadOnlyHintAnnotation(false),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+    )
+}
 
-	resetAllTablesSoftTool := mcp.NewTool(
-		DoltResetAllTablesSoftToolName,
-		mcp.WithDescription(DoltResetAllTablesSoftToolDescription),
-		mcp.WithReadOnlyHintAnnotation(false),
-		mcp.WithDestructiveHintAnnotation(false),
-		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(false),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-	)
+func RegisterDoltResetAllTablesSoftTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    resetAllTablesSoftTool := NewDoltResetAllTablesSoftTool()
 
 	mcpServer.AddTool(resetAllTablesSoftTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
