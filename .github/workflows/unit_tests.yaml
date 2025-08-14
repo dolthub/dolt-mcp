@@ -28,5 +28,7 @@ jobs:
     - name: Test All
       working-directory: ./mcp/
       run: |
-         go test -timeout 30m (go list ./... | grep -v integration_tests)
+         go test -timeout 30m $(go list ./... | grep -v integration_tests)
+
+
 
