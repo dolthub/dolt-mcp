@@ -26,7 +26,7 @@ func RegisterRemoveDoltRemoteTool(server pkg.Server) {
 		mcp.WithReadOnlyHintAnnotation(false),
 		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			RemoteNameCallToolArgumentName,
 			mcp.Required(),
