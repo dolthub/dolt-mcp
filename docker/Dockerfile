@@ -24,7 +24,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s -X github.com/dolthub/dolt-mcp/mcp/pkg.DoltMCPServerVersion=${DOLT_MCP_VERSION}" \
     -a -installsuffix cgo \
     -o dolt-mcp-server \
-    ./mcp/cmd/server
+    ./mcp/cmd/dolt-mcp-server
 
 # Use a minimal base image for the final stage
 FROM alpine:3.21
