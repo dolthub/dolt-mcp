@@ -38,7 +38,7 @@ func NewAlterTableTool() mcp.Tool {
         AlterTableToolName,
         mcp.WithDescription(AlterTableToolDescription),
         mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
         mcp.WithIdempotentHintAnnotation(false),
         mcp.WithOpenWorldHintAnnotation(false),
         mcp.WithString(

@@ -92,7 +92,7 @@ func TestWriteToolAnnotations(t *testing.T) {
 	}{
 		{"exec", NewExecTool, false, false, false, false},
 		{"create_table", NewCreateTableTool, false, false, false, false},
-		{"alter_table", NewAlterTableTool, false, true, false, false},
+		{"alter_table", NewAlterTableTool, false, false, false, false},
 		{"drop_table", NewDropTableTool, false, true, true, false},
 		{"create_database", NewCreateDatabaseTool, false, false, true, false},
 		{"drop_database", NewDropDatabaseTool, false, true, true, false},
