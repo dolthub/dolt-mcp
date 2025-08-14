@@ -17,37 +17,40 @@ const (
 	ListDoltDiffChangesInDateRangeToolSQLQueryFormatString         = "SELECT * FROM dolt_diff WHERE date BETWEEN '%s' AND '%s';"
 )
 
-func RegisterListDoltDiffChangesInDateRangeTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewListDoltDiffChangesInDateRangeTool() mcp.Tool {
+    return mcp.NewTool(
+        ListDoltDiffChangesInDateRangeToolName,
+        mcp.WithDescription(CreateDoltBranchToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            StartDateCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(ListDoltDiffChangesInDateRangeToolStartDateArgumentDescription),
+        ),
+        mcp.WithString(
+            EndDateCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(ListDoltDiffChangesInDateRangeToolEndDateArgumentDescription),
+        ),
+    )
+}
 
-	listDoltDiffChangesInDateRangeTool := mcp.NewTool(
-		ListDoltDiffChangesInDateRangeToolName,
-		mcp.WithDescription(CreateDoltBranchToolDescription),
-		mcp.WithReadOnlyHintAnnotation(true),
-		mcp.WithDestructiveHintAnnotation(false),
-		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(false),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			StartDateCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(ListDoltDiffChangesInDateRangeToolStartDateArgumentDescription),
-		),
-		mcp.WithString(
-			EndDateCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(ListDoltDiffChangesInDateRangeToolEndDateArgumentDescription),
-		),
-	)
+func RegisterListDoltDiffChangesInDateRangeTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    listDoltDiffChangesInDateRangeTool := NewListDoltDiffChangesInDateRangeTool()
 
 	mcpServer.AddTool(listDoltDiffChangesInDateRangeTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

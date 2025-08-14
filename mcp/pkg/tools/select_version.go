@@ -14,17 +14,20 @@ const (
 	SelectVersionToolDescription = "Displays the version of the Dolt server."
 )
 
-func RegisterSelectVersionTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewSelectVersionTool() mcp.Tool {
+    return mcp.NewTool(
+        SelectVersionToolName,
+        mcp.WithDescription(SelectVersionToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+    )
+}
 
-	selectVersionTool := mcp.NewTool(
-		SelectVersionToolName,
-		mcp.WithDescription(SelectVersionToolDescription),
-		mcp.WithReadOnlyHintAnnotation(true),
-		mcp.WithDestructiveHintAnnotation(false),
-		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(false),
-	)
+func RegisterSelectVersionTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    selectVersionTool := NewSelectVersionTool()
 	mcpServer.AddTool(selectVersionTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 

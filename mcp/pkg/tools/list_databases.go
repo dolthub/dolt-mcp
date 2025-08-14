@@ -14,17 +14,20 @@ const (
 	ListDatabasesToolDescription = "Lists all databases in the Dolt server."
 )
 
-func RegisterListDatabasesTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewListDatabasesTool() mcp.Tool {
+    return mcp.NewTool(
+        ListDatabasesToolName,
+        mcp.WithDescription(ListDatabasesToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+    )
+}
 
-	listDatabasesTool := mcp.NewTool(
-		ListDatabasesToolName,
-		mcp.WithDescription(ListDatabasesToolDescription),
-		mcp.WithReadOnlyHintAnnotation(true),
-		mcp.WithDestructiveHintAnnotation(false),
-		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(false),
-	)
+func RegisterListDatabasesTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    listDatabasesTool := NewListDatabasesTool()
 	mcpServer.AddTool(listDatabasesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 

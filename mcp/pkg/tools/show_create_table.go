@@ -16,32 +16,35 @@ const (
 	ShowCreateTableTableArgumentDescription = "The name of the table."
 )
 
-func RegisterShowCreateTableTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewShowCreateTableTool() mcp.Tool {
+    return mcp.NewTool(
+        ShowCreateTableToolName,
+        mcp.WithDescription(ShowCreateTableToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            TableCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(ShowCreateTableTableArgumentDescription),
+        ),
+    )
+}
 
-	showCreateTableTool := mcp.NewTool(
-		ShowCreateTableToolName,
-		mcp.WithDescription(ShowCreateTableToolDescription),
-		mcp.WithReadOnlyHintAnnotation(true),
-		mcp.WithDestructiveHintAnnotation(false),
-		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(false),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			TableCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(ShowCreateTableTableArgumentDescription),
-		),
-	)
+func RegisterShowCreateTableTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    showCreateTableTool := NewShowCreateTableTool()
 
 	mcpServer.AddTool(showCreateTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

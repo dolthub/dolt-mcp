@@ -21,6 +21,9 @@ func RegisterUnstageAllTablesTool(server pkg.Server) {
 	unstageAllTablesTool := mcp.NewTool(
 		UnstageAllTablesToolName,
 		mcp.WithDescription(UnstageAllTablesToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
 		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
 			WorkingDatabaseCallToolArgumentName,

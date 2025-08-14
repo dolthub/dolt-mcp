@@ -15,27 +15,30 @@ const (
 )
 
 // TODO: add pagination to this
-func RegisterListDoltCommitsTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewListDoltCommitsTool() mcp.Tool {
+    return mcp.NewTool(
+        ListDoltCommitsToolName,
+        mcp.WithDescription(ListDoltCommitsToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+    )
+}
 
-	listDoltCommitsTool := mcp.NewTool(
-		ListDoltCommitsToolName,
-		mcp.WithDescription(ListDoltCommitsToolDescription),
-		mcp.WithReadOnlyHintAnnotation(true),
-		mcp.WithDestructiveHintAnnotation(false),
-		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(false),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-	)
+func RegisterListDoltCommitsTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    listDoltCommitsTool := NewListDoltCommitsTool()
 
 	mcpServer.AddTool(listDoltCommitsTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

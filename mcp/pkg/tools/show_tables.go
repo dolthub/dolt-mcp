@@ -14,27 +14,30 @@ const (
 	ShowTablesToolDescription = "Show tables in the current database."
 )
 
-func RegisterShowTablesTool(server pkg.Server) {
-	mcpServer := server.MCP()
+func NewShowTablesTool() mcp.Tool {
+    return mcp.NewTool(
+        ShowTablesToolName,
+        mcp.WithDescription(ShowTablesToolDescription),
+        mcp.WithReadOnlyHintAnnotation(true),
+        mcp.WithDestructiveHintAnnotation(false),
+        mcp.WithIdempotentHintAnnotation(true),
+        mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingBranchCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingBranchCallToolArgumentDescription),
+        ),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+    )
+}
 
-	showTablesTool := mcp.NewTool(
-		ShowTablesToolName,
-		mcp.WithDescription(ShowTablesToolDescription),
-		mcp.WithReadOnlyHintAnnotation(true),
-		mcp.WithDestructiveHintAnnotation(false),
-		mcp.WithIdempotentHintAnnotation(true),
-		mcp.WithOpenWorldHintAnnotation(false),
-		mcp.WithString(
-			WorkingBranchCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingBranchCallToolArgumentDescription),
-		),
-		mcp.WithString(
-			WorkingDatabaseCallToolArgumentName,
-			mcp.Required(),
-			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-		),
-	)
+func RegisterShowTablesTool(server pkg.Server) {
+    mcpServer := server.MCP()
+    showTablesTool := NewShowTablesTool()
 
 	mcpServer.AddTool(showTablesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
