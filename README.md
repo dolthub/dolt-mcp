@@ -24,7 +24,7 @@ The Dolt MCP Server acts as a bridge between AI assistants and Dolt databases, e
 ```bash
 git clone https://github.com/dolthub/dolt-mcp
 cd dolt-mcp
-go build -o dolt-mcp-server ./mcp/cmd/server
+go build -o dolt-mcp-server ./mcp/cmd/dolt-mcp-server
 ```
 
 ### Docker Installation
