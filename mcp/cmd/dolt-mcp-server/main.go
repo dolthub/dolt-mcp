@@ -74,13 +74,14 @@ func main() {
 		homeDir, herr := os.UserHomeDir()
 		if herr == nil && homeDir != "" {
 			logsDir := filepath.Join(homeDir, ".dolt-mcp-server", "logs")
-			_ = os.MkdirAll(logsDir, 0o755)
+			_ = os.MkdirAll(logsDir, os.ModePerm)
 			ts := time.Now().Format("20060102-150405")
 			logFile := filepath.Join(logsDir, fmt.Sprintf("%s.log", ts))
 			cfg.OutputPaths = []string{logFile}
 			cfg.ErrorOutputPaths = []string{logFile}
 		}
 	}
+
 	logger, err := cfg.Build()
 	if err != nil {
 		panic(err)
