@@ -16,11 +16,11 @@ import (
 )
 
 type httpServerImpl struct {
-	mcp     *server.MCPServer
-	handler http.Handler
-	port    int
+	mcp      *server.MCPServer
+	handler  http.Handler
+	port     int
 	dbConfig db.Config
-	logger  *zap.Logger
+	logger   *zap.Logger
 }
 
 type HTTPServer interface {
@@ -38,12 +38,19 @@ func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, opts ...Op
 		server.WithLogging(),
 	)
 
+	baseHandler := server.NewStreamableHTTPServer(mcp, server.WithLogger(NewZapUtilLogger(logger)))
+	// If debug logging is enabled, wrap with access log middleware
+	var handler http.Handler = baseHandler
+	if logger.Core().Enabled(zap.DebugLevel) {
+		handler = withAccessLogging(baseHandler, logger)
+	}
+
 	srv := &httpServerImpl{
-		logger:  logger,
-		mcp:     mcp,
+		logger:   logger,
+		mcp:      mcp,
 		dbConfig: config,
-		port:    port,
-		handler: server.NewStreamableHTTPServer(mcp),
+		port:     port,
+		handler:  handler,
 	}
 
 	for _, opt := range opts {
@@ -110,3 +117,53 @@ func serve(ctx context.Context, logger *zap.Logger, handler http.Handler, port i
 
 	logger.Info("Successfully stopped Dolt MCP server.")
 }
+
+// withAccessLogging wraps an http.Handler to log HTTP requests at debug level
+// including method, path, status code, and duration.
+func withAccessLogging(next http.Handler, logger *zap.Logger) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        lrw := &loggingResponseWriter{ResponseWriter: w}
+
+        next.ServeHTTP(lrw, r)
+
+        // Default to 200 if neither WriteHeader nor Write were called
+        if lrw.statusCode == 0 {
+            lrw.statusCode = http.StatusOK
+        }
+
+        duration := time.Since(start)
+
+        // Access logs should go to stderr; zap production config defaults include stderr.
+        logger.Debug("http request",
+            zap.String("method", r.Method),
+            zap.String("path", r.URL.Path),
+            zap.Int("status", lrw.statusCode),
+            zap.Int("bytes", lrw.bytesWritten),
+            zap.String("remote", r.RemoteAddr),
+            zap.Duration("duration", duration),
+        )
+    })
+}
+
+// loggingResponseWriter captures status code and bytes written for access logging
+type loggingResponseWriter struct {
+    http.ResponseWriter
+    statusCode   int
+    bytesWritten int
+}
+
+func (w *loggingResponseWriter) WriteHeader(code int) {
+    w.statusCode = code
+    w.ResponseWriter.WriteHeader(code)
+}
+
+func (w *loggingResponseWriter) Write(b []byte) (int, error) {
+    if w.statusCode == 0 {
+        w.statusCode = http.StatusOK
+    }
+    n, err := w.ResponseWriter.Write(b)
+    w.bytesWritten += n
+    return n, err
+}
+

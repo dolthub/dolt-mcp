@@ -19,3 +19,20 @@ func NewZapErrorWriter(logger *zap.Logger) *ZapErrorWriter {
 	}
 }
 
+// ZapUtilLogger adapts a zap logger to the minimal util.Logger
+// interface used by github.com/mark3labs/mcp-go.
+type ZapUtilLogger struct {
+	sugar *zap.SugaredLogger
+}
+
+func NewZapUtilLogger(logger *zap.Logger) *ZapUtilLogger {
+	return &ZapUtilLogger{sugar: logger.Sugar()}
+}
+
+func (l *ZapUtilLogger) Infof(format string, v ...any) {
+	l.sugar.Infof(format, v...)
+}
+
+func (l *ZapUtilLogger) Errorf(format string, v ...any) {
+	l.sugar.Errorf(format, v...)
+}
