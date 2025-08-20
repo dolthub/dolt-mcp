@@ -45,9 +45,9 @@ func (c *Config) GetDSN() string {
 		return c.DSN
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)", c.User, c.Password, c.Host, c.Port)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/", c.User, c.Password, c.Host, c.Port)
 	if c.DatabaseName != "" {
-		dsn += fmt.Sprintf("/%s", c.DatabaseName)
+		dsn += c.DatabaseName
 	}
 
 	dsn += c.getDSNOptions()
