@@ -159,9 +159,6 @@ func validateArgs() error {
 	if *doltUser == "" {
 		return mustSupplyError(doltUserFlag)
 	}
-	if *doltDatabase == "" {
-		return mustSupplyError(doltDatabaseFlag)
-	}
 	if *serveHTTP {
 		if *mcpPort == 0 {
 			return mustSupplyError(mcpPortFlag)

@@ -1,4 +1,4 @@
-package db 
+package db
 
 import (
 	"errors"
@@ -45,7 +45,12 @@ func (c *Config) GetDSN() string {
 		return c.DSN
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", c.User, c.Password, c.Host, c.Port, c.DatabaseName)
+	var dsn string
+	if c.DatabaseName != "" {
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", c.User, c.Password, c.Host, c.Port, c.DatabaseName)
+	} else {
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)", c.User, c.Password, c.Host, c.Port)
+	}
 
 	dsn += c.getDSNOptions()
 	return dsn
@@ -59,13 +64,9 @@ func (c *Config) Validate() error {
 		if c.User == "" {
 			return ErrNoUserDefined
 		}
-		if c.DatabaseName == "" {
-			return ErrNoDatabaseNameDefined
-		}
 		if c.Port == 0 {
 			return ErrNoPortDefined
 		}
 	}
 	return nil
 }
-
