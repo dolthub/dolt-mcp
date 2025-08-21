@@ -42,10 +42,12 @@ var _ DatabaseTransaction = &databaseTransactionImpl{}
 func NewDatabaseTransaction(ctx context.Context, config Config) (DatabaseTransaction, error) {
 	db, err := newDB(config)
 	if err != nil {
+		fmt.Println("DUSTIN: NewDatabaseTransaction: newDB: error:", err.Error())
 		return nil, err
 	}
 	_, err = db.ExecContext(ctx, "BEGIN;")
 	if err != nil {
+		fmt.Println("DUSTIN: NewDatabaseTransaction: BEGIN: error:", err.Error())
 		return nil, err
 	}
 	return &databaseTransactionImpl{

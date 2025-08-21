@@ -53,16 +53,20 @@ func NewDatabaseTransactionUsingDatabase(ctx context.Context, config db.Config, 
 func NewDatabaseTransactionOnBranchUsingDatabase(ctx context.Context, config db.Config, branch, database string) (db.DatabaseTransaction, error) {
 	tx, err := db.NewDatabaseTransaction(ctx, config)
 	if err != nil {
-		return nil, err
-	}
-
-	err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, branch))
-	if err != nil {
+		fmt.Println("DUSTIN: NewDatabaseTransactionOnBranchUsingDatabase: NewDatabaseTransaction: error:", err.Error())
 		return nil, err
 	}
 
 	err = tx.ExecContext(ctx, fmt.Sprintf(DoltUseWorkingDatabaseSQLQueryFormatString, database))
 	if err != nil {
+		fmt.Println("DUSTIN: NewDatabaseTransactionOnBranchUsingDatabase: Use Database: error:", err.Error())
+		return nil, err
+	}
+
+	err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, branch))
+	if err != nil {
+		fmt.Println("DUSTIN: DSN:", config.GetDSN())
+		fmt.Println("DUSTIN: NewDatabaseTransactionOnBranchUsingDatabase: CheckoutWorkingBranch: error:", err.Error())
 		return nil, err
 	}
 
