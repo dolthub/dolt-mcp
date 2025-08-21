@@ -29,6 +29,44 @@ func testRemoveDoltRemoteToolInvalidArguments(s *testSuite, testBranchName strin
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.RemoveDoltRemoteToolName,
+					Arguments: map[string]any{
+						tools.RemoteNameCallToolArgumentName: "origin",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.RemoveDoltRemoteToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.RemoteNameCallToolArgumentName:      "origin",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.RemoveDoltRemoteToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.RemoteNameCallToolArgumentName:      "origin",
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing remote name argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
@@ -85,7 +123,8 @@ func testRemoveDoltRemoteToolSuccess(s *testSuite, testBranchName string) {
 		Params: mcp.CallToolParams{
 			Name: tools.RemoveDoltRemoteToolName,
 			Arguments: map[string]any{
-				tools.RemoteNameCallToolArgumentName: "origin",
+				tools.RemoteNameCallToolArgumentName:      "origin",
+				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},
 	}

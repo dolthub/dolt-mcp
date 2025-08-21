@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testSelectActiveBranchToolInvalidArguments(s *testSuite, _ string) {
+func testSelectActiveBranchToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -33,6 +33,9 @@ func testSelectActiveBranchToolInvalidArguments(s *testSuite, _ string) {
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.SelectActiveBranchToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+					},
 				},
 			},
 		},
@@ -44,6 +47,7 @@ func testSelectActiveBranchToolInvalidArguments(s *testSuite, _ string) {
 					Name: tools.SelectActiveBranchToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: "",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -56,6 +60,40 @@ func testSelectActiveBranchToolInvalidArguments(s *testSuite, _ string) {
 					Name: tools.SelectActiveBranchToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.SelectActiveBranchToolName,
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.SelectActiveBranchToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.SelectActiveBranchToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
 					},
 				},
 			},
@@ -94,6 +132,7 @@ func testSelectActiveBranchToolSuccess(s *testSuite, testBranchName string) {
 		Name: tools.SelectActiveBranchToolName,
 		Arguments: map[string]any{
 			tools.WorkingBranchCallToolArgumentName: testBranchName,
+			tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 		},
 	}
 

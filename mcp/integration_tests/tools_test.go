@@ -43,10 +43,10 @@ func TestTools(t *testing.T) {
 		RunTestWithSetupSQL(t, "TestSuccess", testDropTableSetupSQL, testDropTableToolSuccess)
 	})
 	RunTest(t, "TestSelectVersionTool", testSelectVersionTool)
-	// t.Run("TestSelectActiveBranchTool", func(t *testing.T) {
-	// 	RunTest(t, "TestInvalidArguments", testSelectActiveBranchToolInvalidArguments)
-	// 	RunTest(t, "TestSuccess", testSelectActiveBranchToolSuccess)
-	// })
+	t.Run("TestSelectActiveBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testSelectActiveBranchToolInvalidArguments)
+		RunTest(t, "TestSuccess", testSelectActiveBranchToolSuccess)
+	})
 	t.Run("TestQueryTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testQueryToolInvalidArguments)
 		RunTest(t, "TestSuccess", testQueryToolSuccess)
@@ -59,10 +59,10 @@ func TestTools(t *testing.T) {
 	// 	RunTest(t, "TestInvalidArguments", testCreateDoltBranchFromHeadToolInvalidArguments)
 	// 	RunTestWithTeardownSQL(t, "TestSuccess", testCreateDoltBranchTeardownSQL, testCreateDoltBranchFromHeadToolSuccess)
 	// })
-	// t.Run("TestCreateDoltBranchTool", func(t *testing.T) {
-	// 	RunTest(t, "TestInvalidArguments", testCreateDoltBranchToolInvalidArguments)
-	// 	RunTestWithTeardownSQL(t, "TestSuccess", testCreateDoltBranchTeardownSQL, testCreateDoltBranchToolSuccess)
-	// })
+	t.Run("TestCreateDoltBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testCreateDoltBranchToolInvalidArguments)
+		RunTestWithTeardownSQL(t, "TestSuccess", testCreateDoltBranchTeardownSQL, testCreateDoltBranchToolSuccess)
+	})
 	// t.Run("TestMoveDoltBranchTool", func(t *testing.T) {
 	// 	RunTest(t, "TestInvalidArguments", testMoveDoltBranchToolInvalidArguments)
 	// 	RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testMoveDoltBranchSetupSQL, testMoveDoltBranchTeardownSQL, testMoveDoltBranchToolSuccess)
@@ -135,14 +135,14 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testListDoltRemotesToolInvalidArguments)
 		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testListDoltRemotesSetupSQL, testListDoltRemotesTeardownSQL, testListDoltRemotesToolSuccess)
 	})
-	// t.Run("TestAddDoltRemoteTool", func(t *testing.T) {
-	// 	RunTest(t, "TestInvalidArguments", testAddDoltRemoteToolInvalidArguments)
-	// 	RunTestWithTeardownSQL(t, "TestSuccess", testAddDoltRemoteTeardownSQL, testAddDoltRemoteToolSuccess)
-	// })
-	// t.Run("TestRemoveDoltRemoteTool", func(t *testing.T) {
-	// 	RunTest(t, "TestInvalidArguments", testRemoveDoltRemoteToolInvalidArguments)
-	// 	RunTestWithSetupSQL(t, "TestSuccess", testRemoveDoltRemoteSetupSQL, testRemoveDoltRemoteToolSuccess)
-	// })
+	t.Run("TestAddDoltRemoteTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testAddDoltRemoteToolInvalidArguments)
+		RunTestWithTeardownSQL(t, "TestSuccess", testAddDoltRemoteTeardownSQL, testAddDoltRemoteToolSuccess)
+	})
+	t.Run("TestRemoveDoltRemoteTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testRemoveDoltRemoteToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testRemoveDoltRemoteSetupSQL, testRemoveDoltRemoteToolSuccess)
+	})
 	// t.Run("TestCloneDatabaseTool", func(t *testing.T) {
 	// 	RunTest(t, "TestInvalidArguments", testCloneDatabaseToolInvalidArguments)
 	// 	RunTestWithTeardownSQL(t, "TestSuccess", testCloneDatabaseTeardownSQL, testCloneDatabaseToolSuccess)
