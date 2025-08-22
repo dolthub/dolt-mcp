@@ -155,12 +155,12 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testDoltFetchAllBranchesToolInvalidArguments)
 		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testDoltFetchAllBranchesSetupSQL, testDoltFetchAllBranchesTeardownSQL, testDoltFetchAllBranchesToolSuccess)
 	})
-	// t.Run("TestDoltPushBranchTool", func(t *testing.T) {
-	// 	RunTest(t, "TestInvalidArguments", testDoltPushBranchToolInvalidArguments)
-	// 	RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testDoltPushBranchSetupSQL, testDoltPushBranchTeardownSQL, testDoltPushBranchToolSuccess)
-	// })
-	// t.Run("TestDoltPullBranchTool", func(t *testing.T) {
-	// 	RunTest(t, "TestInvalidArguments", testDoltPullBranchToolInvalidArguments)
-	// 	RunTestWithTeardownSQL(t, "TestSuccess", testDoltPullBranchTeardownSQL, testDoltPullBranchToolSuccess)
-	// })
+	t.Run("TestDoltPushBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDoltPushBranchToolInvalidArguments)
+		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testDoltPushBranchSetupSQL, testDoltPushBranchTeardownSQL, testDoltPushBranchToolSuccess)
+	})
+	t.Run("TestDoltPullBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDoltPullBranchToolInvalidArguments)
+		RunTestWithTeardownSQL(t, "TestSuccess", testDoltPullBranchTeardownSQL, testDoltPullBranchToolSuccess)
+	})
 }
