@@ -55,22 +55,22 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testExecToolInvalidArguments)
 		RunTest(t, "TestSuccess", testExecToolSuccess)
 	})
-	// t.Run("TestCreateDoltBranchFromHeadTool", func(t *testing.T) {
-	// 	RunTest(t, "TestInvalidArguments", testCreateDoltBranchFromHeadToolInvalidArguments)
-	// 	RunTestWithTeardownSQL(t, "TestSuccess", testCreateDoltBranchTeardownSQL, testCreateDoltBranchFromHeadToolSuccess)
-	// })
+	t.Run("TestCreateDoltBranchFromHeadTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testCreateDoltBranchFromHeadToolInvalidArguments)
+		RunTestWithTeardownSQL(t, "TestSuccess", testCreateDoltBranchTeardownSQL, testCreateDoltBranchFromHeadToolSuccess)
+	})
 	t.Run("TestCreateDoltBranchTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testCreateDoltBranchToolInvalidArguments)
 		RunTestWithTeardownSQL(t, "TestSuccess", testCreateDoltBranchTeardownSQL, testCreateDoltBranchToolSuccess)
 	})
-	// t.Run("TestMoveDoltBranchTool", func(t *testing.T) {
-	// 	RunTest(t, "TestInvalidArguments", testMoveDoltBranchToolInvalidArguments)
-	// 	RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testMoveDoltBranchSetupSQL, testMoveDoltBranchTeardownSQL, testMoveDoltBranchToolSuccess)
-	// })
-	// t.Run("TestDeleteDoltBranchTool", func(t *testing.T) {
-	// 	RunTest(t, "TestInvalidArguments", testDeleteDoltBranchToolInvalidArguments)
-	// 	RunTestWithSetupSQL(t, "TestSuccess", testDeleteDoltBranchSetupSQL, testDeleteDoltBranchToolSuccess)
-	// })
+	t.Run("TestMoveDoltBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testMoveDoltBranchToolInvalidArguments)
+		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testMoveDoltBranchSetupSQL, testMoveDoltBranchTeardownSQL, testMoveDoltBranchToolSuccess)
+	})
+	t.Run("TestDeleteDoltBranchTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testDeleteDoltBranchToolInvalidArguments)
+		RunTestWithSetupSQL(t, "TestSuccess", testDeleteDoltBranchSetupSQL, testDeleteDoltBranchToolSuccess)
+	})
 	t.Run("TestStageTableForDoltCommitTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testStageTableForDoltCommitToolInvalidArguments)
 		RunTestWithSetupSQLSkipDoltCommit(t, "TestSuccess", testStageTableForDoltCommitSetupSQL, testStageTableForDoltCommitToolSuccess)

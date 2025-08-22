@@ -59,7 +59,7 @@ func RegisterShowTablesTool(server pkg.Server) {
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionOnBranchUsingDatabase(ctx, config, workingBranch, workingDatabase)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
 		if err != nil {
 			fmt.Println("DUSTIN: DB TX error:", err.Error())
 			result = mcp.NewToolResultError(err.Error())

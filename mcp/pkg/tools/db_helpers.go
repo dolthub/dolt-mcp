@@ -50,7 +50,7 @@ func NewDatabaseTransactionUsingDatabase(ctx context.Context, config db.Config, 
 	return tx, nil
 }
 
-func NewDatabaseTransactionOnBranchUsingDatabase(ctx context.Context, config db.Config, branch, database string) (db.DatabaseTransaction, error) {
+func NewDatabaseTransactionUsingDatabaseOnBranch(ctx context.Context, config db.Config, database, branch string) (db.DatabaseTransaction, error) {
 	tx, err := db.NewDatabaseTransaction(ctx, config)
 	if err != nil {
 		fmt.Println("DUSTIN: NewDatabaseTransactionOnBranchUsingDatabase: NewDatabaseTransaction: error:", err.Error())

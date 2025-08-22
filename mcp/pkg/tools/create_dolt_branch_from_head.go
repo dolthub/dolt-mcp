@@ -28,6 +28,11 @@ func NewCreateDoltBranchFromHeadTool() mcp.Tool {
         mcp.WithIdempotentHintAnnotation(false),
         mcp.WithOpenWorldHintAnnotation(false),
         mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
             WorkingBranchCallToolArgumentName,
             mcp.Required(),
             mcp.Description(WorkingBranchCallToolArgumentDescription),
@@ -50,6 +55,14 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 
 	mcpServer.AddTool(createDoltBranchFromHeadTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
+
+		var workingDatabase string
+		workingDatabase, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		var workingBranch string
 		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
 		if err != nil {
@@ -69,7 +82,7 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionOnBranch(ctx, config, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
