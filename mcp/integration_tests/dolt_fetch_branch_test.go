@@ -33,13 +33,55 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DoltFetchBranchToolName,
+					Arguments: map[string]any{
+						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.BranchCallToolArgumentName:     "fetchme",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DoltFetchBranchToolName,
+					Arguments: map[string]any{
+						tools.RemoteNameCallToolArgumentName:      "origin",
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.BranchCallToolArgumentName:          "fetchme",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DoltFetchBranchToolName,
+					Arguments: map[string]any{
+						tools.RemoteNameCallToolArgumentName:      "origin",
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.BranchCallToolArgumentName:          "fetchme",
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing remote name argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DoltFetchBranchToolName,
 					Arguments: map[string]any{
-						tools.BranchCallToolArgumentName: "fetchme",
+						tools.BranchCallToolArgumentName:          "fetchme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -51,8 +93,9 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.DoltFetchBranchToolName,
 					Arguments: map[string]any{
-						tools.RemoteURLCallToolArgumentName: "",
-						tools.BranchCallToolArgumentName:    "fetchme",
+						tools.RemoteNameCallToolArgumentName:      "",
+						tools.BranchCallToolArgumentName:          "fetchme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -64,8 +107,9 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.DoltFetchBranchToolName,
 					Arguments: map[string]any{
-						tools.RemoteURLCallToolArgumentName: "doesnotexist",
-						tools.BranchCallToolArgumentName:    "fetchme",
+						tools.RemoteNameCallToolArgumentName:      "doesnotexist",
+						tools.BranchCallToolArgumentName:          "fetchme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -77,7 +121,8 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.DoltFetchBranchToolName,
 					Arguments: map[string]any{
-						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.RemoteNameCallToolArgumentName:      "origin",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -89,8 +134,9 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.DoltFetchBranchToolName,
 					Arguments: map[string]any{
-						tools.RemoteNameCallToolArgumentName: "origin",
-						tools.BranchCallToolArgumentName:     "",
+						tools.RemoteNameCallToolArgumentName:      "origin",
+						tools.BranchCallToolArgumentName:          "",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -102,8 +148,9 @@ func testDoltFetchBranchToolInvalidArguments(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.DoltFetchBranchToolName,
 					Arguments: map[string]any{
-						tools.RemoteNameCallToolArgumentName: "origin",
-						tools.BranchCallToolArgumentName:     "doesnotexist",
+						tools.RemoteNameCallToolArgumentName:      "origin",
+						tools.BranchCallToolArgumentName:          "doesnotexist",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -153,8 +200,9 @@ CALL DOLT_BRANCH('-c', @current_branch, 'fetchme');
 		Params: mcp.CallToolParams{
 			Name: tools.DoltFetchBranchToolName,
 			Arguments: map[string]any{
-				tools.RemoteNameCallToolArgumentName: "origin",
-				tools.BranchCallToolArgumentName:     "fetchme",
+				tools.RemoteNameCallToolArgumentName:      "origin",
+				tools.BranchCallToolArgumentName:          "fetchme",
+				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},
 	}
@@ -170,7 +218,7 @@ CALL DOLT_BRANCH('-c', @current_branch, 'fetchme');
 
 	_, err = s.testDb.ExecContext(ctx, "CALL DOLT_CHECKOUT('fetchme');")
 	require.NoError(s.t, err)
-	
+
 	_, err = s.testDb.ExecContext(ctx, fmt.Sprintf("CALL DOLT_CHECKOUT('%s');", testBranchName))
 	require.NoError(s.t, err)
 }
