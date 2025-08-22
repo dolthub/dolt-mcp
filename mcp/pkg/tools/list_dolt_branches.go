@@ -15,27 +15,38 @@ const (
 )
 
 func NewListDoltBranchesTool() mcp.Tool {
-    return mcp.NewTool(
-        ListDoltBranchesToolName,
-        mcp.WithDescription(ListDoltBranchesToolDescription),
-        mcp.WithReadOnlyHintAnnotation(true),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-    )
+	return mcp.NewTool(
+		ListDoltBranchesToolName,
+		mcp.WithDescription(ListDoltBranchesToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+        mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+	)
 }
 
 func RegisterListDoltBranchesTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    listDoltBranchesTool := NewListDoltBranchesTool()
+	mcpServer := server.MCP()
+	listDoltBranchesTool := NewListDoltBranchesTool()
 	mcpServer.AddTool(listDoltBranchesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
+
+		var workingDatabase string
+		workingDatabase, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
 
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-
-		tx, err = db.NewDatabaseTransaction(ctx, config)
+		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

@@ -126,11 +126,11 @@ The HTTP server exposes a REST API for MCP tool calls, useful for web applicatio
 
 - `--dolt-host`: Hostname of the Dolt SQL server
 - `--dolt-user`: Username for Dolt server authentication  
-- `--dolt-database`: Name of the database to connect to
 - `--stdio` or `--http`: Server mode selection
 
 ### Optional Parameters
 
+- `--dolt-database`: Name of the database to connect to
 - `--dolt-port`: Dolt server port (default: 3306)
 - `--dolt-password`: Password for authentication (can also use environment variable)
 - `--mcp-port`: HTTP server port (default: 8080, HTTP mode only)
@@ -146,9 +146,9 @@ When using Docker, you can configure the server using environment variables:
 #### Required
 - `DOLT_HOST`: Hostname of the Dolt SQL server
 - `DOLT_USER`: Username for Dolt server authentication
-- `DOLT_DATABASE`: Name of the database to connect to
 
 #### Optional
+- `DOLT_DATABASE`: Name of the database to connect to
 - `DOLT_PASSWORD`: Password for authentication
 - `DOLT_PORT`: Dolt server port (default: 3306)
 - `MCP_MODE`: Server mode: `http` or `stdio` (default: stdio)

@@ -12,7 +12,7 @@ var testDeleteDoltBranchSetupSQL = `CALL DOLT_BRANCH('-c', 'main', 'deleteme');
 CALL DOLT_BRANCH('-c', 'main', 'forcedeleteme');
 SELECT ACTIVE_BRANCH() INTO @current_branch;
 CALL DOLT_CHECKOUT('forcedeleteme');
-INSERT INTO `+ "`" +`people`+ "`" +` VALUES (UUID(), 'mark', 'twain');
+INSERT INTO ` + "`" + `people` + "`" + ` VALUES (UUID(), 'mark', 'twain');
 CALL DOLT_CHECKOUT(@current_branch);
 `
 
@@ -35,13 +35,55 @@ func testDeleteDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DeleteDoltBranchToolName,
+					Arguments: map[string]any{
+						tools.BranchCallToolArgumentName:        "deleteme",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DeleteDoltBranchToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.BranchCallToolArgumentName:          "deleteme",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DeleteDoltBranchToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.BranchCallToolArgumentName:          "deleteme",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing working_branch argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DeleteDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.BranchCallToolArgumentName: "deleteme",
+						tools.BranchCallToolArgumentName:          "deleteme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -53,8 +95,9 @@ func testDeleteDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 				Params: mcp.CallToolParams{
 					Name: tools.DeleteDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "",
-						tools.BranchCallToolArgumentName:        "deleteme",
+						tools.WorkingBranchCallToolArgumentName:   "",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.BranchCallToolArgumentName:          "deleteme",
 					},
 				},
 			},
@@ -66,8 +109,9 @@ func testDeleteDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 				Params: mcp.CallToolParams{
 					Name: tools.DeleteDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
-						tools.BranchCallToolArgumentName:        "deleteme",
+						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.BranchCallToolArgumentName:          "deleteme",
 					},
 				},
 			},
@@ -79,7 +123,8 @@ func testDeleteDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 				Params: mcp.CallToolParams{
 					Name: tools.DeleteDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -91,8 +136,9 @@ func testDeleteDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 				Params: mcp.CallToolParams{
 					Name: tools.DeleteDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.BranchCallToolArgumentName:        "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.BranchCallToolArgumentName:          "",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -104,8 +150,9 @@ func testDeleteDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 				Params: mcp.CallToolParams{
 					Name: tools.DeleteDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.BranchCallToolArgumentName:        "doesnotexist",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.BranchCallToolArgumentName:          "doesnotexist",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -151,8 +198,9 @@ func testDeleteDoltBranchToolSuccess(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DeleteDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.BranchCallToolArgumentName:        "deleteme",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.BranchCallToolArgumentName:          "deleteme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -163,9 +211,10 @@ func testDeleteDoltBranchToolSuccess(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DeleteDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.BranchCallToolArgumentName:        "forcedeleteme",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.ForceCallToolArgumentName:         true,
+						tools.BranchCallToolArgumentName:          "forcedeleteme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.ForceCallToolArgumentName:           true,
 					},
 				},
 			},

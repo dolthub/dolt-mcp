@@ -6,7 +6,10 @@ import (
 
 func TestTools(t *testing.T) {
 	RunTest(t, "TestListDatabasesTool", testListDatabasesTool)
-	RunTest(t, "TestListDoltBranchesTool", testListDoltBranchesTool)
+	t.Run("TestListDoltBranchesTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testListDoltBranchesToolInvalidArguments)
+		RunTest(t, "TestSuccess", testListDoltBranchesToolSuccess)
+	})
 	t.Run("TestCreateDatabaseTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testCreateDatabaseToolInvalidArguments)
 		RunTestWithTeardownSQL(t, "TestSuccess", testCreateDatabaseTeardownSQL, testCreateDatabaseToolSuccess)
@@ -128,7 +131,10 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testMergeDoltBranchNoFastForwardToolInvalidArguments)
 		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testMergeDoltBranchNoFastForwardSetupSQL, testMergeDoltBranchNoFastForwardTeardownSQL, testMergeDoltBranchNoFastForwardToolSuccess)
 	})
-	RunTestWithSetupAndTeardownSQL(t, "TestListDoltRemotesTool", testListDoltRemotesSetupSQL, testListDoltRemotesTeardownSQL, testListDoltRemotesToolSuccess)
+	t.Run("TestListDoltRemotesTool", func(t *testing.T) {
+		RunTest(t, "TestInvalidArguments", testListDoltRemotesToolInvalidArguments)
+		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testListDoltRemotesSetupSQL, testListDoltRemotesTeardownSQL, testListDoltRemotesToolSuccess)
+	})
 	t.Run("TestAddDoltRemoteTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testAddDoltRemoteToolInvalidArguments)
 		RunTestWithTeardownSQL(t, "TestSuccess", testAddDoltRemoteTeardownSQL, testAddDoltRemoteToolSuccess)

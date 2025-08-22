@@ -27,6 +27,47 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateDoltBranchFromHeadToolName,
+					Arguments: map[string]any{
+						tools.NewBranchCallToolArgumentName:     "valid",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateDoltBranchFromHeadToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.NewBranchCallToolArgumentName:     "valid",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.CreateDoltBranchFromHeadToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.NewBranchCallToolArgumentName:     "valid",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing working_branch argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
@@ -34,6 +75,7 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
 						tools.NewBranchCallToolArgumentName: "valid",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -47,6 +89,7 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: "",
 						tools.NewBranchCallToolArgumentName:     "valid",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -60,6 +103,7 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
 						tools.NewBranchCallToolArgumentName:     "valid",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -72,6 +116,7 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -85,6 +130,7 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 					Arguments: map[string]any{
 						tools.NewBranchCallToolArgumentName:     "",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -98,6 +144,7 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 					Arguments: map[string]any{
 						tools.NewBranchCallToolArgumentName:     testBranchName,
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -145,6 +192,7 @@ func testCreateDoltBranchFromHeadToolSuccess(s *testSuite, testBranchName string
 					Arguments: map[string]any{
 						tools.NewBranchCallToolArgumentName:     "valid",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
@@ -157,6 +205,7 @@ func testCreateDoltBranchFromHeadToolSuccess(s *testSuite, testBranchName string
 					Arguments: map[string]any{
 						tools.NewBranchCallToolArgumentName:     testBranchName,
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 						tools.ForceCallToolArgumentName: true,
 					},
 				},

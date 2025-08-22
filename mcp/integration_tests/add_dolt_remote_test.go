@@ -29,6 +29,47 @@ func testAddDoltRemoteToolInvalidArguments(s *testSuite, testBranchName string) 
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AddDoltRemoteToolName,
+					Arguments: map[string]any{
+						tools.RemoteURLCallToolArgumentName: "file://myurl",
+						tools.RemoteNameCallToolArgumentName: "origin",
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AddDoltRemoteToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.RemoteURLCallToolArgumentName: "file://myurl",
+						tools.RemoteNameCallToolArgumentName: "origin",
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.AddDoltRemoteToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.RemoteURLCallToolArgumentName: "file://myurl",
+						tools.RemoteNameCallToolArgumentName: "origin",
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing remote name argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
@@ -116,6 +157,7 @@ func testAddDoltRemoteToolSuccess(s *testSuite, testBranchName string) {
 			Arguments: map[string]any{
 				tools.RemoteNameCallToolArgumentName: "origin",
 				tools.RemoteURLCallToolArgumentName:  "file://myurl",
+				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},
 	}

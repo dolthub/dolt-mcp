@@ -34,14 +34,59 @@ func testMoveDoltBranchToolInvalidArguments(s *testSuite, testBranchName string)
 		errorExpected bool
 	}{
 		{
+			description:   "Missing working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.MoveDoltBranchToolName,
+					Arguments: map[string]any{
+						tools.OldNameCallToolArgumentName:       "moveme",
+						tools.NewNameCallToolArgumentName:       "imoved",
+						tools.WorkingBranchCallToolArgumentName: testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Empty working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.MoveDoltBranchToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "",
+						tools.OldNameCallToolArgumentName:         "moveme",
+						tools.NewNameCallToolArgumentName:         "imoved",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+					},
+				},
+			},
+		},
+		{
+			description:   "Non-existent working_database argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.MoveDoltBranchToolName,
+					Arguments: map[string]any{
+						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
+						tools.OldNameCallToolArgumentName:         "moveme",
+						tools.NewNameCallToolArgumentName:         "imoved",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+					},
+				},
+			},
+		},
+		{
 			description:   "Missing working_branch argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.MoveDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.OldNameCallToolArgumentName: "moveme",
-						tools.NewNameCallToolArgumentName: "imoved",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.OldNameCallToolArgumentName:         "moveme",
+						tools.NewNameCallToolArgumentName:         "imoved",
 					},
 				},
 			},
@@ -53,9 +98,10 @@ func testMoveDoltBranchToolInvalidArguments(s *testSuite, testBranchName string)
 				Params: mcp.CallToolParams{
 					Name: tools.MoveDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "",
-						tools.NewNameCallToolArgumentName:       "imoved",
-						tools.OldNameCallToolArgumentName:       "moveme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   "",
+						tools.NewNameCallToolArgumentName:         "imoved",
+						tools.OldNameCallToolArgumentName:         "moveme",
 					},
 				},
 			},
@@ -67,8 +113,9 @@ func testMoveDoltBranchToolInvalidArguments(s *testSuite, testBranchName string)
 				Params: mcp.CallToolParams{
 					Name: tools.MoveDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.NewNameCallToolArgumentName:       "imoved",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.NewNameCallToolArgumentName:         "imoved",
 					},
 				},
 			},
@@ -80,9 +127,10 @@ func testMoveDoltBranchToolInvalidArguments(s *testSuite, testBranchName string)
 				Params: mcp.CallToolParams{
 					Name: tools.MoveDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.OldNameCallToolArgumentName:       "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.NewNameCallToolArgumentName:       "imoved",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.OldNameCallToolArgumentName:         "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.NewNameCallToolArgumentName:         "imoved",
 					},
 				},
 			},
@@ -94,9 +142,10 @@ func testMoveDoltBranchToolInvalidArguments(s *testSuite, testBranchName string)
 				Params: mcp.CallToolParams{
 					Name: tools.MoveDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
-						tools.NewNameCallToolArgumentName:       "imoved",
-						tools.OldNameCallToolArgumentName:       testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
+						tools.NewNameCallToolArgumentName:         "imoved",
+						tools.OldNameCallToolArgumentName:         testBranchName,
 					},
 				},
 			},
@@ -108,8 +157,9 @@ func testMoveDoltBranchToolInvalidArguments(s *testSuite, testBranchName string)
 				Params: mcp.CallToolParams{
 					Name: tools.MoveDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.OldNameCallToolArgumentName:       "moveme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.OldNameCallToolArgumentName:         "moveme",
 					},
 				},
 			},
@@ -121,9 +171,10 @@ func testMoveDoltBranchToolInvalidArguments(s *testSuite, testBranchName string)
 				Params: mcp.CallToolParams{
 					Name: tools.MoveDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.NewNameCallToolArgumentName:       "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.OldNameCallToolArgumentName:       "moveme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.NewNameCallToolArgumentName:         "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.OldNameCallToolArgumentName:         "moveme",
 					},
 				},
 			},
@@ -135,9 +186,10 @@ func testMoveDoltBranchToolInvalidArguments(s *testSuite, testBranchName string)
 				Params: mcp.CallToolParams{
 					Name: tools.MoveDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.NewNameCallToolArgumentName:       testBranchName,
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.OldNameCallToolArgumentName:       "moveme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.NewNameCallToolArgumentName:         testBranchName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.OldNameCallToolArgumentName:         "moveme",
 					},
 				},
 			},
@@ -183,9 +235,10 @@ func testMoveDoltBranchToolSuccess(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.MoveDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.NewNameCallToolArgumentName:       "imoved",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.OldNameCallToolArgumentName:       "moveme",
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.NewNameCallToolArgumentName:         "imoved",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.OldNameCallToolArgumentName:         "moveme",
 					},
 				},
 			},
@@ -196,10 +249,11 @@ func testMoveDoltBranchToolSuccess(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.MoveDoltBranchToolName,
 					Arguments: map[string]any{
-						tools.NewNameCallToolArgumentName:       "iforcemoved",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.OldNameCallToolArgumentName:       "forcemoveme",
-						tools.ForceCallToolArgumentName:         true,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+						tools.NewNameCallToolArgumentName:         "iforcemoved",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.OldNameCallToolArgumentName:         "forcemoveme",
+						tools.ForceCallToolArgumentName:           true,
 					},
 				},
 			},

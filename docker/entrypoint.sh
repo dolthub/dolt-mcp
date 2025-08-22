@@ -21,20 +21,19 @@ if [ -z "$DOLT_USER" ]; then
     exit 1
 fi
 
-if [ -z "$DOLT_DATABASE" ]; then
-    echo "Error: DOLT_DATABASE environment variable is required"
-    exit 1
-fi
-
 # Add required parameters
 CMD_ARGS="$CMD_ARGS --dolt-host $DOLT_HOST"
 CMD_ARGS="$CMD_ARGS --dolt-port $DOLT_PORT"
 CMD_ARGS="$CMD_ARGS --dolt-user $DOLT_USER"
-CMD_ARGS="$CMD_ARGS --dolt-database $DOLT_DATABASE"
 
 # Add password if provided
 if [ -n "$DOLT_PASSWORD" ]; then
     CMD_ARGS="$CMD_ARGS --dolt-password $DOLT_PASSWORD"
+fi
+
+# Add database if provided
+if [ -n "$DOLT_DATABASE" ]; then
+    CMD_ARGS="$CMD_ARGS --dolt-database $DOLT_DATABASE"
 fi
 
 # Determine server mode
@@ -53,7 +52,12 @@ else
 fi
 
 echo "Connecting to Dolt server at $DOLT_HOST:$DOLT_PORT"
-echo "Database: $DOLT_DATABASE, User: $DOLT_USER"
+
+if [ -n "$DOLT_DATABASE" ]; then
+    echo "Database: $DOLT_DATABASE"
+fi
+
+echo "User: $DOLT_USER"
 
 # Execute the command
 exec ./dolt-mcp-server $CMD_ARGS

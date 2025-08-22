@@ -26,6 +26,11 @@ func NewRemoveDoltRemoteTool() mcp.Tool {
         mcp.WithIdempotentHintAnnotation(true),
         mcp.WithOpenWorldHintAnnotation(false),
         mcp.WithString(
+            WorkingDatabaseCallToolArgumentName,
+            mcp.Required(),
+            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+        ),
+        mcp.WithString(
             RemoteNameCallToolArgumentName,
             mcp.Required(),
             mcp.Description(RemoveDoltRemoteToolRemoteNameArgumentDescription),
@@ -39,6 +44,14 @@ func RegisterRemoveDoltRemoteTool(server pkg.Server) {
 
 	mcpServer.AddTool(removeDoltRemoteTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
+
+		var workingDatabase string
+		workingDatabase, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		var name string
 		name, err = GetRequiredStringArgumentFromCallToolRequest(request, RemoteNameCallToolArgumentName)
 		if err != nil {
@@ -49,7 +62,7 @@ func RegisterRemoveDoltRemoteTool(server pkg.Server) {
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = db.NewDatabaseTransaction(ctx, config)
+		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
