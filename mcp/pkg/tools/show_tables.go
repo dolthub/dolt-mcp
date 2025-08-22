@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -61,7 +60,6 @@ func RegisterShowTablesTool(server pkg.Server) {
 		var tx db.DatabaseTransaction
 		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
 		if err != nil {
-			fmt.Println("DUSTIN: DB TX error:", err.Error())
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}

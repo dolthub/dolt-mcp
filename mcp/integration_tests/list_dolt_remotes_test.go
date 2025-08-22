@@ -10,7 +10,6 @@ import (
 
 var testListDoltRemotesSetupSQL = "CALL DOLT_REMOTE('add', 'origin', 'file://myoriginremote');"
 var testListDoltRemotesTeardownSQL = "CALL DOLT_REMOTE('remove', 'origin');"
-// var testListDoltRemotesTeardownSQL = "SELECT 1;"
 
 func testListDoltRemotesToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

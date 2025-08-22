@@ -281,7 +281,6 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 		Port:         doltServerPort,
 		User:         mcpTestMCPServerSQLUser,
 		Password:     mcpTestMCPServerSQLPassword,
-		// DatabaseName: mcpTestDatabaseName,
 	}
 
 	logger := zap.NewNop()

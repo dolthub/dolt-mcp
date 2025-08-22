@@ -3,8 +3,6 @@ package tools
 import (
 	"context"
 
-	"fmt"
-
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -61,7 +59,6 @@ func RegisterListDoltBranchesTool(server pkg.Server) {
 		var formattedResult string
 		formattedResult, err = tx.QueryContext(ctx, ListDoltBranchesToolSQLQuery, db.ResultFormatMarkdown)
 		if err != nil {
-			fmt.Println("DUSTIN: list dolt branches: error:", err.Error())
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
