@@ -1,9 +1,11 @@
 module github.com/dolthub/dolt-mcp
 
-go 1.24.4
+go 1.24.6
 
 require (
 	github.com/dolthub/dolt/go v0.40.5-0.20250717234857-c708eac7b968
+	github.com/dolthub/go-mysql-server v0.20.1-0.20250717202802-75c0b198280d
+	github.com/dolthub/vitess v0.0.0-20250611225316-90a5898bfe26
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/google/uuid v1.6.0
 	github.com/mark3labs/mcp-go v0.34.0
@@ -18,9 +20,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dolthub/flatbuffers/v23 v23.3.3-dh.2 // indirect
-	github.com/dolthub/go-mysql-server v0.20.1-0.20250717202802-75c0b198280d // indirect
 	github.com/dolthub/jsonpath v0.0.2-0.20240227200619-19675ab05c71 // indirect
-	github.com/dolthub/vitess v0.0.0-20250611225316-90a5898bfe26 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
