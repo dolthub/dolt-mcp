@@ -172,6 +172,7 @@ func TestTools(t *testing.T) {
     t.Run("TestAddRemoveDoltTestTools", func(t *testing.T) {
         RunTest(t, "TestInvalidArguments", testAddDoltTestToolInvalidArguments)
         RunTest(t, "TestAddSuccess", testAddDoltTestToolSuccess)
+        RunTest(t, "TestRemoveInvalidArguments", testRemoveDoltTestToolInvalidArguments)
         RunTestWithSetupSQL(t, "TestRemoveSuccess", testRemoveDoltTestSetupSQL, testRemoveDoltTestToolSuccess)
     })
 }
