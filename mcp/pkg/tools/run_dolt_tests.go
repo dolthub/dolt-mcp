@@ -3,7 +3,6 @@ package tools
 import (
     "context"
     "fmt"
-    "strings"
 
     "github.com/dolthub/dolt-mcp/mcp/pkg"
     "github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -78,8 +77,8 @@ func RegisterRunDoltTestsTool(server pkg.Server) {
 			query = "SELECT * FROM dolt_test_run()"
         } else {
             // Arguments to dolt_test_run are string literals; escape any single quotes
-            query = fmt.Sprintf("SELECT * FROM dolt_test_run('%s')", strings.ReplaceAll(target, "'", "''"))
-		}
+            query = fmt.Sprintf("SELECT * FROM dolt_test_run('%s')", singleQuoteEscape(target))
+        }
 
 		var formatted string
 		formatted, err = tx.QueryContext(ctx, query, db.ResultFormatMarkdown)
