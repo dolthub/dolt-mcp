@@ -29,6 +29,14 @@ const (
 	RemoteNameCallToolArgumentName        = "remote_name"
 	URLCallToolArgumentName               = "url"
 	RemoteURLCallToolArgumentName         = "remote_url"
+
+    // Dolt tests related arguments
+    TestNameCallToolArgumentName          = "test_name"
+    TestGroupCallToolArgumentName         = "test_group"
+    AssertionTypeCallToolArgumentName     = "assertion_type"
+    AssertionComparatorCallToolArgumentName = "assertion_comparator"
+    AssertionValueCallToolArgumentName    = "assertion_value"
+    TargetCallToolArgumentName            = "target"
 )
 
 var DoltUseWorkingDatabaseSQLQueryFormatString = "USE %s;"

@@ -163,4 +163,15 @@ func TestTools(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testDoltPullBranchToolInvalidArguments)
 		RunTestWithTeardownSQL(t, "TestSuccess", testDoltPullBranchTeardownSQL, testDoltPullBranchToolSuccess)
 	})
+
+    // Dolt tests tools
+    t.Run("TestRunDoltTestsTool", func(t *testing.T) {
+        RunTest(t, "TestInvalidArguments", testRunDoltTestsToolInvalidArguments)
+        RunTestWithSetupSQL(t, "TestSuccess", testRunDoltTestsSetupSQL, testRunDoltTestsToolSuccess)
+    })
+    t.Run("TestAddRemoveDoltTestTools", func(t *testing.T) {
+        RunTest(t, "TestInvalidArguments", testAddDoltTestToolInvalidArguments)
+        RunTestWithSetupSQL(t, "TestAddSuccess", testAddDoltTestSetupSQL, testAddDoltTestToolSuccess)
+        RunTestWithSetupSQL(t, "TestRemoveSuccess", testRemoveDoltTestSetupSQL, testRemoveDoltTestToolSuccess)
+    })
 }
