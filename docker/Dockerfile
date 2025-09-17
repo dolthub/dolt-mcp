@@ -1,5 +1,5 @@
 # Use official golang image as the build stage
-FROM golang:1.24.4-alpine3.21 AS builder
+FROM golang:1.24.6-alpine3.21 AS builder
 
 # Set build arguments
 ARG DOLT_MCP_VERSION=development
