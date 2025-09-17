@@ -51,5 +51,8 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterDoltFetchAllBranchesTool(server)
 	tools.RegisterDoltPushBranchTool(server)
 	tools.RegisterDoltPullBranchTool(server)
+    tools.RegisterRunDoltTestsTool(server)
+    tools.RegisterAddDoltTestTool(server)
+    tools.RegisterRemoveDoltTestTool(server)
 }
 
