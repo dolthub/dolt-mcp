@@ -1,6 +1,6 @@
 module github.com/dolthub/dolt-mcp
 
-go 1.24.6
+go 1.25
 
 require (
 	github.com/dolthub/dolt/go v0.40.5-0.20250717234857-c708eac7b968
