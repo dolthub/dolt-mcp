@@ -109,8 +109,8 @@ func serve(ctx context.Context, logger *zap.Logger, handler http.Handler, port i
 		shutdown("context cancellation")
 	}()
 
-	// Start the server
-	fmt.Println("Serving Dolt MCP on", portStr)
+    // Start the server
+    logger.Info("Dolt MCP server ready. Accepting connections.", zap.String("addr", portStr))
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		logger.Error("error serving Dolt MCP server", zap.Error(err))
 	}
