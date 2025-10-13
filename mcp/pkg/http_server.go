@@ -154,6 +154,11 @@ type loggingResponseWriter struct {
 }
 
 func (w *loggingResponseWriter) WriteHeader(code int) {
+	// Only forward the first WriteHeader to the underlying writer to avoid
+	// triggering the net/http "superfluous response.WriteHeader" warning.
+	if w.statusCode != 0 {
+		return
+	}
 	w.statusCode = code
 	w.ResponseWriter.WriteHeader(code)
 }
