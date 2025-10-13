@@ -36,11 +36,11 @@ func testDoltResetHardToolInvalidArguments(s *testSuite, testBranchName string) 
 		{
 			description:   "Missing working_branch argument",
 			errorExpected: true,
-			request: mcp.CallToolRequest{
+            request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DoltResetHardToolName,
 					Arguments: map[string]any{
-						tools.BranchOrCommitSHACallToolArgumentName: testBranchName,
+                        tools.RevisionCallToolArgumentName: testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName:   mcpTestDatabaseName,
 					},
 				},
@@ -49,12 +49,12 @@ func testDoltResetHardToolInvalidArguments(s *testSuite, testBranchName string) 
 		{
 			description:   "Empty working_branch argument",
 			errorExpected: true,
-			request: mcp.CallToolRequest{
+            request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DoltResetHardToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:     "",
-						tools.BranchOrCommitSHACallToolArgumentName: testBranchName,
+                        tools.RevisionCallToolArgumentName: testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName:   mcpTestDatabaseName,
 					},
 				},
@@ -63,11 +63,11 @@ func testDoltResetHardToolInvalidArguments(s *testSuite, testBranchName string) 
 		{
 			description:   "Missing working_database argument",
 			errorExpected: true,
-			request: mcp.CallToolRequest{
+            request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DoltResetHardToolName,
 					Arguments: map[string]any{
-						tools.BranchOrCommitSHACallToolArgumentName: testBranchName,
+                        tools.RevisionCallToolArgumentName: testBranchName,
 						tools.WorkingBranchCallToolArgumentName:     testBranchName,
 					},
 				},
@@ -76,13 +76,13 @@ func testDoltResetHardToolInvalidArguments(s *testSuite, testBranchName string) 
 		{
 			description:   "Empty working_database argument",
 			errorExpected: true,
-			request: mcp.CallToolRequest{
+            request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DoltResetHardToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName:   "",
 						tools.WorkingBranchCallToolArgumentName:     testBranchName,
-						tools.BranchOrCommitSHACallToolArgumentName: testBranchName,
+                        tools.RevisionCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -90,13 +90,13 @@ func testDoltResetHardToolInvalidArguments(s *testSuite, testBranchName string) 
 		{
 			description:   "Non-existent working_database argument",
 			errorExpected: true,
-			request: mcp.CallToolRequest{
+            request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DoltResetHardToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName:   "doesnotexist",
 						tools.WorkingBranchCallToolArgumentName:     testBranchName,
-						tools.BranchOrCommitSHACallToolArgumentName: testBranchName,
+                        tools.RevisionCallToolArgumentName: testBranchName,
 					},
 				},
 			},
@@ -104,21 +104,21 @@ func testDoltResetHardToolInvalidArguments(s *testSuite, testBranchName string) 
 		{
 			description:   "Non-existent working_branch argument",
 			errorExpected: true,
-			request: mcp.CallToolRequest{
+            request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DoltResetHardToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:     "doesnotexist",
-						tools.BranchOrCommitSHACallToolArgumentName: testBranchName,
+                        tools.RevisionCallToolArgumentName: testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName:   mcpTestDatabaseName,
 					},
 				},
 			},
 		},
 		{
-			description:   "Missing branch_or_commit argument",
+            description:   "Missing revision argument",
 			errorExpected: true,
-			request: mcp.CallToolRequest{
+            request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DoltResetHardToolName,
 					Arguments: map[string]any{
@@ -129,13 +129,13 @@ func testDoltResetHardToolInvalidArguments(s *testSuite, testBranchName string) 
 			},
 		},
 		{
-			description:   "Empty branch_or_commit argument",
+            description:   "Empty revision argument",
 			errorExpected: true,
-			request: mcp.CallToolRequest{
+            request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DoltResetHardToolName,
 					Arguments: map[string]any{
-						tools.BranchOrCommitSHACallToolArgumentName: "",
+                        tools.RevisionCallToolArgumentName: "",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
@@ -143,13 +143,13 @@ func testDoltResetHardToolInvalidArguments(s *testSuite, testBranchName string) 
 			},
 		},
 		{
-			description:   "Non-existent branch_or_commit argument",
+            description:   "Non-existent revision argument",
 			errorExpected: true,
-			request: mcp.CallToolRequest{
+            request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: tools.DoltResetHardToolName,
 					Arguments: map[string]any{
-						tools.BranchOrCommitSHACallToolArgumentName: "bar",
+                        tools.RevisionCallToolArgumentName: "bar",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
@@ -204,11 +204,11 @@ func testDoltResetHardToolSuccess(s *testSuite, testBranchName string) {
 
 	requireTableHasNRows(s, ctx, "resetme", 2)
 
-	doltResetHardCallToolRequest := mcp.CallToolRequest{
+    doltResetHardCallToolRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: tools.DoltResetHardToolName,
 			Arguments: map[string]any{
-				tools.BranchOrCommitSHACallToolArgumentName: testBranchName,
+                tools.RevisionCallToolArgumentName: testBranchName,
 				tools.WorkingBranchCallToolArgumentName:     testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName:   mcpTestDatabaseName,
 			},

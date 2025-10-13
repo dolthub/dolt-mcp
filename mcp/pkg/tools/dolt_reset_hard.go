@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	DoltResetHardToolName                                 = "dolt_reset_hard"
-	DoltResetHardToolBranchOrCommitSHAArgumentDescription = "The branch or commit sha to hard reset."
-	DoltResetHardToolDescription                          = "Hard resets the specified branch."
-	DoltResetHardToolSQLQueryFormatString                 = "CALL DOLT_RESET('--hard', '%s');"
-	DoltResetHardToolCallSuccessFormatString              = "successfully hard reset: %s"
+    DoltResetHardToolName                        = "dolt_reset_hard"
+    DoltResetHardToolRevisionArgumentDescription = "The revision to reset to (working set, table name, branch, commit sha, or '.' for all tables)."
+    DoltResetHardToolDescription                 = "Hard resets the working set to the specified revision."
+    DoltResetHardToolSQLQueryFormatString        = "CALL DOLT_RESET('--hard', '%s');"
+    DoltResetHardToolCallSuccessFormatString     = "successfully hard reset: %s"
 )
 
 func NewDoltResetHardTool() mcp.Tool {
@@ -36,9 +36,9 @@ func NewDoltResetHardTool() mcp.Tool {
             mcp.Description(WorkingBranchCallToolArgumentDescription),
         ),
         mcp.WithString(
-            BranchOrCommitSHACallToolArgumentName,
+            RevisionCallToolArgumentName,
             mcp.Required(),
-            mcp.Description(DoltResetHardToolBranchOrCommitSHAArgumentDescription),
+            mcp.Description(DoltResetHardToolRevisionArgumentDescription),
         ),
     )
 }
@@ -63,8 +63,8 @@ func RegisterDoltResetHardTool(server pkg.Server) {
 			return
 		}
 
-		var branchOrCommitSHA string
-		branchOrCommitSHA, err = GetRequiredStringArgumentFromCallToolRequest(request, BranchOrCommitSHACallToolArgumentName)
+        var revision string
+        revision, err = GetRequiredStringArgumentFromCallToolRequest(request, RevisionCallToolArgumentName)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -86,13 +86,13 @@ func RegisterDoltResetHardTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltResetHardToolSQLQueryFormatString, branchOrCommitSHA))
+        err = tx.ExecContext(ctx, fmt.Sprintf(DoltResetHardToolSQLQueryFormatString, revision))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
 
-		result = mcp.NewToolResultText(fmt.Sprintf(DoltResetHardToolCallSuccessFormatString, branchOrCommitSHA))
+        result = mcp.NewToolResultText(fmt.Sprintf(DoltResetHardToolCallSuccessFormatString, revision))
 		return
 	})
 }

@@ -238,9 +238,8 @@ The Dolt MCP Server provides 40+ tools organized by functionality:
 - `merge_dolt_branch_no_fast_forward`: Force merge commit
 
 ### Reset Operations
-- `dolt_reset_table_soft`: Soft reset specific table
-- `dolt_reset_all_tables_soft`: Soft reset all tables
-- `dolt_reset_hard`: Hard reset to specific commit
+- `dolt_reset_soft`: Soft reset to a revision (table, branch, commit, working set, or '.')
+- `dolt_reset_hard`: Hard reset to a revision
 
 ### Remote Operations
 - `list_dolt_remotes`: List configured remotes
