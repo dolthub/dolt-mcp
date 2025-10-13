@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testDoltResetTableSoftSetupSQL = `CREATE TABLE ` + "`" + `resetme` + "`" + ` (pk int primary key);
+var testDoltResetSoftSetupSQL = `CREATE TABLE ` + "`" + `resetme` + "`" + ` (pk int primary key);
 INSERT INTO ` + "`" + `resetme` + "`" + ` VALUES (1);
 CALL DOLT_ADD('resetme');
 INSERT INTO ` + "`" + `resetme` + "`" + ` VALUES (2);
 `
 
-func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName string) {
+func testDoltResetSoftToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -25,7 +25,7 @@ func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName str
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.DoltResetTableSoftToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.DoltResetSoftToolName)
 
 	requests := []struct {
 		description   string
@@ -37,9 +37,9 @@ func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName str
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltResetTableSoftToolName,
+					Name: tools.DoltResetSoftToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName:           "resetme",
+						tools.RevisionCallToolArgumentName:        testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -50,10 +50,10 @@ func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName str
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltResetTableSoftToolName,
+					Name: tools.DoltResetSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "",
-						tools.TableCallToolArgumentName:           "resetme",
+						tools.RevisionCallToolArgumentName:        testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -64,9 +64,9 @@ func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName str
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltResetTableSoftToolName,
+					Name: tools.DoltResetSoftToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName:         "resetme",
+						tools.RevisionCallToolArgumentName:      testBranchName,
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
@@ -77,11 +77,11 @@ func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName str
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltResetTableSoftToolName,
+					Name: tools.DoltResetSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.TableCallToolArgumentName:           "resetme",
+						tools.RevisionCallToolArgumentName:        testBranchName,
 					},
 				},
 			},
@@ -91,11 +91,11 @@ func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName str
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltResetTableSoftToolName,
+					Name: tools.DoltResetSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.TableCallToolArgumentName:           "resetme",
+						tools.RevisionCallToolArgumentName:        testBranchName,
 					},
 				},
 			},
@@ -105,21 +105,21 @@ func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName str
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltResetTableSoftToolName,
+					Name: tools.DoltResetSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
-						tools.TableCallToolArgumentName:           "resetme",
+						tools.RevisionCallToolArgumentName:        testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
 			},
 		},
 		{
-			description:   "Missing table argument",
+			description:   "Missing revision argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltResetTableSoftToolName,
+					Name: tools.DoltResetSoftToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
@@ -128,13 +128,13 @@ func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName str
 			},
 		},
 		{
-			description:   "Empty table argument",
+			description:   "Empty revision argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltResetTableSoftToolName,
+					Name: tools.DoltResetSoftToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName:           "",
+						tools.RevisionCallToolArgumentName:        "",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
@@ -142,13 +142,13 @@ func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName str
 			},
 		},
 		{
-			description:   "Non-existent table argument",
+			description:   "Non-existent revision argument",
 			errorExpected: true,
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: tools.DoltResetTableSoftToolName,
+					Name: tools.DoltResetSoftToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName:           "bar",
+						tools.RevisionCallToolArgumentName:        "bar",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
@@ -172,7 +172,7 @@ func testDoltResetTableSoftToolInvalidArguments(s *testSuite, testBranchName str
 	}
 }
 
-func testDoltResetTableSoftToolSuccess(s *testSuite, testBranchName string) {
+func testDoltResetSoftToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()
 
 	client, err := NewMCPHTTPTestClient(testSuiteHTTPURL)
@@ -183,7 +183,7 @@ func testDoltResetTableSoftToolSuccess(s *testSuite, testBranchName string) {
 	require.NoError(s.t, err)
 	require.NotNil(s.t, serverInfo)
 
-	requireToolExists(s, ctx, client, serverInfo, tools.DoltResetTableSoftToolName)
+	requireToolExists(s, ctx, client, serverInfo, tools.DoltResetSoftToolName)
 
 	tableStatuses, err := getDoltStatus(s, ctx, "resetme")
 	require.NoError(s.t, err)
@@ -198,25 +198,25 @@ func testDoltResetTableSoftToolSuccess(s *testSuite, testBranchName string) {
 
 	requireTableHasNRows(s, ctx, "resetme", 2)
 
-	doltResetTableSoftCallToolRequest := mcp.CallToolRequest{
+	doltResetSoftCallToolRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
-			Name: tools.DoltResetTableSoftToolName,
+			Name: tools.DoltResetSoftToolName,
 			Arguments: map[string]any{
-				tools.TableCallToolArgumentName:           "resetme",
+				tools.RevisionCallToolArgumentName:        testBranchName,
 				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},
 	}
 
-	doltResetTableSoftCallToolResult, err := client.CallTool(ctx, doltResetTableSoftCallToolRequest)
+	doltResetSoftCallToolResult, err := client.CallTool(ctx, doltResetSoftCallToolRequest)
 	require.NoError(s.t, err)
-	require.False(s.t, doltResetTableSoftCallToolResult.IsError)
-	require.NotNil(s.t, doltResetTableSoftCallToolResult)
-	require.NotEmpty(s.t, doltResetTableSoftCallToolResult.Content)
-	resultString, err := resultToString(doltResetTableSoftCallToolResult)
+	require.False(s.t, doltResetSoftCallToolResult.IsError)
+	require.NotNil(s.t, doltResetSoftCallToolResult)
+	require.NotEmpty(s.t, doltResetSoftCallToolResult.Content)
+	resultString, err := resultToString(doltResetSoftCallToolResult)
 	require.NoError(s.t, err)
-	require.Contains(s.t, resultString, "successfully soft reset table")
+	require.Contains(s.t, resultString, "successfully soft reset")
 
 	tableStatuses, err = getDoltStatus(s, ctx, "resetme")
 	require.NoError(s.t, err)

@@ -18,34 +18,34 @@ const (
 )
 
 func NewStageTableForDoltCommitTool() mcp.Tool {
-    return mcp.NewTool(
-        StageTableForDoltCommitToolName,
-        mcp.WithDescription(StageTableForDoltCommitToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            TableCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(StageTableForDoltCommitToolTableArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		StageTableForDoltCommitToolName,
+		mcp.WithDescription(StageTableForDoltCommitToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			TableCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(StageTableForDoltCommitToolTableArgumentDescription),
+		),
+	)
 }
 
 func RegisterStageTableForDoltCommitTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    stageTableForDoltCommitTool := NewStageTableForDoltCommitTool()
+	mcpServer := server.MCP()
+	stageTableForDoltCommitTool := NewStageTableForDoltCommitTool()
 
 	mcpServer.AddTool(stageTableForDoltCommitTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -96,4 +96,3 @@ func RegisterStageTableForDoltCommitTool(server pkg.Server) {
 		return
 	})
 }
-

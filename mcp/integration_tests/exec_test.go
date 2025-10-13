@@ -33,7 +33,7 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+						tools.QueryCallToolArgumentName:           "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -46,9 +46,9 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "",
+						tools.WorkingBranchCallToolArgumentName:   "",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+						tools.QueryCallToolArgumentName:           "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
 					},
 				},
 			},
@@ -60,9 +60,9 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+						tools.QueryCallToolArgumentName:           "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
 					},
 				},
 			},
@@ -74,7 +74,7 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
@@ -88,8 +88,8 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.QueryCallToolArgumentName:           "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
 					},
 				},
 			},
@@ -102,8 +102,8 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.QueryCallToolArgumentName:           "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
 					},
 				},
 			},
@@ -115,7 +115,7 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -128,8 +128,8 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:         "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:           "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -142,8 +142,8 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.ExecToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:         "this is not sql",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:           "this is not sql",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -183,8 +183,8 @@ func testExecToolSuccess(s *testSuite, testBranchName string) {
 		Params: mcp.CallToolParams{
 			Name: tools.ExecToolName,
 			Arguments: map[string]any{
-				tools.QueryCallToolArgumentName:         "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
-				tools.WorkingBranchCallToolArgumentName: testBranchName,
+				tools.QueryCallToolArgumentName:           "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},

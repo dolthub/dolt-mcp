@@ -199,4 +199,3 @@ func testStageAllTablesForDoltCommitToolSuccess(s *testSuite, testBranchName str
 		}
 	}
 }
-

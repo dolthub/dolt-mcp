@@ -14,8 +14,8 @@ var testDoltStatusNewTable = "new table"
 var testDoltStatusModifiedTable = "modified"
 
 type TableStatus struct {
-	Status string
-	Staged bool
+	Status    string
+	Staged    bool
 	TableName string
 }
 
@@ -35,7 +35,7 @@ func requireToolExists(s *testSuite, ctx context.Context, client *TestClient, se
 }
 
 func requireTableHasNRows(s *testSuite, ctx context.Context, tableName string, numberOfRows int) {
-	var actualCount int 
+	var actualCount int
 
 	row := s.testDb.QueryRowContext(ctx, fmt.Sprintf("SELECT COUNT(*) AS count FROM `%s`;", tableName))
 
@@ -84,8 +84,8 @@ func getDoltStatus(s *testSuite, ctx context.Context, tableName string) ([]*Tabl
 
 		tableStatuses = append(tableStatuses, &TableStatus{
 			TableName: tableName,
-			Staged: staged,
-			Status: status,
+			Staged:    staged,
+			Status:    status,
 		})
 	}
 
@@ -114,4 +114,3 @@ func getLastCommitHash(s *testSuite, ctx context.Context) (string, error) {
 
 	return hash, nil
 }
-

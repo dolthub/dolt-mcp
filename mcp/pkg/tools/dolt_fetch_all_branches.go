@@ -18,29 +18,29 @@ const (
 )
 
 func NewDoltFetchAllBranchesTool() mcp.Tool {
-    return mcp.NewTool(
-        DoltFetchAllBranchesToolName,
-        mcp.WithDescription(DoltFetchAllBranchesToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(true),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            RemoteNameCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(DoltFetchAllBranchesToolRemoteNameArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		DoltFetchAllBranchesToolName,
+		mcp.WithDescription(DoltFetchAllBranchesToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(true),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			RemoteNameCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(DoltFetchAllBranchesToolRemoteNameArgumentDescription),
+		),
+	)
 }
 
 func RegisterDoltFetchAllBranchesTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    doltFetchAllBranchesTool := NewDoltFetchAllBranchesTool()
+	mcpServer := server.MCP()
+	doltFetchAllBranchesTool := NewDoltFetchAllBranchesTool()
 
 	mcpServer.AddTool(doltFetchAllBranchesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -85,4 +85,3 @@ func RegisterDoltFetchAllBranchesTool(server pkg.Server) {
 		return
 	})
 }
-

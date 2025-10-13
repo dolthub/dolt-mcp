@@ -193,8 +193,8 @@ func testMergeDoltBranchNoFastForwardToolSuccess(s *testSuite, testBranchName st
 		Params: mcp.CallToolParams{
 			Name: tools.MergeDoltBranchNoFastForwardToolName,
 			Arguments: map[string]any{
-				tools.BranchCallToolArgumentName:        "mergeme",
-				tools.WorkingBranchCallToolArgumentName: testBranchName,
+				tools.BranchCallToolArgumentName:          "mergeme",
+				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},

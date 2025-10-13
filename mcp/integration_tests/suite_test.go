@@ -118,4 +118,3 @@ func RunTestWithSetupAndTeardownSQLSkipDoltCommit(t *testing.T, testName, setupS
 		testFunc(suite, generatedTestBranchName)
 	})
 }
-

@@ -77,37 +77,37 @@ func testRunDoltTestsToolSuccess(s *testSuite, testBranchName string) {
 	require.Contains(s.t, out, "test_people_count")
 	require.Contains(s.t, out, "test_people_columns")
 
-    // Run a single test by name
-    reqByName := mcp.CallToolRequest{Params: mcp.CallToolParams{
-        Name: tools.RunDoltTestsToolName,
-        Arguments: map[string]any{
-            tools.WorkingBranchCallToolArgumentName:   testBranchName,
-            tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-            tools.TargetCallToolArgumentName:          "test_people_count",
-        },
-    }}
-    resByName, err := client.CallTool(ctx, reqByName)
-    require.NoError(s.t, err)
-    require.False(s.t, resByName.IsError)
-    outByName, err := resultToString(resByName)
-    require.NoError(s.t, err)
-    require.Contains(s.t, outByName, "test_people_count")
-    require.NotContains(s.t, outByName, "test_people_columns")
+	// Run a single test by name
+	reqByName := mcp.CallToolRequest{Params: mcp.CallToolParams{
+		Name: tools.RunDoltTestsToolName,
+		Arguments: map[string]any{
+			tools.WorkingBranchCallToolArgumentName:   testBranchName,
+			tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+			tools.TargetCallToolArgumentName:          "test_people_count",
+		},
+	}}
+	resByName, err := client.CallTool(ctx, reqByName)
+	require.NoError(s.t, err)
+	require.False(s.t, resByName.IsError)
+	outByName, err := resultToString(resByName)
+	require.NoError(s.t, err)
+	require.Contains(s.t, outByName, "test_people_count")
+	require.NotContains(s.t, outByName, "test_people_columns")
 
-    // Run tests by group name
-    reqByGroup := mcp.CallToolRequest{Params: mcp.CallToolParams{
-        Name: tools.RunDoltTestsToolName,
-        Arguments: map[string]any{
-            tools.WorkingBranchCallToolArgumentName:   testBranchName,
-            tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-            tools.TargetCallToolArgumentName:          "people",
-        },
-    }}
-    resByGroup, err := client.CallTool(ctx, reqByGroup)
-    require.NoError(s.t, err)
-    require.False(s.t, resByGroup.IsError)
-    outByGroup, err := resultToString(resByGroup)
-    require.NoError(s.t, err)
-    require.Contains(s.t, outByGroup, "test_people_count")
-    require.Contains(s.t, outByGroup, "test_people_columns")
+	// Run tests by group name
+	reqByGroup := mcp.CallToolRequest{Params: mcp.CallToolParams{
+		Name: tools.RunDoltTestsToolName,
+		Arguments: map[string]any{
+			tools.WorkingBranchCallToolArgumentName:   testBranchName,
+			tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+			tools.TargetCallToolArgumentName:          "people",
+		},
+	}}
+	resByGroup, err := client.CallTool(ctx, reqByGroup)
+	require.NoError(s.t, err)
+	require.False(s.t, resByGroup.IsError)
+	outByGroup, err := resultToString(resByGroup)
+	require.NoError(s.t, err)
+	require.Contains(s.t, outByGroup, "test_people_count")
+	require.Contains(s.t, outByGroup, "test_people_columns")
 }

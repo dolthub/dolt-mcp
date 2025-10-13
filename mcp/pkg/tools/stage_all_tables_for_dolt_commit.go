@@ -16,29 +16,29 @@ const (
 )
 
 func NewStageAllTablesForDoltCommitTool() mcp.Tool {
-    return mcp.NewTool(
-        StageAllTablesForDoltCommitToolName,
-        mcp.WithDescription(StageAllTablesForDoltCommitToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		StageAllTablesForDoltCommitToolName,
+		mcp.WithDescription(StageAllTablesForDoltCommitToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+	)
 }
 
 func RegisterStageAllTablesForDoltCommitTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    stageAllTablesForDoltCommitTool := NewStageAllTablesForDoltCommitTool()
+	mcpServer := server.MCP()
+	stageAllTablesForDoltCommitTool := NewStageAllTablesForDoltCommitTool()
 
 	mcpServer.AddTool(stageAllTablesForDoltCommitTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

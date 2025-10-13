@@ -10,17 +10,17 @@ import (
 )
 
 const (
-	UnstageTableToolName                     = "unstage_table"
-	UnstageTableToolTableArgumentDescription = "The name of the table to remove from the staging area."
-	UnstageTableToolDescription              = "Removes a staged table from the staging area."
-	UnstageTableToolSQLQueryFormatString     = "CALL DOLT_RESET('%s');"
-	UnstageTableToolCallSuccessFormatString  = "successfully unstaged table: %s"
+	DoltResetSoftToolName                        = "dolt_reset_soft"
+	DoltResetSoftToolRevisionArgumentDescription = "The revision to reset to (working set, table name, branch, commit sha, or '.' for all tables)."
+	DoltResetSoftToolDescription                 = "Soft resets the working set to the specified revision."
+	DoltResetSoftToolSQLQueryFormatString        = "CALL DOLT_RESET('--soft', '%s');"
+	DoltResetSoftToolCallSuccessFormatString     = "successfully soft reset: %s"
 )
 
-func NewUnstageTableTool() mcp.Tool {
+func NewDoltResetSoftTool() mcp.Tool {
 	return mcp.NewTool(
-		UnstageTableToolName,
-		mcp.WithDescription(UnstageTableToolDescription),
+		DoltResetSoftToolName,
+		mcp.WithDescription(DoltResetSoftToolDescription),
 		mcp.WithReadOnlyHintAnnotation(false),
 		mcp.WithDestructiveHintAnnotation(false),
 		mcp.WithIdempotentHintAnnotation(true),
@@ -36,18 +36,18 @@ func NewUnstageTableTool() mcp.Tool {
 			mcp.Description(WorkingBranchCallToolArgumentDescription),
 		),
 		mcp.WithString(
-			TableCallToolArgumentName,
+			RevisionCallToolArgumentName,
 			mcp.Required(),
-			mcp.Description(UnstageTableToolTableArgumentDescription),
+			mcp.Description(DoltResetSoftToolRevisionArgumentDescription),
 		),
 	)
 }
 
-func RegisterUnstageTableTool(server pkg.Server) {
+func RegisterDoltResetSoftTool(server pkg.Server) {
 	mcpServer := server.MCP()
-	unstageTableTool := NewUnstageTableTool()
+	resetSoftTool := NewDoltResetSoftTool()
 
-	mcpServer.AddTool(unstageTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+	mcpServer.AddTool(resetSoftTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		var workingBranch string
 		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
@@ -63,8 +63,8 @@ func RegisterUnstageTableTool(server pkg.Server) {
 			return
 		}
 
-		var table string
-		table, err = GetRequiredStringArgumentFromCallToolRequest(request, TableCallToolArgumentName)
+		var revision string
+		revision, err = GetRequiredStringArgumentFromCallToolRequest(request, RevisionCallToolArgumentName)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -86,13 +86,13 @@ func RegisterUnstageTableTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, fmt.Sprintf(UnstageTableToolSQLQueryFormatString, table))
+		err = tx.ExecContext(ctx, fmt.Sprintf(DoltResetSoftToolSQLQueryFormatString, revision))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
 
-		result = mcp.NewToolResultText(fmt.Sprintf(UnstageTableToolCallSuccessFormatString, table))
+		result = mcp.NewToolResultText(fmt.Sprintf(DoltResetSoftToolCallSuccessFormatString, revision))
 		return
 	})
 }

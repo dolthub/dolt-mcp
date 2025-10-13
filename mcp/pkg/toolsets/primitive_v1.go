@@ -33,8 +33,7 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterUnstageTableTool(server)
 	tools.RegisterUnstageAllTablesTool(server)
 	tools.RegisterCreateDoltCommitTool(server)
-	tools.RegisterDoltResetTableSoftTool(server)
-	tools.RegisterDoltResetAllTablesSoftTool(server)
+	tools.RegisterDoltResetSoftTool(server)
 	tools.RegisterDoltResetHardTool(server)
 	tools.RegisterListDoltCommitsTool(server)
 	tools.RegisterListDoltDiffChangesInWorkingSetTool(server)
@@ -51,8 +50,7 @@ func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
 	tools.RegisterDoltFetchAllBranchesTool(server)
 	tools.RegisterDoltPushBranchTool(server)
 	tools.RegisterDoltPullBranchTool(server)
-    tools.RegisterRunDoltTestsTool(server)
-    tools.RegisterAddDoltTestTool(server)
-    tools.RegisterRemoveDoltTestTool(server)
+	tools.RegisterRunDoltTestsTool(server)
+	tools.RegisterAddDoltTestTool(server)
+	tools.RegisterRemoveDoltTestTool(server)
 }
-

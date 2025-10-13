@@ -15,43 +15,43 @@ const (
 	CreateDoltBranchFromHeadToolForceArgumentDescription     = "If true, will force the creation of the new branch even if it already exists."
 	CreateDoltBranchFromHeadToolDescription                  = "Creates a new branch from current HEAD."
 	CreateDoltBranchFromHeadToolCallSuccessFormatString      = "successfully created branch: %s"
-	CreateDoltBranchFromHeadToolSQLQueryFormatString             = "CALL DOLT_BRANCH('%s');"
-	CreateDoltBranchFromHeadToolForceSQLQueryFormatString        = "CALL DOLT_BRANCH('-f', '%s');"
+	CreateDoltBranchFromHeadToolSQLQueryFormatString         = "CALL DOLT_BRANCH('%s');"
+	CreateDoltBranchFromHeadToolForceSQLQueryFormatString    = "CALL DOLT_BRANCH('-f', '%s');"
 )
 
 func NewCreateDoltBranchFromHeadTool() mcp.Tool {
-    return mcp.NewTool(
-        CreateDoltBranchFromHeadToolName,
-        mcp.WithDescription(CreateDoltBranchFromHeadToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(false),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            NewBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(CreateDoltBranchToolNewBranchArgumentDescription),
-        ),
-        mcp.WithBoolean(
-            ForceCallToolArgumentName,
-            mcp.Description(CreateDoltBranchFromHeadToolForceArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		CreateDoltBranchFromHeadToolName,
+		mcp.WithDescription(CreateDoltBranchFromHeadToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			NewBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(CreateDoltBranchToolNewBranchArgumentDescription),
+		),
+		mcp.WithBoolean(
+			ForceCallToolArgumentName,
+			mcp.Description(CreateDoltBranchFromHeadToolForceArgumentDescription),
+		),
+	)
 }
 
 func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    createDoltBranchFromHeadTool := NewCreateDoltBranchFromHeadTool()
+	mcpServer := server.MCP()
+	createDoltBranchFromHeadTool := NewCreateDoltBranchFromHeadTool()
 
 	mcpServer.AddTool(createDoltBranchFromHeadTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -113,4 +113,3 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 		return
 	})
 }
-

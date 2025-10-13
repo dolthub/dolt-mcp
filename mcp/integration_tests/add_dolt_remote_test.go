@@ -35,7 +35,7 @@ func testAddDoltRemoteToolInvalidArguments(s *testSuite, testBranchName string) 
 				Params: mcp.CallToolParams{
 					Name: tools.AddDoltRemoteToolName,
 					Arguments: map[string]any{
-						tools.RemoteURLCallToolArgumentName: "file://myurl",
+						tools.RemoteURLCallToolArgumentName:  "file://myurl",
 						tools.RemoteNameCallToolArgumentName: "origin",
 					},
 				},
@@ -49,8 +49,8 @@ func testAddDoltRemoteToolInvalidArguments(s *testSuite, testBranchName string) 
 					Name: tools.AddDoltRemoteToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
-						tools.RemoteURLCallToolArgumentName: "file://myurl",
-						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.RemoteURLCallToolArgumentName:       "file://myurl",
+						tools.RemoteNameCallToolArgumentName:      "origin",
 					},
 				},
 			},
@@ -63,8 +63,8 @@ func testAddDoltRemoteToolInvalidArguments(s *testSuite, testBranchName string) 
 					Name: tools.AddDoltRemoteToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
-						tools.RemoteURLCallToolArgumentName: "file://myurl",
-						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.RemoteURLCallToolArgumentName:       "file://myurl",
+						tools.RemoteNameCallToolArgumentName:      "origin",
 					},
 				},
 			},
@@ -155,8 +155,8 @@ func testAddDoltRemoteToolSuccess(s *testSuite, testBranchName string) {
 		Params: mcp.CallToolParams{
 			Name: tools.AddDoltRemoteToolName,
 			Arguments: map[string]any{
-				tools.RemoteNameCallToolArgumentName: "origin",
-				tools.RemoteURLCallToolArgumentName:  "file://myurl",
+				tools.RemoteNameCallToolArgumentName:      "origin",
+				tools.RemoteURLCallToolArgumentName:       "file://myurl",
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},

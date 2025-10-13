@@ -44,7 +44,7 @@ func testCloneDatabaseToolInvalidArguments(s *testSuite, testBranchName string) 
 				Params: mcp.CallToolParams{
 					Name: tools.CloneDatabaseToolName,
 					Arguments: map[string]any{
-						tools.RemoteURLCallToolArgumentName:  "",
+						tools.RemoteURLCallToolArgumentName: "",
 					},
 				},
 			},
@@ -91,8 +91,8 @@ CALL DOLT_COMMIT('-Am', 'add t1 with value 1');`
 		Params: mcp.CallToolParams{
 			Name: tools.CloneDatabaseToolName,
 			Arguments: map[string]any{
-				tools.NameCallToolArgumentName: "alt",
-				tools.RemoteURLCallToolArgumentName:  fileRemoteDatabase.GetRemoteURL(),
+				tools.NameCallToolArgumentName:      "alt",
+				tools.RemoteURLCallToolArgumentName: fileRemoteDatabase.GetRemoteURL(),
 			},
 		},
 	}

@@ -10,42 +10,42 @@ import (
 )
 
 const (
-	DoltResetHardToolName                                 = "dolt_reset_hard"
-	DoltResetHardToolBranchOrCommitSHAArgumentDescription = "The branch or commit sha to hard reset."
-	DoltResetHardToolDescription                          = "Hard resets the specified branch."
-	DoltResetHardToolSQLQueryFormatString                 = "CALL DOLT_RESET('--hard', '%s');"
-	DoltResetHardToolCallSuccessFormatString              = "successfully hard reset: %s"
+	DoltResetHardToolName                        = "dolt_reset_hard"
+	DoltResetHardToolRevisionArgumentDescription = "The revision to reset to (working set, table name, branch, commit sha, or '.' for all tables)."
+	DoltResetHardToolDescription                 = "Hard resets the working set to the specified revision."
+	DoltResetHardToolSQLQueryFormatString        = "CALL DOLT_RESET('--hard', '%s');"
+	DoltResetHardToolCallSuccessFormatString     = "successfully hard reset: %s"
 )
 
 func NewDoltResetHardTool() mcp.Tool {
-    return mcp.NewTool(
-        DoltResetHardToolName,
-        mcp.WithDescription(DoltResetHardToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(true),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            BranchOrCommitSHACallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(DoltResetHardToolBranchOrCommitSHAArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		DoltResetHardToolName,
+		mcp.WithDescription(DoltResetHardToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			RevisionCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(DoltResetHardToolRevisionArgumentDescription),
+		),
+	)
 }
 
 func RegisterDoltResetHardTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    resetHardTool := NewDoltResetHardTool()
+	mcpServer := server.MCP()
+	resetHardTool := NewDoltResetHardTool()
 
 	mcpServer.AddTool(resetHardTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -63,8 +63,8 @@ func RegisterDoltResetHardTool(server pkg.Server) {
 			return
 		}
 
-		var branchOrCommitSHA string
-		branchOrCommitSHA, err = GetRequiredStringArgumentFromCallToolRequest(request, BranchOrCommitSHACallToolArgumentName)
+		var revision string
+		revision, err = GetRequiredStringArgumentFromCallToolRequest(request, RevisionCallToolArgumentName)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -86,13 +86,13 @@ func RegisterDoltResetHardTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltResetHardToolSQLQueryFormatString, branchOrCommitSHA))
+		err = tx.ExecContext(ctx, fmt.Sprintf(DoltResetHardToolSQLQueryFormatString, revision))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
 
-		result = mcp.NewToolResultText(fmt.Sprintf(DoltResetHardToolCallSuccessFormatString, branchOrCommitSHA))
+		result = mcp.NewToolResultText(fmt.Sprintf(DoltResetHardToolCallSuccessFormatString, revision))
 		return
 	})
 }

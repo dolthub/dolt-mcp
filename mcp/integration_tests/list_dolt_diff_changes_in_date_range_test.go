@@ -231,4 +231,3 @@ func testListDoltDiffChangesInDateRangeToolSuccess(s *testSuite, testBranchName 
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultString, "2022-06-01")
 }
-

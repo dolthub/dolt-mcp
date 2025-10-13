@@ -15,29 +15,29 @@ const (
 )
 
 func NewGetDoltMergeStatusTool() mcp.Tool {
-    return mcp.NewTool(
-        GetDoltMergeStatusToolName,
-        mcp.WithDescription(GetDoltMergeStatusToolDescription),
-        mcp.WithReadOnlyHintAnnotation(true),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		GetDoltMergeStatusToolName,
+		mcp.WithDescription(GetDoltMergeStatusToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+	)
 }
 
 func RegisterGetDoltMergeStatusTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    getDoltMergeStatusTool := NewGetDoltMergeStatusTool()
+	mcpServer := server.MCP()
+	getDoltMergeStatusTool := NewGetDoltMergeStatusTool()
 
 	mcpServer.AddTool(getDoltMergeStatusTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

@@ -36,15 +36,23 @@ func RegisterRemoveDoltTestTool(server pkg.Server) {
 	mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		branch, err := GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		dbName, err := GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		name, err := GetRequiredStringArgumentFromCallToolRequest(request, TestNameCallToolArgumentName)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 
 		config := server.DBConfig()
 		tx, err := NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dbName, branch)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		defer func() {
 			if rerr := CommitTransactionOrRollbackOnError(ctx, tx, err); rerr != nil && err == nil {
 				result = mcp.NewToolResultError(rerr.Error())

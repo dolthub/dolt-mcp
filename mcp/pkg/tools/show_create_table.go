@@ -1,8 +1,8 @@
 package tools
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -17,34 +17,34 @@ const (
 )
 
 func NewShowCreateTableTool() mcp.Tool {
-    return mcp.NewTool(
-        ShowCreateTableToolName,
-        mcp.WithDescription(ShowCreateTableToolDescription),
-        mcp.WithReadOnlyHintAnnotation(true),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            TableCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(ShowCreateTableTableArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		ShowCreateTableToolName,
+		mcp.WithDescription(ShowCreateTableToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			TableCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(ShowCreateTableTableArgumentDescription),
+		),
+	)
 }
 
 func RegisterShowCreateTableTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    showCreateTableTool := NewShowCreateTableTool()
+	mcpServer := server.MCP()
+	showCreateTableTool := NewShowCreateTableTool()
 
 	mcpServer.AddTool(showCreateTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -93,4 +93,3 @@ func RegisterShowCreateTableTool(server pkg.Server) {
 		return
 	})
 }
-

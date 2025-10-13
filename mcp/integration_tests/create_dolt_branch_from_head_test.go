@@ -47,8 +47,8 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
-						tools.NewBranchCallToolArgumentName:     "valid",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.NewBranchCallToolArgumentName:       "valid",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -61,8 +61,8 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
-						tools.NewBranchCallToolArgumentName:     "valid",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.NewBranchCallToolArgumentName:       "valid",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -74,7 +74,7 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 				Params: mcp.CallToolParams{
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
-						tools.NewBranchCallToolArgumentName: "valid",
+						tools.NewBranchCallToolArgumentName:       "valid",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -87,8 +87,8 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 				Params: mcp.CallToolParams{
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "",
-						tools.NewBranchCallToolArgumentName:     "valid",
+						tools.WorkingBranchCallToolArgumentName:   "",
+						tools.NewBranchCallToolArgumentName:       "valid",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -101,8 +101,8 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 				Params: mcp.CallToolParams{
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
-						tools.NewBranchCallToolArgumentName:     "valid",
+						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
+						tools.NewBranchCallToolArgumentName:       "valid",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -115,7 +115,7 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 				Params: mcp.CallToolParams{
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -128,8 +128,8 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 				Params: mcp.CallToolParams{
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
-						tools.NewBranchCallToolArgumentName:     "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.NewBranchCallToolArgumentName:       "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -142,8 +142,8 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 				Params: mcp.CallToolParams{
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
-						tools.NewBranchCallToolArgumentName:     testBranchName,
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.NewBranchCallToolArgumentName:       testBranchName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -190,8 +190,8 @@ func testCreateDoltBranchFromHeadToolSuccess(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
-						tools.NewBranchCallToolArgumentName:     "valid",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.NewBranchCallToolArgumentName:       "valid",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -203,10 +203,10 @@ func testCreateDoltBranchFromHeadToolSuccess(s *testSuite, testBranchName string
 				Params: mcp.CallToolParams{
 					Name: tools.CreateDoltBranchFromHeadToolName,
 					Arguments: map[string]any{
-						tools.NewBranchCallToolArgumentName:     testBranchName,
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.NewBranchCallToolArgumentName:       testBranchName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-						tools.ForceCallToolArgumentName: true,
+						tools.ForceCallToolArgumentName:           true,
 					},
 				},
 			},
@@ -224,4 +224,3 @@ func testCreateDoltBranchFromHeadToolSuccess(s *testSuite, testBranchName string
 		require.Contains(s.t, resultString, "successfully created branch")
 	}
 }
-

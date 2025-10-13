@@ -208,7 +208,7 @@ func (d *databaseTransactionImpl) Rollback(ctx context.Context) (err error) {
 		return
 	}
 
-	defer func(){
+	defer func() {
 		rerr := d.db.Close()
 		if err == nil {
 			err = rerr
@@ -230,7 +230,7 @@ func (d *databaseTransactionImpl) Commit(ctx context.Context) (err error) {
 		return
 	}
 
-	defer func(){
+	defer func() {
 		rerr := d.db.Close()
 		if err == nil {
 			err = rerr
@@ -260,4 +260,3 @@ func newDB(config Config) (*sql.DB, error) {
 
 	return db, nil
 }
-

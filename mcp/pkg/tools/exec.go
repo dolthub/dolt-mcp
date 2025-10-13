@@ -35,34 +35,34 @@ func ValidateWriteQuery(query string) error {
 }
 
 func NewExecTool() mcp.Tool {
-    return mcp.NewTool(
-        ExecToolName,
-        mcp.WithDescription(ExecToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(false),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            QueryCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(ExecToolQueryArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		ExecToolName,
+		mcp.WithDescription(ExecToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			QueryCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(ExecToolQueryArgumentDescription),
+		),
+	)
 }
 
 func RegisterExecTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    execTool := NewExecTool()
+	mcpServer := server.MCP()
+	execTool := NewExecTool()
 
 	mcpServer.AddTool(execTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

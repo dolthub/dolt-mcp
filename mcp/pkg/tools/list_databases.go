@@ -9,25 +9,25 @@ import (
 )
 
 const (
-	ListDatabasesToolName     = "list_databases"
-	ListDatabasesToolSQLQuery = "SHOW DATABASES;"
+	ListDatabasesToolName        = "list_databases"
+	ListDatabasesToolSQLQuery    = "SHOW DATABASES;"
 	ListDatabasesToolDescription = "Lists all databases in the Dolt server."
 )
 
 func NewListDatabasesTool() mcp.Tool {
-    return mcp.NewTool(
-        ListDatabasesToolName,
-        mcp.WithDescription(ListDatabasesToolDescription),
-        mcp.WithReadOnlyHintAnnotation(true),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-    )
+	return mcp.NewTool(
+		ListDatabasesToolName,
+		mcp.WithDescription(ListDatabasesToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+	)
 }
 
 func RegisterListDatabasesTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    listDatabasesTool := NewListDatabasesTool()
+	mcpServer := server.MCP()
+	listDatabasesTool := NewListDatabasesTool()
 	mcpServer.AddTool(listDatabasesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 
@@ -56,4 +56,3 @@ func RegisterListDatabasesTool(server pkg.Server) {
 		return
 	})
 }
-

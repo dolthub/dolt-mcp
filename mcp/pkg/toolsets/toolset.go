@@ -13,4 +13,3 @@ func WithToolSet(ts ToolSet) pkg.Option {
 type ToolSet interface {
 	RegisterTools(server pkg.Server)
 }
-

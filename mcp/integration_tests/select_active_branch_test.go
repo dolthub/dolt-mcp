@@ -46,7 +46,7 @@ func testSelectActiveBranchToolInvalidArguments(s *testSuite, testBranchName str
 				Params: mcp.CallToolParams{
 					Name: tools.SelectActiveBranchToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "",
+						tools.WorkingBranchCallToolArgumentName:   "",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -59,7 +59,7 @@ func testSelectActiveBranchToolInvalidArguments(s *testSuite, testBranchName str
 				Params: mcp.CallToolParams{
 					Name: tools.SelectActiveBranchToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
+						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -131,7 +131,7 @@ func testSelectActiveBranchToolSuccess(s *testSuite, testBranchName string) {
 	selectActiveBranchParams := mcp.CallToolParams{
 		Name: tools.SelectActiveBranchToolName,
 		Arguments: map[string]any{
-			tools.WorkingBranchCallToolArgumentName: testBranchName,
+			tools.WorkingBranchCallToolArgumentName:   testBranchName,
 			tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 		},
 	}

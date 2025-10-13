@@ -41,19 +41,31 @@ func RegisterAddDoltTestTool(server pkg.Server) {
 	mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		branch, err := GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		dbName, err := GetRequiredStringArgumentFromCallToolRequest(request, WorkingDatabaseCallToolArgumentName)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 
 		name, err := GetRequiredStringArgumentFromCallToolRequest(request, TestNameCallToolArgumentName)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		group := GetStringArgumentFromCallToolRequest(request, TestGroupCallToolArgumentName)
 		query, err := GetRequiredStringArgumentFromCallToolRequest(request, QueryCallToolArgumentName)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		atype, err := GetRequiredStringArgumentFromCallToolRequest(request, AssertionTypeCallToolArgumentName)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		comp, err := GetRequiredStringArgumentFromCallToolRequest(request, AssertionComparatorCallToolArgumentName)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		aval := GetStringArgumentFromCallToolRequest(request, AssertionValueCallToolArgumentName)
 
 		// Ensure the provided query is read-only, aligning with dolt_test_run rules
@@ -63,7 +75,9 @@ func RegisterAddDoltTestTool(server pkg.Server) {
 
 		config := server.DBConfig()
 		tx, err := NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dbName, branch)
-		if err != nil { return mcp.NewToolResultError(err.Error()), nil }
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		defer func() {
 			if rerr := CommitTransactionOrRollbackOnError(ctx, tx, err); rerr != nil && err == nil {
 				result = mcp.NewToolResultError(rerr.Error())
