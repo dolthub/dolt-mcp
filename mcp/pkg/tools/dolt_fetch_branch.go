@@ -19,34 +19,34 @@ const (
 )
 
 func NewDoltFetchBranchTool() mcp.Tool {
-    return mcp.NewTool(
-        DoltFetchBranchToolName,
-        mcp.WithDescription(DoltFetchBranchToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(true),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            RemoteNameCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(DoltFetchBranchToolRemoteNameArgumentDescription),
-        ),
-        mcp.WithString(
-            BranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(DoltFetchBranchToolBranchArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		DoltFetchBranchToolName,
+		mcp.WithDescription(DoltFetchBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(true),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			RemoteNameCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(DoltFetchBranchToolRemoteNameArgumentDescription),
+		),
+		mcp.WithString(
+			BranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(DoltFetchBranchToolBranchArgumentDescription),
+		),
+	)
 }
 
 func RegisterDoltFetchBranchTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    doltFetchBranchTool := NewDoltFetchBranchTool()
+	mcpServer := server.MCP()
+	doltFetchBranchTool := NewDoltFetchBranchTool()
 
 	mcpServer.AddTool(doltFetchBranchTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

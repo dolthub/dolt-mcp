@@ -34,4 +34,3 @@ func GetBooleanArgumentFromCallToolRequest(request mcp.CallToolRequest, argument
 	}
 	return value
 }
-

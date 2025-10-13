@@ -74,7 +74,7 @@ func testQueryToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.QueryToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "SELECT * FROM `people`;",
+						tools.QueryCallToolArgumentName:         "SELECT * FROM `people`;",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
@@ -88,8 +88,8 @@ func testQueryToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.QueryToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
-						tools.QueryCallToolArgumentName:         "SELECT * FROM `people`;",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:           "SELECT * FROM `people`;",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},
@@ -102,8 +102,8 @@ func testQueryToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.QueryToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
-						tools.QueryCallToolArgumentName:         "SELECT * FROM `people`;",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:           "SELECT * FROM `people`;",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 					},
 				},
 			},

@@ -41,7 +41,7 @@ func NewMCPStdioServer(logger *zap.Logger, config db.Config, opts ...Option) (St
 
 	srv := &stdioServerImpl{
 		mcp:         mcp,
-		dbConfig: config,
+		dbConfig:    config,
 		stdioServer: stdioServer,
 	}
 

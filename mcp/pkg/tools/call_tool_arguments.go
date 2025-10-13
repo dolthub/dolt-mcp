@@ -5,7 +5,7 @@ const (
 	WorkingBranchCallToolArgumentName       = "working_branch"
 	WorkingDatabaseCallToolArgumentName     = "working_database"
 	TableCallToolArgumentName               = "table"
-    RevisionCallToolArgumentName            = "revision"
+	RevisionCallToolArgumentName            = "revision"
 	MessageCallToolArgumentName             = "message"
 	QueryCallToolArgumentName               = "query"
 	IfNotExistsCallToolArgumentName         = "if_not_exists"

@@ -10,37 +10,37 @@ import (
 )
 
 const (
-	RemoveDoltRemoteToolName                 = "remove_dolt_remote"
+	RemoveDoltRemoteToolName                          = "remove_dolt_remote"
 	RemoveDoltRemoteToolRemoteNameArgumentDescription = "The name of the remote to remove."
-	RemoveDoltRemoteToolSQLQueryFormatString    = "CALL DOLT_REMOTE('remove', '%s');"
-	RemoveDoltRemoteToolDescription             = "Removes a remote from the Dolt server."
-	RemoveDoltRemoteToolCallSuccessFormatString = "successfully removed remote: %s"
+	RemoveDoltRemoteToolSQLQueryFormatString          = "CALL DOLT_REMOTE('remove', '%s');"
+	RemoveDoltRemoteToolDescription                   = "Removes a remote from the Dolt server."
+	RemoveDoltRemoteToolCallSuccessFormatString       = "successfully removed remote: %s"
 )
 
 func NewRemoveDoltRemoteTool() mcp.Tool {
-    return mcp.NewTool(
-        RemoveDoltRemoteToolName,
-        mcp.WithDescription(RemoveDoltRemoteToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            RemoteNameCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(RemoveDoltRemoteToolRemoteNameArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		RemoveDoltRemoteToolName,
+		mcp.WithDescription(RemoveDoltRemoteToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			RemoteNameCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(RemoveDoltRemoteToolRemoteNameArgumentDescription),
+		),
+	)
 }
 
 func RegisterRemoveDoltRemoteTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    removeDoltRemoteTool := NewRemoveDoltRemoteTool()
+	mcpServer := server.MCP()
+	removeDoltRemoteTool := NewRemoveDoltRemoteTool()
 
 	mcpServer.AddTool(removeDoltRemoteTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

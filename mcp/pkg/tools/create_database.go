@@ -20,28 +20,28 @@ const (
 )
 
 func NewCreateDatabaseTool() mcp.Tool {
-    return mcp.NewTool(
-        CreateDatabaseToolName,
-        mcp.WithDescription(CreateDatabaseToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            DatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(CreateDatabaseToolDatabaseArgumentDescription),
-        ),
-        mcp.WithBoolean(
-            IfNotExistsCallToolArgumentName,
-            mcp.Description(CreateDatabaseToolIfNotExistsArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		CreateDatabaseToolName,
+		mcp.WithDescription(CreateDatabaseToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			DatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(CreateDatabaseToolDatabaseArgumentDescription),
+		),
+		mcp.WithBoolean(
+			IfNotExistsCallToolArgumentName,
+			mcp.Description(CreateDatabaseToolIfNotExistsArgumentDescription),
+		),
+	)
 }
 
 func RegisterCreateDatabaseTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    createDatabaseTool := NewCreateDatabaseTool()
+	mcpServer := server.MCP()
+	createDatabaseTool := NewCreateDatabaseTool()
 
 	mcpServer.AddTool(createDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

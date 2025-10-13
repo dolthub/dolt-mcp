@@ -132,4 +132,3 @@ func testCreateDatabaseToolSuccess(s *testSuite, _ string) {
 		require.Contains(s.t, resultString, "successfully created database")
 	}
 }
-

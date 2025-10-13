@@ -39,4 +39,3 @@ func testSelectVersionTool(s *testSuite, _ string) {
 	require.NoError(s.t, err)
 	require.Contains(s.t, strings.ToLower(resultStr), "dolt_version()")
 }
-

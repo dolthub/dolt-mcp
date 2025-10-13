@@ -109,4 +109,3 @@ func testListDoltBranchesToolSuccess(s *testSuite, _ string) {
 	require.NoError(s.t, err)
 	require.NotEmpty(s.t, resultStr)
 }
-

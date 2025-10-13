@@ -15,29 +15,29 @@ const (
 )
 
 func NewListDoltDiffChangesInWorkingSetTool() mcp.Tool {
-    return mcp.NewTool(
-        ListDoltDiffChangesInWorkingSetToolName,
-        mcp.WithDescription(ListDoltDiffChangesInWorkingSetToolDescription),
-        mcp.WithReadOnlyHintAnnotation(true),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		ListDoltDiffChangesInWorkingSetToolName,
+		mcp.WithDescription(ListDoltDiffChangesInWorkingSetToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+	)
 }
 
 func RegisterListDoltDiffChangesInWorkingSetTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    listDoltDiffChangesInWorkingSetTool := NewListDoltDiffChangesInWorkingSetTool()
+	mcpServer := server.MCP()
+	listDoltDiffChangesInWorkingSetTool := NewListDoltDiffChangesInWorkingSetTool()
 	mcpServer.AddTool(listDoltDiffChangesInWorkingSetTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 		var workingBranch string

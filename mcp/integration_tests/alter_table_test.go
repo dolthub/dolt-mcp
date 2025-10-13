@@ -33,7 +33,7 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -46,8 +46,8 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "",
-						tools.QueryCallToolArgumentName:         "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.WorkingBranchCallToolArgumentName:   "",
+						tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -60,8 +60,8 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
-						tools.QueryCallToolArgumentName:         "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
+						tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -103,7 +103,7 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.QueryCallToolArgumentName:         "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
 					},
 				},
 			},
@@ -115,7 +115,7 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -128,8 +128,8 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:         "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:           "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -142,8 +142,8 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:         "insert into people values (uuid(), 'homer', 'simpson');",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
+						tools.QueryCallToolArgumentName:           "insert into people values (uuid(), 'homer', 'simpson');",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -183,8 +183,8 @@ func testAlterTableToolSuccess(s *testSuite, testBranchName string) {
 		Params: mcp.CallToolParams{
 			Name: tools.AlterTableToolName,
 			Arguments: map[string]any{
-				tools.QueryCallToolArgumentName:         "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
-				tools.WorkingBranchCallToolArgumentName: testBranchName,
+				tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},

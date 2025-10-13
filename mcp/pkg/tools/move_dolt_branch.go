@@ -21,38 +21,38 @@ const (
 )
 
 func NewMoveDoltBranchTool() mcp.Tool {
-    return mcp.NewTool(
-        MoveDoltBranchToolName,
-        mcp.WithDescription(MoveDoltBranchToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(false),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            OldNameCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(MoveDoltBranchToolOldNameArgumentDescription),
-        ),
-        mcp.WithString(
-            NewNameCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(MoveDoltBranchToolNewNameArgumentDescription),
-        ),
-        mcp.WithBoolean(
-            ForceCallToolArgumentName,
-            mcp.Description(MoveDoltBranchToolForceArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		MoveDoltBranchToolName,
+		mcp.WithDescription(MoveDoltBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			OldNameCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(MoveDoltBranchToolOldNameArgumentDescription),
+		),
+		mcp.WithString(
+			NewNameCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(MoveDoltBranchToolNewNameArgumentDescription),
+		),
+		mcp.WithBoolean(
+			ForceCallToolArgumentName,
+			mcp.Description(MoveDoltBranchToolForceArgumentDescription),
+		),
+	)
 }
 
 func RegisterMoveDoltBranchTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    moveDoltBranchTool := NewMoveDoltBranchTool()
+	mcpServer := server.MCP()
+	moveDoltBranchTool := NewMoveDoltBranchTool()
 
 	mcpServer.AddTool(moveDoltBranchTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -114,4 +114,3 @@ func RegisterMoveDoltBranchTool(server pkg.Server) {
 		return
 	})
 }
-

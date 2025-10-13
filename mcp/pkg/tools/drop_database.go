@@ -20,28 +20,28 @@ const (
 )
 
 func NewDropDatabaseTool() mcp.Tool {
-    return mcp.NewTool(
-        DropDatabaseToolName,
-        mcp.WithDescription(DropDatabaseToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(true),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            DatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(DropDatabaseToolDatabaseArgumentDescription),
-        ),
-        mcp.WithBoolean(
-            IfExistsCallToolArgumentName,
-            mcp.Description(DropDatabaseToolIfExistsArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		DropDatabaseToolName,
+		mcp.WithDescription(DropDatabaseToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			DatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(DropDatabaseToolDatabaseArgumentDescription),
+		),
+		mcp.WithBoolean(
+			IfExistsCallToolArgumentName,
+			mcp.Description(DropDatabaseToolIfExistsArgumentDescription),
+		),
+	)
 }
 
 func RegisterDropDatabaseTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    dropDatabaseTool := NewDropDatabaseTool()
+	mcpServer := server.MCP()
+	dropDatabaseTool := NewDropDatabaseTool()
 
 	mcpServer.AddTool(dropDatabaseTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -86,4 +86,3 @@ func RegisterDropDatabaseTool(server pkg.Server) {
 		return
 	})
 }
-

@@ -19,34 +19,34 @@ const (
 )
 
 func NewAddDoltRemoteTool() mcp.Tool {
-    return mcp.NewTool(
-        AddDoltRemoteToolName,
-        mcp.WithDescription(AddDoltRemoteToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            RemoteNameCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(AddDoltRemoteToolRemoteNameArgumentDescription),
-        ),
-        mcp.WithString(
-            RemoteURLCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(AddDoltRemoteToolRemoteURLArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		AddDoltRemoteToolName,
+		mcp.WithDescription(AddDoltRemoteToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			RemoteNameCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(AddDoltRemoteToolRemoteNameArgumentDescription),
+		),
+		mcp.WithString(
+			RemoteURLCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(AddDoltRemoteToolRemoteURLArgumentDescription),
+		),
+	)
 }
 
 func RegisterAddDoltRemoteTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    addDoltRemoteTool := NewAddDoltRemoteTool()
+	mcpServer := server.MCP()
+	addDoltRemoteTool := NewAddDoltRemoteTool()
 
 	mcpServer.AddTool(addDoltRemoteTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

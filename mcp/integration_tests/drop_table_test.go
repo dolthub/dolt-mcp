@@ -40,7 +40,7 @@ func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName: "people",
+						tools.TableCallToolArgumentName:           "people",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -53,8 +53,8 @@ func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "",
-						tools.TableCallToolArgumentName: "people",
+						tools.WorkingBranchCallToolArgumentName:   "",
+						tools.TableCallToolArgumentName:           "people",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -67,7 +67,7 @@ func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName: "people",
+						tools.TableCallToolArgumentName:         "people",
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
@@ -81,8 +81,8 @@ func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.TableCallToolArgumentName: "people",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.TableCallToolArgumentName:           "people",
 					},
 				},
 			},
@@ -95,8 +95,8 @@ func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
-						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.TableCallToolArgumentName: "people",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.TableCallToolArgumentName:           "people",
 					},
 				},
 			},
@@ -108,8 +108,8 @@ func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
-						tools.TableCallToolArgumentName: "people",
+						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
+						tools.TableCallToolArgumentName:           "people",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -122,7 +122,7 @@ func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
-						tools.WorkingBranchCallToolArgumentName: testBranchName, 
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -135,8 +135,8 @@ func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName: "",
-						tools.WorkingBranchCallToolArgumentName: testBranchName, 
+						tools.TableCallToolArgumentName:           "",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -149,8 +149,8 @@ func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName: "bar",
-						tools.WorkingBranchCallToolArgumentName: testBranchName, 
+						tools.TableCallToolArgumentName:           "bar",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -197,8 +197,8 @@ func testDropTableToolSuccess(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName: "places",
-						tools.WorkingBranchCallToolArgumentName: testBranchName, 
+						tools.TableCallToolArgumentName:           "places",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -210,9 +210,9 @@ func testDropTableToolSuccess(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.DropTableToolName,
 					Arguments: map[string]any{
-						tools.TableCallToolArgumentName: "foo",
-						tools.IfExistsCallToolArgumentName: true,
-						tools.WorkingBranchCallToolArgumentName: testBranchName, 
+						tools.TableCallToolArgumentName:           "foo",
+						tools.IfExistsCallToolArgumentName:        true,
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -231,4 +231,3 @@ func testDropTableToolSuccess(s *testSuite, testBranchName string) {
 		require.Contains(s.t, resultString, "successfully dropped table")
 	}
 }
-

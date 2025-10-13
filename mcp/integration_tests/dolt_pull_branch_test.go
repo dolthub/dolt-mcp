@@ -49,8 +49,8 @@ func testDoltPullBranchToolInvalidArguments(s *testSuite, testBranchName string)
 				Params: mcp.CallToolParams{
 					Name: tools.DoltPullBranchToolName,
 					Arguments: map[string]any{
-						tools.BranchCallToolArgumentName:     "pullme",
-						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.BranchCallToolArgumentName:                 "pullme",
+						tools.RemoteNameCallToolArgumentName:             "origin",
 						tools.WorkingDatabaseCallToolArgumentDescription: "",
 					},
 				},
@@ -63,8 +63,8 @@ func testDoltPullBranchToolInvalidArguments(s *testSuite, testBranchName string)
 				Params: mcp.CallToolParams{
 					Name: tools.DoltPullBranchToolName,
 					Arguments: map[string]any{
-						tools.BranchCallToolArgumentName:     "pullme",
-						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.BranchCallToolArgumentName:                 "pullme",
+						tools.RemoteNameCallToolArgumentName:             "origin",
 						tools.WorkingDatabaseCallToolArgumentDescription: "doesnotexist",
 					},
 				},
@@ -210,9 +210,9 @@ CALL DOLT_CHECKOUT(@current_branch);
 
 	requireToolExists(s, ctx, client, serverInfo, tools.DoltPullBranchToolName)
 
-	requests := []struct{
-		description string
-		request mcp.CallToolRequest
+	requests := []struct {
+		description   string
+		request       mcp.CallToolRequest
 		errorExpected bool
 	}{
 		{
@@ -221,8 +221,8 @@ CALL DOLT_CHECKOUT(@current_branch);
 				Params: mcp.CallToolParams{
 					Name: tools.DoltPullBranchToolName,
 					Arguments: map[string]any{
-						tools.BranchCallToolArgumentName:     "pullme",
-						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.BranchCallToolArgumentName:          "pullme",
+						tools.RemoteNameCallToolArgumentName:      "origin",
 						tools.WorkingDatabaseCallToolArgumentName: "alt",
 					},
 				},
@@ -234,10 +234,10 @@ CALL DOLT_CHECKOUT(@current_branch);
 				Params: mcp.CallToolParams{
 					Name: tools.DoltPullBranchToolName,
 					Arguments: map[string]any{
-						tools.BranchCallToolArgumentName:     "forcepullme",
-						tools.RemoteNameCallToolArgumentName: "origin",
+						tools.BranchCallToolArgumentName:          "forcepullme",
+						tools.RemoteNameCallToolArgumentName:      "origin",
 						tools.WorkingDatabaseCallToolArgumentName: "alt",
-						tools.ForceCallToolArgumentName: true,
+						tools.ForceCallToolArgumentName:           true,
 					},
 				},
 			},

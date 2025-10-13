@@ -18,34 +18,34 @@ const (
 )
 
 func NewCreateDoltCommitTool() mcp.Tool {
-    return mcp.NewTool(
-        CreateDoltCommitToolName,
-        mcp.WithDescription(CreateDoltCommitToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            MessageCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(CreateDoltCommitToolMessageArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		CreateDoltCommitToolName,
+		mcp.WithDescription(CreateDoltCommitToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			MessageCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(CreateDoltCommitToolMessageArgumentDescription),
+		),
+	)
 }
 
 func RegisterCreateDoltCommitTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    createDoltCommitTool := NewCreateDoltCommitTool()
+	mcpServer := server.MCP()
+	createDoltCommitTool := NewCreateDoltCommitTool()
 
 	mcpServer.AddTool(createDoltCommitTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -96,4 +96,3 @@ func RegisterCreateDoltCommitTool(server pkg.Server) {
 		return
 	})
 }
-

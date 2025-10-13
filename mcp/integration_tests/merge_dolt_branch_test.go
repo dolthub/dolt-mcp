@@ -193,8 +193,8 @@ func testMergeDoltBranchToolSuccess(s *testSuite, testBranchName string) {
 		Params: mcp.CallToolParams{
 			Name: tools.MergeDoltBranchToolName,
 			Arguments: map[string]any{
-				tools.BranchCallToolArgumentName:        "mergeme",
-				tools.WorkingBranchCallToolArgumentName: testBranchName,
+				tools.BranchCallToolArgumentName:          "mergeme",
+				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
 		},

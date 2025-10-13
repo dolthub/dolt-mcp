@@ -20,38 +20,38 @@ const (
 )
 
 func NewDeleteDoltBranchTool() mcp.Tool {
-    return mcp.NewTool(
-        DeleteDoltBranchToolName,
-        mcp.WithDescription(DeleteDoltBranchToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(true),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            BranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(DeleteDoltBranchToolBranchArgumentDescription),
-        ),
-        mcp.WithBoolean(
-            ForceCallToolArgumentName,
-            mcp.Description(DeleteDoltBranchToolForceArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		DeleteDoltBranchToolName,
+		mcp.WithDescription(DeleteDoltBranchToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			BranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(DeleteDoltBranchToolBranchArgumentDescription),
+		),
+		mcp.WithBoolean(
+			ForceCallToolArgumentName,
+			mcp.Description(DeleteDoltBranchToolForceArgumentDescription),
+		),
+	)
 }
 
 func RegisterDeleteDoltBranchTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    deleteDoltBranchTool := NewDeleteDoltBranchTool()
+	mcpServer := server.MCP()
+	deleteDoltBranchTool := NewDeleteDoltBranchTool()
 
 	mcpServer.AddTool(deleteDoltBranchTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

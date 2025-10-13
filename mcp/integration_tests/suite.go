@@ -277,10 +277,10 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 	}
 
 	config := db.Config{
-		Host:         doltServerHost,
-		Port:         doltServerPort,
-		User:         mcpTestMCPServerSQLUser,
-		Password:     mcpTestMCPServerSQLPassword,
+		Host:     doltServerHost,
+		Port:     doltServerPort,
+		User:     mcpTestMCPServerSQLUser,
+		Password: mcpTestMCPServerSQLPassword,
 	}
 
 	logger := zap.NewNop()
@@ -327,13 +327,13 @@ type FileRemoteDatabase struct {
 
 func NewFileRemoteDatabase(s *testSuite, name string) *FileRemoteDatabase {
 	return &FileRemoteDatabase{
-		s: s,
+		s:               s,
 		name:            name,
 		remoteServePort: 2222,
 	}
 }
 
-func (r *FileRemoteDatabase) Setup (ctx context.Context, setupSQL string) error {
+func (r *FileRemoteDatabase) Setup(ctx context.Context, setupSQL string) error {
 	altServerPort := doltServerPort + 1
 	configFilePath, err := generateFileRemoteDatabaseConfigFile(ctx, altServerPort, r.remoteServePort)
 	if err != nil {
@@ -450,7 +450,7 @@ remotesapi:
 	if err != nil {
 		return
 	}
-	defer func(){
+	defer func() {
 		rerr := file.Close()
 		if err == nil {
 			err = rerr

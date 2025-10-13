@@ -15,25 +15,25 @@ const (
 )
 
 func NewListDoltRemotesTool() mcp.Tool {
-    return mcp.NewTool(
-        ListDoltRemotesToolName,
-        mcp.WithDescription(ListDoltRemotesToolDescription),
-        mcp.WithReadOnlyHintAnnotation(true),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		ListDoltRemotesToolName,
+		mcp.WithDescription(ListDoltRemotesToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+	)
 }
 
 func RegisterListDoltRemotesTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    listDoltRemotesTool := NewListDoltRemotesTool()
-    mcpServer.AddTool(listDoltRemotesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
+	mcpServer := server.MCP()
+	listDoltRemotesTool := NewListDoltRemotesTool()
+	mcpServer.AddTool(listDoltRemotesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
 
 		var workingDatabase string
@@ -67,4 +67,3 @@ func RegisterListDoltRemotesTool(server pkg.Server) {
 		return
 	})
 }
-

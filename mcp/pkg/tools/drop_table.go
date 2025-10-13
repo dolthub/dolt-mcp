@@ -20,38 +20,38 @@ const (
 )
 
 func NewDropTableTool() mcp.Tool {
-    return mcp.NewTool(
-        DropTableToolName,
-        mcp.WithDescription(DropTableToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(true),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            TableCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(DropTableToolTableArgumentDescription),
-        ),
-        mcp.WithBoolean(
-            IfExistsCallToolArgumentName,
-            mcp.Description(DropTableToolIfExistsArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		DropTableToolName,
+		mcp.WithDescription(DropTableToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			TableCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(DropTableToolTableArgumentDescription),
+		),
+		mcp.WithBoolean(
+			IfExistsCallToolArgumentName,
+			mcp.Description(DropTableToolIfExistsArgumentDescription),
+		),
+	)
 }
 
 func RegisterDropTableTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    dropTableTool := NewDropTableTool()
+	mcpServer := server.MCP()
+	dropTableTool := NewDropTableTool()
 
 	mcpServer.AddTool(dropTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -111,4 +111,3 @@ func RegisterDropTableTool(server pkg.Server) {
 		return
 	})
 }
-

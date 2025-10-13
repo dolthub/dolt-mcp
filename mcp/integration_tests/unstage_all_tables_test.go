@@ -201,4 +201,3 @@ func testUnstageAllTablesToolSuccess(s *testSuite, testBranchName string) {
 		}
 	}
 }
-

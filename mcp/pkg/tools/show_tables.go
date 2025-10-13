@@ -9,35 +9,35 @@ import (
 )
 
 const (
-	ShowTablesToolName     = "show_tables"
-	ShowTablesToolSQLQuery = "SHOW TABLES;"
+	ShowTablesToolName        = "show_tables"
+	ShowTablesToolSQLQuery    = "SHOW TABLES;"
 	ShowTablesToolDescription = "Show tables in the current database."
 )
 
 func NewShowTablesTool() mcp.Tool {
-    return mcp.NewTool(
-        ShowTablesToolName,
-        mcp.WithDescription(ShowTablesToolDescription),
-        mcp.WithReadOnlyHintAnnotation(true),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		ShowTablesToolName,
+		mcp.WithDescription(ShowTablesToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+	)
 }
 
 func RegisterShowTablesTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    showTablesTool := NewShowTablesTool()
+	mcpServer := server.MCP()
+	showTablesTool := NewShowTablesTool()
 
 	mcpServer.AddTool(showTablesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -79,4 +79,3 @@ func RegisterShowTablesTool(server pkg.Server) {
 		return
 	})
 }
-

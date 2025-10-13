@@ -1,12 +1,12 @@
 package tools
 
 import (
-    "context"
-    "fmt"
+	"context"
+	"fmt"
 
-    "github.com/dolthub/dolt-mcp/mcp/pkg"
-    "github.com/dolthub/dolt-mcp/mcp/pkg/db"
-    "github.com/mark3labs/mcp-go/mcp"
+	"github.com/dolthub/dolt-mcp/mcp/pkg"
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
+	"github.com/mark3labs/mcp-go/mcp"
 )
 
 const (
@@ -75,10 +75,10 @@ func RegisterRunDoltTestsTool(server pkg.Server) {
 		var query string
 		if target == "" || target == "*" {
 			query = "SELECT * FROM dolt_test_run()"
-        } else {
-            // Arguments to dolt_test_run are string literals; escape any single quotes
-            query = fmt.Sprintf("SELECT * FROM dolt_test_run('%s')", singleQuoteEscape(target))
-        }
+		} else {
+			// Arguments to dolt_test_run are string literals; escape any single quotes
+			query = fmt.Sprintf("SELECT * FROM dolt_test_run('%s')", singleQuoteEscape(target))
+		}
 
 		var formatted string
 		formatted, err = tx.QueryContext(ctx, query, db.ResultFormatMarkdown)

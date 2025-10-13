@@ -35,34 +35,34 @@ func ValidateCreateTableQuery(query string) error {
 }
 
 func NewCreateTableTool() mcp.Tool {
-    return mcp.NewTool(
-        CreateTableToolName,
-        mcp.WithDescription(CreateTableToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(false),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            QueryCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(CreateTableToolQueryArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		CreateTableToolName,
+		mcp.WithDescription(CreateTableToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(false),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			QueryCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(CreateTableToolQueryArgumentDescription),
+		),
+	)
 }
 
 func RegisterCreateTableTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    createTableTool := NewCreateTableTool()
+	mcpServer := server.MCP()
+	createTableTool := NewCreateTableTool()
 
 	mcpServer.AddTool(createTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error

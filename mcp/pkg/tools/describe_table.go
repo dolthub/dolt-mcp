@@ -10,41 +10,41 @@ import (
 )
 
 const (
-	DescribeTableToolName                            = "describe_table"
-	DescribeTableToolTableArgumentDescription        = "The name of the table to describe."
-	DescribeTableToolSQLQueryFormatString            = "DESCRIBE `%s`;"
-	DescribeTableToolDescription                     = "Describes a table in the current database."
+	DescribeTableToolName                     = "describe_table"
+	DescribeTableToolTableArgumentDescription = "The name of the table to describe."
+	DescribeTableToolSQLQueryFormatString     = "DESCRIBE `%s`;"
+	DescribeTableToolDescription              = "Describes a table in the current database."
 )
 
 func NewDescribeTableTool() mcp.Tool {
-    return mcp.NewTool(
-        DescribeTableToolName,
-        mcp.WithDescription(DescribeTableToolDescription),
-        mcp.WithReadOnlyHintAnnotation(true),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            TableCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(DescribeTableToolTableArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		DescribeTableToolName,
+		mcp.WithDescription(DescribeTableToolDescription),
+		mcp.WithReadOnlyHintAnnotation(true),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			TableCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(DescribeTableToolTableArgumentDescription),
+		),
+	)
 }
 
 func RegisterDescribeTableTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    describeTableTool := NewDescribeTableTool()
+	mcpServer := server.MCP()
+	describeTableTool := NewDescribeTableTool()
 
 	mcpServer.AddTool(describeTableTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -93,4 +93,3 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		return
 	})
 }
-

@@ -16,29 +16,29 @@ const (
 )
 
 func NewUnstageAllTablesTool() mcp.Tool {
-    return mcp.NewTool(
-        UnstageAllTablesToolName,
-        mcp.WithDescription(UnstageAllTablesToolDescription),
-        mcp.WithReadOnlyHintAnnotation(false),
-        mcp.WithDestructiveHintAnnotation(false),
-        mcp.WithIdempotentHintAnnotation(true),
-        mcp.WithOpenWorldHintAnnotation(false),
-        mcp.WithString(
-            WorkingDatabaseCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingDatabaseCallToolArgumentDescription),
-        ),
-        mcp.WithString(
-            WorkingBranchCallToolArgumentName,
-            mcp.Required(),
-            mcp.Description(WorkingBranchCallToolArgumentDescription),
-        ),
-    )
+	return mcp.NewTool(
+		UnstageAllTablesToolName,
+		mcp.WithDescription(UnstageAllTablesToolDescription),
+		mcp.WithReadOnlyHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithIdempotentHintAnnotation(true),
+		mcp.WithOpenWorldHintAnnotation(false),
+		mcp.WithString(
+			WorkingDatabaseCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
+		),
+	)
 }
 
 func RegisterUnstageAllTablesTool(server pkg.Server) {
-    mcpServer := server.MCP()
-    unstageAllTablesTool := NewUnstageAllTablesTool()
+	mcpServer := server.MCP()
+	unstageAllTablesTool := NewUnstageAllTablesTool()
 
 	mcpServer.AddTool(unstageAllTablesTool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
 		var err error
@@ -82,4 +82,3 @@ func RegisterUnstageAllTablesTool(server pkg.Server) {
 		return
 	})
 }
-
