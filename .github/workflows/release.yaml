@@ -49,6 +49,42 @@ jobs:
           add: ${{ format('["{0}/mcp/pkg/server.go"]', github.workspace) }}
           cwd: "."
           pull: "--ff"
+      - name: Build Binaries
+        id: build_binaries
+        run: |
+          set -euo pipefail
+          mkdir -p out staging
+          latest=$(git rev-parse HEAD)
+          echo "commitish=$latest" >> "$GITHUB_OUTPUT"
+
+          package_tgz() {
+            local goos="$1"; shift
+            local goarch="$1"; shift
+            local name="dolt-mcp-server-${goos}-${goarch}.tar.gz"
+            echo "Building ${goos}/${goarch} -> out/${name}"
+            rm -f staging/dolt-mcp-server
+            GOOS="$goos" GOARCH="$goarch" CGO_ENABLED=0 \
+              go build -trimpath -ldflags "-s -w" -o staging/dolt-mcp-server ./mcp/cmd/dolt-mcp-server
+            tar -C staging -czf "out/${name}" dolt-mcp-server
+            rm -f staging/dolt-mcp-server
+          }
+
+          package_zip_windows() {
+            local goarch="$1"; shift
+            local name="dolt-mcp-server-windows-${goarch}.zip"
+            echo "Building windows/${goarch} -> out/${name}"
+            rm -f staging/dolt-mcp-server.exe
+            GOOS=windows GOARCH="$goarch" CGO_ENABLED=0 \
+              go build -trimpath -ldflags "-s -w" -o staging/dolt-mcp-server.exe ./mcp/cmd/dolt-mcp-server
+            (cd staging && zip -q "../out/${name}" dolt-mcp-server.exe)
+            rm -f staging/dolt-mcp-server.exe
+          }
+
+          package_tgz linux amd64
+          package_tgz linux arm64
+          package_tgz darwin amd64
+          package_tgz darwin arm64
+          package_zip_windows amd64
       - name: Create Release
         id: create_release
         uses: dolthub/create-release@v2
@@ -60,6 +96,56 @@ jobs:
           draft: false
           prerelease: true
           commitish: ${{ steps.build_binaries.outputs.commitish }}
+      - name: Upload Linux AMD64 Distro
+        id: upload-linux-amd64-distro
+        uses: dolthub/upload-release-asset@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: out/dolt-mcp-server-linux-amd64.tar.gz
+          asset_name: dolt-mcp-server-linux-amd64.tar.gz
+          asset_content_type: application/zip
+      - name: Upload Linux ARM64 Distro
+        id: upload-linux-arm64-distro
+        uses: dolthub/upload-release-asset@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: out/dolt-mcp-server-linux-arm64.tar.gz
+          asset_name: dolt-mcp-server-linux-arm64.tar.gz
+          asset_content_type: application/zip
+      - name: Upload OSX AMD64 Distro
+        id: upload-osx-amd64-distro
+        uses: dolthub/upload-release-asset@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: out/dolt-mcp-server-darwin-amd64.tar.gz
+          asset_name: dolt-mcp-server-darwin-amd64.tar.gz
+          asset_content_type: application/zip
+      - name: Upload OSX ARM64 Distro
+        id: upload-osx-arm64-distro
+        uses: dolthub/upload-release-asset@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: out/dolt-mcp-server-darwin-arm64.tar.gz
+          asset_name: dolt-mcp-server-darwin-arm64.tar.gz
+          asset_content_type: application/zip
+      - name: Upload Windows Distro
+        id: upload-windows-distro
+        uses: dolthub/upload-release-asset@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: out/dolt-mcp-server-windows-amd64.zip
+          asset_name: dolt-mcp-server-windows-amd64.zip
+          asset_content_type: application/zip
 
   docker-image-push:
     needs: [format-version, create-release]
