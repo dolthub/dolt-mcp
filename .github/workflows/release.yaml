@@ -26,7 +26,7 @@ jobs:
           fi
           echo "version=$version" >> $GITHUB_OUTPUT
 
-  create-release:
+  create_release:
     needs: format-version
     runs-on: ubuntu-22.04
     name: Release Dolt MCP Server
@@ -52,13 +52,17 @@ jobs:
           add: mcp/pkg/server.go
           cwd: .
           pull: "--ff"
+      - name: Set OUT_DIR
+        run: echo "OUT_DIR=$RUNNER_TEMP/dolt-mcp-assets" >> "$GITHUB_ENV"
+      - name: Prepare output directory
+        run: mkdir -p "$OUT_DIR"
       - name: Build Binaries
         id: build_binaries
         run: |
           set -euo pipefail
           latest=$(git rev-parse HEAD)
           echo "commitish=$latest" >> "$GITHUB_OUTPUT"
-          bash .github/scripts/build_binaries.sh
+          ./.github/scripts/build_binaries.sh "$OUT_DIR"
       - name: Create Release
         id: create_release
         uses: dolthub/create-release@v2
@@ -76,15 +80,15 @@ jobs:
         run: |
           set -euo pipefail
           gh release upload "v${{ needs.format-version.outputs.version }}" \
-            out/dolt-mcp-server-linux-amd64.tar.gz \
-            out/dolt-mcp-server-linux-arm64.tar.gz \
-            out/dolt-mcp-server-darwin-amd64.tar.gz \
-            out/dolt-mcp-server-darwin-arm64.tar.gz \
-            out/dolt-mcp-server-windows-amd64.zip \
+            "$OUT_DIR/dolt-mcp-server-linux-amd64.tar.gz" \
+            "$OUT_DIR/dolt-mcp-server-linux-arm64.tar.gz" \
+            "$OUT_DIR/dolt-mcp-server-darwin-amd64.tar.gz" \
+            "$OUT_DIR/dolt-mcp-server-darwin-arm64.tar.gz" \
+            "$OUT_DIR/dolt-mcp-server-windows-amd64.zip" \
             --clobber
 
   docker-image-push:
-    needs: [format-version, create-release]
+    needs: [format-version, create_release]
     runs-on: ubuntu-22.04
     steps:
       - name: Trigger Push Docker Image
@@ -92,5 +96,7 @@ jobs:
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
           event-type: push-docker-image
-          client-payload: '{"version": "${{ needs.format-version.outputs.version }}", "release_id": "${{ needs["create-release"].outputs.release_id }}" }'
+          client-payload: >-
+            {"version":"${{ needs.format-version.outputs.version }}",
+             "release_id":"${{ needs.create_release.outputs.release_id }}"}
 

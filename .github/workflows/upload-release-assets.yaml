@@ -34,10 +34,28 @@ jobs:
       TAG: ${{ needs.format-version.outputs.tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Copy build script from main
+        run: |
+          cp .github/scripts/build_binaries.sh /tmp/build_binaries.sh
+          chmod +x /tmp/build_binaries.sh
+
       - name: Checkout code at tag
         uses: actions/checkout@v4
         with:
           ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Set OUT_DIR
+        run: echo "OUT_DIR=$RUNNER_TEMP/dolt-mcp-assets" >> "$GITHUB_ENV"
+
+      - name: Prepare output directory
+        run: mkdir -p "$OUT_DIR"
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -46,15 +64,15 @@ jobs:
 
         # Build cross-platform binaries into compressed archives
       - name: Build Binaries
-        run: bash .github/scripts/build_binaries.sh
+        run: /tmp/build_binaries.sh "$OUT_DIR"
 
       - name: Upload assets to existing release (clobber)
         run: |
           set -euo pipefail
           gh release upload "$TAG" \
-            out/dolt-mcp-server-linux-amd64.tar.gz \
-            out/dolt-mcp-server-linux-arm64.tar.gz \
-            out/dolt-mcp-server-darwin-amd64.tar.gz \
-            out/dolt-mcp-server-darwin-arm64.tar.gz \
-            out/dolt-mcp-server-windows-amd64.zip \
+            "$OUT_DIR/dolt-mcp-server-linux-amd64.tar.gz" \
+            "$OUT_DIR/dolt-mcp-server-linux-arm64.tar.gz" \
+            "$OUT_DIR/dolt-mcp-server-darwin-amd64.tar.gz" \
+            "$OUT_DIR/dolt-mcp-server-darwin-arm64.tar.gz" \
+            "$OUT_DIR/dolt-mcp-server-windows-amd64.zip" \
             --clobber
