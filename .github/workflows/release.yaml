@@ -26,7 +26,7 @@ jobs:
           fi
           echo "version=$version" >> $GITHUB_OUTPUT
 
-  create-release:
+  create_release:
     needs: format-version
     runs-on: ubuntu-22.04
     name: Release Dolt MCP Server
@@ -84,7 +84,7 @@ jobs:
             --clobber
 
   docker-image-push:
-    needs: [format-version, create-release]
+    needs: [format-version, create_release]
     runs-on: ubuntu-22.04
     steps:
       - name: Trigger Push Docker Image
@@ -92,5 +92,7 @@ jobs:
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
           event-type: push-docker-image
-          client-payload: '{"version": "${{ needs.format-version.outputs.version }}", "release_id": "${{ needs["create-release"].outputs.release_id }}" }'
+          client-payload: >-
+            {"version":"${{ needs.format-version.outputs.version }}",
+             "release_id":"${{ needs.create_release.outputs.release_id }}"}
 
