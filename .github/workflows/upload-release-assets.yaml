@@ -34,10 +34,20 @@ jobs:
       TAG: ${{ needs.format-version.outputs.tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Checkout code at tag
+      - name: Checkout repository (current)
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Prepare build script for tag checkout
+        run: |
+          cp .github/scripts/build_binaries.sh /tmp/build_binaries.sh
+          chmod +x /tmp/build_binaries.sh
+
+      - name: Checkout requested tag
+        run: |
+          git fetch --tags --force
+          git checkout "$TAG"
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -46,7 +56,7 @@ jobs:
 
         # Build cross-platform binaries into compressed archives
       - name: Build Binaries
-        run: bash .github/scripts/build_binaries.sh
+        run: /tmp/build_binaries.sh
 
       - name: Upload assets to existing release (clobber)
         run: |

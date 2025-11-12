@@ -9,8 +9,13 @@ set -euo pipefail
 #   - out/dolt-mcp-server-darwin-arm64.tar.gz
 #   - out/dolt-mcp-server-windows-amd64.zip
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# Determine repository root reliably to support running from outside .github/
+if git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+  REPO_ROOT="$git_root"
+else
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+fi
 cd "$REPO_ROOT"
 
 mkdir -p out staging
