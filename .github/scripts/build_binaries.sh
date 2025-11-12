@@ -10,7 +10,9 @@ set -euo pipefail
 #   - out/dolt-mcp-server-windows-amd64.zip
 
 # Determine repository root reliably to support running from outside .github/
-if git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+if [[ -n "${GITHUB_WORKSPACE:-}" && -d "${GITHUB_WORKSPACE}" ]]; then
+  REPO_ROOT="${GITHUB_WORKSPACE}"
+elif git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
   REPO_ROOT="$git_root"
 else
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
