@@ -29,8 +29,6 @@ jobs:
   create_release:
     needs: format-version
     runs-on: ubuntu-22.04
-    env:
-      OUT_DIR: ${{ runner.temp }}/dolt-mcp-assets
     name: Release Dolt MCP Server
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
@@ -54,6 +52,8 @@ jobs:
           add: mcp/pkg/server.go
           cwd: .
           pull: "--ff"
+      - name: Set OUT_DIR
+        run: echo "OUT_DIR=$RUNNER_TEMP/dolt-mcp-assets" >> "$GITHUB_ENV"
       - name: Prepare output directory
         run: mkdir -p "$OUT_DIR"
       - name: Build Binaries

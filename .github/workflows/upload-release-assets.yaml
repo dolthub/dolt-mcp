@@ -33,7 +33,6 @@ jobs:
     env:
       TAG: ${{ needs.format-version.outputs.tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      OUT_DIR: ${{ runner.temp }}/dolt-mcp-assets
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -51,6 +50,9 @@ jobs:
         with:
           ref: ${{ env.TAG }}
           fetch-depth: 0
+
+      - name: Set OUT_DIR
+        run: echo "OUT_DIR=$RUNNER_TEMP/dolt-mcp-assets" >> "$GITHUB_ENV"
 
       - name: Prepare output directory
         run: mkdir -p "$OUT_DIR"
