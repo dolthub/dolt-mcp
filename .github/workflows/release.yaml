@@ -58,7 +58,7 @@ jobs:
           set -euo pipefail
           latest=$(git rev-parse HEAD)
           echo "commitish=$latest" >> "$GITHUB_OUTPUT"
-          bash .github/scripts/build_binaries.sh
+          ./.github/scripts/build_binaries.sh
       - name: Create Release
         id: create_release
         uses: dolthub/create-release@v2
