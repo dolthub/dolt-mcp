@@ -7,6 +7,9 @@ on:
         description: 'SemVer format release tag, i.e. 0.24.5'
         required: true
 
+permissions:
+  contents: write
+
 jobs:
   format-version:
     runs-on: ubuntu-22.04
@@ -46,9 +49,16 @@ jobs:
       - uses: EndBug/add-and-commit@v9.1.4
         with:
           message: ${{ format('[ga-bump-release] Update Dolt MCP Server version to {0} and release v{0}', needs.format-version.outputs.version) }}
-          add: ${{ format('["{0}/mcp/pkg/server.go"]', github.workspace) }}
-          cwd: "."
+          add: mcp/pkg/server.go
+          cwd: .
           pull: "--ff"
+      - name: Build Binaries
+        id: build_binaries
+        run: |
+          set -euo pipefail
+          latest=$(git rev-parse HEAD)
+          echo "commitish=$latest" >> "$GITHUB_OUTPUT"
+          bash .github/scripts/build_binaries.sh
       - name: Create Release
         id: create_release
         uses: dolthub/create-release@v2
@@ -60,6 +70,18 @@ jobs:
           draft: false
           prerelease: true
           commitish: ${{ steps.build_binaries.outputs.commitish }}
+      - name: Upload Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release upload "v${{ needs.format-version.outputs.version }}" \
+            out/dolt-mcp-server-linux-amd64.tar.gz \
+            out/dolt-mcp-server-linux-arm64.tar.gz \
+            out/dolt-mcp-server-darwin-amd64.tar.gz \
+            out/dolt-mcp-server-darwin-arm64.tar.gz \
+            out/dolt-mcp-server-windows-amd64.zip \
+            --clobber
 
   docker-image-push:
     needs: [format-version, create-release]
@@ -70,5 +92,5 @@ jobs:
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
           event-type: push-docker-image
-          client-payload: '{"version": "${{ needs.format-version.outputs.version }}", "release_id": "${{ needs.create-release.outputs.release_id }}" }'
+          client-payload: '{"version": "${{ needs.format-version.outputs.version }}", "release_id": "${{ needs["create-release"].outputs.release_id }}" }'
 

@@ -1,0 +1,60 @@
+name: Upload Dolt MCP Server Assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'SemVer release tag to upload assets to (e.g. 0.24.5 or v0.24.5)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  format-version:
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.format_version.outputs.version }}
+      tag: ${{ steps.format_version.outputs.tag }}
+    steps:
+      - name: Format Input
+        id: format_version
+        run: |
+          version="${{ github.event.inputs.version }}"
+          if [[ $version == v* ]]; then
+            version="${version:1}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+  build-and-upload:
+    needs: format-version
+    runs-on: ubuntu-22.04
+    env:
+      TAG: ${{ needs.format-version.outputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code at tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
+
+        # Build cross-platform binaries into compressed archives
+      - name: Build Binaries
+        run: bash .github/scripts/build_binaries.sh
+
+      - name: Upload assets to existing release (clobber)
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" \
+            out/dolt-mcp-server-linux-amd64.tar.gz \
+            out/dolt-mcp-server-linux-arm64.tar.gz \
+            out/dolt-mcp-server-darwin-amd64.tar.gz \
+            out/dolt-mcp-server-darwin-arm64.tar.gz \
+            out/dolt-mcp-server-windows-amd64.zip \
+            --clobber
