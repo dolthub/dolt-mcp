@@ -80,8 +80,8 @@ func getTlsConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
 	return &tls.Config{
 		Certificates: []tls.Certificate{serverCert},
 		ClientCAs:    caCertPool,
-		ClientAuth:   tls.RequireAndVerifyClientCert, // For mutual TLS, require client cert
-		MinVersion:   tls.VersionTLS12,               // Enforce a minimum TLS version
+		ClientAuth:   tls.VerifyClientCertIfGiven,
+		MinVersion:   tls.VersionTLS12, // Enforce a minimum TLS version
 	}, nil
 }
 
