@@ -52,36 +52,34 @@ var httpCAFile = flag.String(httpCAFlag, "", "Path to TLS CA certificate file fo
 var help = flag.Bool(helpFlag, false, "If true, prints Dolt MCP server help information.")
 var version = flag.Bool(versionFlag, false, "If true, prints the Dolt MCP server version.")
 
-func getTlsConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
-	if len(certFile) == 0 && len(keyFile) == 0 && len(caFile) == 0 {
+func getTLSConfig(cert, key, ca string) (*tls.Config, error) {
+	if key == "" && cert == "" {
 		return nil, nil
-	} else if len(certFile) == 0 || len(keyFile) == 0 || len(caFile) == 0 {
-		return nil, fmt.Errorf("all of certFile, keyFile, and caFile must be provided for TLS configuration")
 	}
 
-	// Load server certificate and private key
-	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	c, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
-		return nil, fmt.Errorf("error loading server certificate '%s' and key '%s': %w", certFile, keyFile, err)
+		return nil, fmt.Errorf("tls.LoadX509KeyPair(%v, %v) failed: %w", cert, key, err)
 	}
 
-	// Load CA certificate for client authentication (if using mutual TLS)
-	caCertPEM, err := os.ReadFile(caFile)
-	if err != nil {
-		return nil, fmt.Errorf("Error reading CA certificate '%s': %w", caFile, err)
+	var caCertPool *x509.CertPool
+	if ca != "" {
+		caCertPEM, err := os.ReadFile(ca)
+		if err != nil {
+			return nil, fmt.Errorf("unable to read CA file at %s: %w", ca, err)
+		}
+
+		caCertPool = x509.NewCertPool()
+		if ok := caCertPool.AppendCertsFromPEM(caCertPEM); !ok {
+			return nil, fmt.Errorf("unable to add CA cert to cert pool")
+		}
 	}
 
-	caCertPool := x509.NewCertPool()
-	if !caCertPool.AppendCertsFromPEM(caCertPEM) {
-		return nil, fmt.Errorf("failed to append CA certificate from '%s'", caFile)
-	}
-
-	// Create tls.Config
 	return &tls.Config{
-		Certificates: []tls.Certificate{serverCert},
-		ClientCAs:    caCertPool,
+		Certificates: []tls.Certificate{c},
 		ClientAuth:   tls.VerifyClientCertIfGiven,
-		MinVersion:   tls.VersionTLS12, // Enforce a minimum TLS version
+		ClientCAs:    caCertPool,
+		MinVersion:   tls.VersionTLS12,
 	}, nil
 }
 
@@ -159,7 +157,7 @@ func main() {
 		DatabaseName: *doltDatabase,
 	}
 
-	tlsConfig, err := getTlsConfig(*httpCertFile, *httpKeyFile, *httpCAFile)
+	tlsConfig, err := getTLSConfig(*httpCertFile, *httpKeyFile, *httpCAFile)
 	if err != nil {
 		logger.Fatal("failed to get TLS configuration", zap.Error(err))
 	}
