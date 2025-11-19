@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"flag"
 	"fmt"
@@ -24,6 +26,9 @@ const (
 	doltDatabaseFlag = "dolt-database"
 	mcpPortFlag      = "mcp-port"
 	serveHTTPFlag    = "http"
+	httpCertFlag     = "http-cert-file"
+	httpKeyFlag      = "http-key-file"
+	httpCAFlag       = "http-ca-file"
 	serveStdioFlag   = "stdio"
 	logLevelFlag     = "log-level"
 	helpFlag         = "help"
@@ -40,9 +45,43 @@ var mcpPort = flag.Int(mcpPortFlag, 8080, "The HTTP port to serve Dolt MCP serve
 var serveHTTP = flag.Bool(serveHTTPFlag, false, "If true, serves Dolt MCP server over HTTP")
 var serveStdio = flag.Bool(serveStdioFlag, false, "If true, serves Dolt MCP server over stdio")
 var logLevel = flag.String(logLevelFlag, "info", "Log level: debug, info, warn, error. Default is info.")
+var httpCertFile = flag.String(httpCertFlag, "", "Path to TLS certificate file for HTTPS. If provided, all TLS parameters must be provided.")
+var httpKeyFile = flag.String(httpKeyFlag, "", "Path to TLS private key file for HTTPS. If provided, all TLS parameters must be provided.")
+var httpCAFile = flag.String(httpCAFlag, "", "Path to TLS CA certificate file for HTTPS. If provided, all TLS parameters must be provided.")
 
 var help = flag.Bool(helpFlag, false, "If true, prints Dolt MCP server help information.")
 var version = flag.Bool(versionFlag, false, "If true, prints the Dolt MCP server version.")
+
+func getTLSConfig(cert, key, ca string) (*tls.Config, error) {
+	if key == "" && cert == "" {
+		return nil, nil
+	}
+
+	c, err := tls.LoadX509KeyPair(cert, key)
+	if err != nil {
+		return nil, fmt.Errorf("tls.LoadX509KeyPair(%v, %v) failed: %w", cert, key, err)
+	}
+
+	var caCertPool *x509.CertPool
+	if ca != "" {
+		caCertPEM, err := os.ReadFile(ca)
+		if err != nil {
+			return nil, fmt.Errorf("unable to read CA file at %s: %w", ca, err)
+		}
+
+		caCertPool = x509.NewCertPool()
+		if ok := caCertPool.AppendCertsFromPEM(caCertPEM); !ok {
+			return nil, fmt.Errorf("unable to add CA cert to cert pool")
+		}
+	}
+
+	return &tls.Config{
+		Certificates: []tls.Certificate{c},
+		ClientAuth:   tls.VerifyClientCertIfGiven,
+		ClientCAs:    caCertPool,
+		MinVersion:   tls.VersionTLS12,
+	}, nil
+}
 
 func main() {
 	flag.Usage = func() {
@@ -118,11 +157,17 @@ func main() {
 		DatabaseName: *doltDatabase,
 	}
 
+	tlsConfig, err := getTLSConfig(*httpCertFile, *httpKeyFile, *httpCAFile)
+	if err != nil {
+		logger.Fatal("failed to get TLS configuration", zap.Error(err))
+	}
+
 	if *serveHTTP {
 		srv, err := pkg.NewMCPHTTPServer(
 			logger,
 			config,
 			*mcpPort,
+			tlsConfig,
 			toolsets.WithToolSet(&toolsets.PrimitiveToolSetV1{}))
 		if err != nil {
 			logger.Fatal("failed to create Dolt MCP HTTP server", zap.Error(err))

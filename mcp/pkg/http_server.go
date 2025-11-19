@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -16,11 +17,12 @@ import (
 )
 
 type httpServerImpl struct {
-	mcp      *server.MCPServer
-	handler  http.Handler
-	port     int
-	dbConfig db.Config
-	logger   *zap.Logger
+	mcp       *server.MCPServer
+	handler   http.Handler
+	port      int
+	dbConfig  db.Config
+	logger    *zap.Logger
+	tlsConfig *tls.Config
 }
 
 type HTTPServer interface {
@@ -30,7 +32,7 @@ type HTTPServer interface {
 
 var _ HTTPServer = &httpServerImpl{}
 
-func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, opts ...Option) (HTTPServer, error) {
+func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, tlsConfig *tls.Config, opts ...Option) (HTTPServer, error) {
 	mcp := server.NewMCPServer(
 		DoltMCPServerName,
 		DoltMCPServerVersion,
@@ -46,11 +48,12 @@ func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, opts ...Op
 	}
 
 	srv := &httpServerImpl{
-		logger:   logger,
-		mcp:      mcp,
-		dbConfig: config,
-		port:     port,
-		handler:  handler,
+		logger:    logger,
+		mcp:       mcp,
+		dbConfig:  config,
+		port:      port,
+		handler:   handler,
+		tlsConfig: tlsConfig,
 	}
 
 	for _, opt := range opts {
@@ -69,14 +72,15 @@ func (s *httpServerImpl) DBConfig() db.Config {
 }
 
 func (s *httpServerImpl) ListenAndServe(ctx context.Context) {
-	serve(ctx, s.logger, s.handler, s.port)
+	serve(ctx, s.logger, s.handler, s.port, s.tlsConfig)
 }
 
-func serve(ctx context.Context, logger *zap.Logger, handler http.Handler, port int) {
+func serve(ctx context.Context, logger *zap.Logger, handler http.Handler, port int, tlsConfig *tls.Config) {
 	portStr := fmt.Sprintf(":%d", port)
 	srv := &http.Server{
-		Addr:    portStr,
-		Handler: handler,
+		Addr:      portStr,
+		Handler:   handler,
+		TLSConfig: tlsConfig,
 	}
 
 	quit := make(chan os.Signal, 1)
@@ -109,9 +113,18 @@ func serve(ctx context.Context, logger *zap.Logger, handler http.Handler, port i
 		shutdown("context cancellation")
 	}()
 
-    // Start the server
-    logger.Info("Dolt MCP server ready. Accepting connections.", zap.String("addr", portStr))
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	// Start the server
+	var err error
+	if tlsConfig != nil {
+		logger.Info("Dolt MCP server ready. Accepting HTTPS connections.", zap.String("addr", portStr))
+		// When using custom TLSConfig with certificates already loaded,
+		// we call ListenAndServeTLS with empty cert/key strings
+		err = srv.ListenAndServeTLS("", "")
+	} else {
+		logger.Info("Dolt MCP server ready. Accepting HTTP connections.", zap.String("addr", portStr))
+		err = srv.ListenAndServe()
+	}
+	if err != nil && err != http.ErrServerClosed {
 		logger.Error("error serving Dolt MCP server", zap.Error(err))
 	}
 
