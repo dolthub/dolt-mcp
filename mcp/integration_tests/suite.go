@@ -285,7 +285,7 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 
 	logger := zap.NewNop()
 
-	mcpServer, err := pkg.NewMCPHTTPServer(logger, config, mcpServerPort, nil, toolsets.WithToolSet(&toolsets.PrimitiveToolSetV1{}))
+	mcpServer, err := pkg.NewMCPHTTPServer(logger, config, mcpServerPort, nil, "", nil, toolsets.WithToolSet(&toolsets.PrimitiveToolSetV1{}))
 	if err != nil {
 		doltServer.Stop()
 		testDb.Close()
