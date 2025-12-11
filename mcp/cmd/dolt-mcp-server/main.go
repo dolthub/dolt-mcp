@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
@@ -33,6 +34,8 @@ const (
 	logLevelFlag     = "log-level"
 	helpFlag         = "help"
 	versionFlag      = "version"
+	jwkClaimsFlag    = "jwk-claims"
+	jwkURLFlag       = "jwk-url"
 )
 
 var doltHost = flag.String(doltHostFlag, "", "The hostname for the Dolt server.")
@@ -45,9 +48,11 @@ var mcpPort = flag.Int(mcpPortFlag, 8080, "The HTTP port to serve Dolt MCP serve
 var serveHTTP = flag.Bool(serveHTTPFlag, false, "If true, serves Dolt MCP server over HTTP")
 var serveStdio = flag.Bool(serveStdioFlag, false, "If true, serves Dolt MCP server over stdio")
 var logLevel = flag.String(logLevelFlag, "info", "Log level: debug, info, warn, error. Default is info.")
-var httpCertFile = flag.String(httpCertFlag, "", "Path to TLS certificate file for HTTPS. If provided, all TLS parameters must be provided.")
-var httpKeyFile = flag.String(httpKeyFlag, "", "Path to TLS private key file for HTTPS. If provided, all TLS parameters must be provided.")
-var httpCAFile = flag.String(httpCAFlag, "", "Path to TLS CA certificate file for HTTPS. If provided, all TLS parameters must be provided.")
+var httpCertFile = flag.String(httpCertFlag, "", "Path to TLS certificate file for HTTPS. If provided, a key must also be provided.")
+var httpKeyFile = flag.String(httpKeyFlag, "", "Path to TLS private key file for HTTPS. If provided, a cert must also be be provided.")
+var httpCAFile = flag.String(httpCAFlag, "", "Path to TLS CA certificate file for HTTPS. If provided, all TLS parameters must be provided otherwise it will be ignored.")
+var jwkClaims = flag.String(jwkClaimsFlag, "", "A comma-separated list of key=value pairs for JWT claims for authentication.")
+var jwkURL = flag.String(jwkURLFlag, "", "The URL of the JWKS server for JWT authentication.")
 
 var help = flag.Bool(helpFlag, false, "If true, prints Dolt MCP server help information.")
 var version = flag.Bool(versionFlag, false, "If true, prints the Dolt MCP server version.")
@@ -162,11 +167,18 @@ func main() {
 		logger.Fatal("failed to get TLS configuration", zap.Error(err))
 	}
 
+	jwkClaimsMap, err := parseClaimsMap(jwkClaims)
+	if err != nil {
+		logger.Fatal("failed to parse JWK claims", zap.Stringp("jwk_claims", jwkClaims), zap.Error(err))
+	}
+
 	if *serveHTTP {
 		srv, err := pkg.NewMCPHTTPServer(
 			logger,
 			config,
 			*mcpPort,
+			jwkClaimsMap,
+			*jwkURL,
 			tlsConfig,
 			toolsets.WithToolSet(&toolsets.PrimitiveToolSetV1{}))
 		if err != nil {
@@ -210,4 +222,30 @@ func validateArgs() error {
 		}
 	}
 	return nil
+}
+
+func parseClaimsMap(jwkClaims *string) (map[string]string, error) {
+	if jwkClaims == nil || *jwkClaims == "" {
+		return nil, nil
+	}
+
+	claimsMap := make(map[string]string)
+	items := splitAndTrim(*jwkClaims, ",")
+	for _, item := range items {
+		tup := splitAndTrim(item, "=")
+		if len(tup) != 2 {
+			return nil, errors.New("invalid format for jwk-claims, must be key=value pairs separated by commas")
+		}
+		claimsMap[tup[0]] = tup[1]
+	}
+	return claimsMap, nil
+}
+
+func splitAndTrim(s string, sep string) []string {
+	parts := []string{}
+	for _, part := range strings.Split(s, sep) {
+		parts = append(parts, strings.TrimSpace(part))
+	}
+
+	return parts
 }

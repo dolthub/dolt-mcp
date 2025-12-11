@@ -32,7 +32,7 @@ type HTTPServer interface {
 
 var _ HTTPServer = &httpServerImpl{}
 
-func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, tlsConfig *tls.Config, opts ...Option) (HTTPServer, error) {
+func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, jwkClaimsMap map[string]string, jwkUrl string, tlsConfig *tls.Config, opts ...Option) (HTTPServer, error) {
 	mcp := server.NewMCPServer(
 		DoltMCPServerName,
 		DoltMCPServerVersion,
@@ -45,6 +45,21 @@ func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, tlsConfig 
 	var handler http.Handler = baseHandler
 	if logger.Core().Enabled(zap.DebugLevel) {
 		handler = withAccessLogging(baseHandler, logger)
+	}
+
+	bearerTokenAuth := false
+	if jwkClaimsMap != nil && jwkUrl != "" {
+		bearerTokenAuth = true
+	} else if jwkClaimsMap != nil || jwkUrl != "" {
+		return nil, fmt.Errorf("if a JWK URL or claims are provided, both must be provided for bearer token authentication")
+	}
+
+	if bearerTokenAuth {
+		var err error
+		handler, err = withBearerAuth(logger, handler, jwkClaimsMap, jwkUrl)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set up bearer token authentication: %w", err)
+		}
 	}
 
 	srv := &httpServerImpl{
