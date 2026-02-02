@@ -20,13 +20,28 @@ func withBearerAuth(logger *zap.Logger, next http.Handler, jwkClaimsMap map[stri
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// auth will be "" if the "Authorization" header is not set
 		auth := r.Header.Get("Authorization")
-		if !strings.HasPrefix(auth, "Bearer ") {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
+
+		var token string
+		if strings.HasPrefix(auth, "Bearer ") {
+			token = strings.TrimPrefix(auth, "Bearer ")
+			token = strings.TrimSpace(token)
+		} else {
+			vals := r.URL.Query()
+
+			for key, arr := range vals {
+				if key == "jwt" && len(arr) == 1 {
+					token = strings.TrimSpace(arr[0])
+					break
+				}
+			}
+
+			if token == "" {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
 		}
-		token := strings.TrimPrefix(auth, "Bearer ")
-		token = strings.TrimSpace(token)
 
 		// validate token
 		valid, _, err := validateJWT(logger, pr, token, time.Now())
