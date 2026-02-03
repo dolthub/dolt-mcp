@@ -20,6 +20,8 @@ type Config struct {
 	Port            int    `yaml:"port" json:"port"`
 	ParseTime       bool   `yaml:"parse_time" json:"parse_time"`
 	MultiStatements bool   `yaml:"multi_statements" json:"multi_statements"`
+	TLS             string `yaml:"tls" json:"tls"`
+	TLSCAFile       string `yaml:"tls_ca_file" json:"tls_ca_file"`
 }
 
 func (c *Config) getDSNOptions() string {
@@ -33,8 +35,12 @@ func (c *Config) getDSNOptions() string {
 		options = append(options, "multiStatements=true")
 	}
 
+	if c.TLS != "" {
+		options = append(options, fmt.Sprintf("tls=%s", c.TLS))
+	}
+
 	if len(options) > 0 {
-		return strings.Join(options, "&")
+		return "?" + strings.Join(options, "&")
 	}
 
 	return ""

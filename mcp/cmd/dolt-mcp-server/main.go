@@ -25,6 +25,8 @@ const (
 	doltUserFlag     = "dolt-user"
 	doltPasswordFlag = "dolt-password"
 	doltDatabaseFlag = "dolt-database"
+	doltTLSFlag      = "dolt-tls"
+	doltTLSCAFlag    = "dolt-tls-ca"
 	mcpPortFlag      = "mcp-port"
 	serveHTTPFlag    = "http"
 	httpCertFlag     = "http-cert-file"
@@ -43,6 +45,8 @@ var doltPort = flag.Int(doltPortFlag, 3306, "The port for the Dolt server, defau
 var doltUser = flag.String(doltUserFlag, "", "The username for connecting to the Dolt server.")
 var doltPassword = flag.String(doltPasswordFlag, "", "The password for connecting to the Dolt server.")
 var doltDatabase = flag.String(doltDatabaseFlag, "", "The database for connecting to the Dolt server.")
+var doltTLS = flag.String(doltTLSFlag, "", "TLS mode for Dolt server connection: 'true', 'false', 'skip-verify', or 'preferred'. Leave empty to disable TLS.")
+var doltTLSCA = flag.String(doltTLSCAFlag, "", "Path to CA certificate file for Dolt server TLS connection. When provided, enables TLS with custom CA.")
 
 var mcpPort = flag.Int(mcpPortFlag, 8080, "The HTTP port to serve Dolt MCP server on, default is 8080.")
 var serveHTTP = flag.Bool(serveHTTPFlag, false, "If true, serves Dolt MCP server over HTTP")
@@ -155,11 +159,13 @@ func main() {
 	}
 
 	config := db.Config{
-		Host:         "0.0.0.0",
+		Host:         *doltHost,
 		Port:         *doltPort,
 		User:         *doltUser,
 		Password:     finalPassword,
 		DatabaseName: *doltDatabase,
+		TLS:          *doltTLS,
+		TLSCAFile:    *doltTLSCA,
 	}
 
 	tlsConfig, err := getTLSConfig(*httpCertFile, *httpKeyFile, *httpCAFile)
