@@ -9,7 +9,7 @@ const (
 	DoltMCPServerName = "dolt-mcp"
 )
 
-var DoltMCPServerVersion = "0.3.1"
+var DoltMCPServerVersion = "0.3.2"
 
 type Server interface {
 	MCP() *server.MCPServer
