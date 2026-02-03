@@ -106,6 +106,36 @@ Add this configuration to your Claude Desktop MCP settings:
 }
 ```
 
+#### HTTP Client Configuration
+
+When connecting to a Dolt MCP server running in HTTP mode, you can configure Claude to use the HTTP transport. **Important**: HTTP connections require the `/mcp` endpoint to be appended to the server URL.
+
+##### Using Claude CLI
+
+```bash
+claude mcp add --transport http dolt-mcp https://your-dolt-host:8080/mcp --header "Authorization: Bearer <token>"
+```
+
+##### Claude Desktop Configuration
+
+Add this configuration to your Claude Desktop MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "dolt-mcp": {
+      "transport": "http",
+      "url": "https://your-dolt-host:8080/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-token>"
+      }
+    }
+  }
+}
+```
+
+**Note**: Replace `your-dolt-host`, the port, and `<your-token>` with your actual server details. The `/mcp` endpoint is required for HTTP connections.
+
 #### 2. HTTP Server
 
 The HTTP server exposes a REST API for MCP tool calls, useful for web applications and custom integrations.
