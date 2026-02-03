@@ -2,13 +2,16 @@ package db
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 type ResultFormat int
@@ -247,6 +250,26 @@ func (d *databaseTransactionImpl) Commit(ctx context.Context) (err error) {
 }
 
 func newDB(config Config) (*sql.DB, error) {
+	// If a CA file is provided, register a custom TLS config
+	if config.TLSCAFile != "" {
+		rootCertPool := x509.NewCertPool()
+		pem, err := os.ReadFile(config.TLSCAFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read CA file %s: %w", config.TLSCAFile, err)
+		}
+		if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
+			return nil, fmt.Errorf("failed to append CA certificate from %s", config.TLSCAFile)
+		}
+		tlsConfig := &tls.Config{
+			RootCAs: rootCertPool,
+		}
+		if err := mysql.RegisterTLSConfig("custom", tlsConfig); err != nil {
+			return nil, fmt.Errorf("failed to register TLS config: %w", err)
+		}
+		// Override the TLS setting to use our custom config
+		config.TLS = "custom"
+	}
+
 	dsn := config.GetDSN()
 
 	db, err := sql.Open("mysql", dsn)
