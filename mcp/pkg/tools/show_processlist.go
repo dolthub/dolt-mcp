@@ -52,8 +52,6 @@ func RegisterShowProcesslistTool(server pkg.Server) {
 	tool := NewShowProcesslistTool()
 
 	mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, serverErr error) {
-		var err error
-
 		workingBranch, err := GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil

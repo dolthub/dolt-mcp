@@ -24,12 +24,3 @@ func IsReadOnlyStatement(stmt sqlparser.Statement) bool {
 		return false
 	}
 }
-
-// IsReadOnlySQL parses a SQL string and classifies it as read-only or not.
-func IsReadOnlySQL(query string) (bool, error) {
-	stmt, err := ParseSQLQuery(query)
-	if err != nil {
-		return false, err
-	}
-	return IsReadOnlyStatement(stmt), nil
-}
