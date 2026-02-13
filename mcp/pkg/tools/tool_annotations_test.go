@@ -13,6 +13,7 @@ func TestReadOnlyToolAnnotations(t *testing.T) {
 	}{
 		{"query", NewQueryTool},
 		{"show_tables", NewShowTablesTool},
+		{"show_processlist", NewShowProcesslistTool},
 		{"show_create_table", NewShowCreateTableTool},
 		{"describe_table", NewDescribeTableTool},
 		{"list_databases", NewListDatabasesTool},
@@ -99,7 +100,8 @@ func TestWriteToolAnnotations(t *testing.T) {
 		ctor                  func() mcp.Tool
 		ro, destr, idem, open bool
 	}{
-		{"exec", NewExecTool, false, false, false, false},
+		{"exec", NewExecTool, false, true, false, false},
+		{"kill_process", NewKillProcessTool, false, true, false, false},
 		{"create_table", NewCreateTableTool, false, false, false, false},
 		{"alter_table", NewAlterTableTool, false, false, false, false},
 		{"drop_table", NewDropTableTool, false, true, true, false},

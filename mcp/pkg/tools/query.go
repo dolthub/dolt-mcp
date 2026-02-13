@@ -6,7 +6,6 @@ import (
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
-	"github.com/dolthub/vitess/go/vt/sqlparser"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -24,12 +23,9 @@ func ValidateReadQuery(query string) error {
 		return err
 	}
 
-	switch sqlStatement.(type) {
-	case *sqlparser.Select, *sqlparser.OtherRead:
-		// TODO: make sure we're covering all valid reads here
+	if IsReadOnlyStatement(sqlStatement) {
 		return nil
 	}
-
 	return ErrInvalidSQLReadQuery
 }
 
