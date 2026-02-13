@@ -6,7 +6,6 @@ import (
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
-	"github.com/dolthub/vitess/go/vt/sqlparser"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -25,13 +24,10 @@ func ValidateWriteQuery(query string) error {
 		return err
 	}
 
-	switch sqlStatement.(type) {
-	case *sqlparser.Insert, *sqlparser.Update, *sqlparser.Delete:
-		// TODO: make sure we're covering all valid writes here
-		return nil
+	if IsReadOnlyStatement(sqlStatement) {
+		return ErrInvalidSQLWriteQuery
 	}
-
-	return ErrInvalidSQLWriteQuery
+	return nil
 }
 
 func NewExecTool() mcp.Tool {
@@ -39,7 +35,7 @@ func NewExecTool() mcp.Tool {
 		ExecToolName,
 		mcp.WithDescription(ExecToolDescription),
 		mcp.WithReadOnlyHintAnnotation(false),
-		mcp.WithDestructiveHintAnnotation(false),
+		mcp.WithDestructiveHintAnnotation(true),
 		mcp.WithIdempotentHintAnnotation(false),
 		mcp.WithOpenWorldHintAnnotation(false),
 		mcp.WithString(
