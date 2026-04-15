@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"errors"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -15,20 +14,6 @@ const (
 	ExecToolDescription              = "Executes a WRITE query."
 	ExecToolCallSuccessMessage       = "successfully executed write"
 )
-
-var ErrInvalidSQLWriteQuery = errors.New("invalid write query")
-
-func ValidateWriteQuery(query string) error {
-	sqlStatement, err := ParseSQLQuery(query)
-	if err != nil {
-		return err
-	}
-
-	if IsReadOnlyStatement(sqlStatement) {
-		return ErrInvalidSQLWriteQuery
-	}
-	return nil
-}
 
 func NewExecTool() mcp.Tool {
 	return mcp.NewTool(
@@ -83,7 +68,9 @@ func RegisterExecTool(server pkg.Server) {
 			return
 		}
 
-		err = ValidateWriteQuery(query)
+		dialect := server.Dialect()
+
+		err = dialect.ValidateWriteQuery(query)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -92,7 +79,7 @@ func RegisterExecTool(server pkg.Server) {
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

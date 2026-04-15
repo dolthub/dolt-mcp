@@ -14,9 +14,7 @@ const (
 	CreateDoltBranchFromHeadToolNewBranchArgumentDescription = "The name of the new branch."
 	CreateDoltBranchFromHeadToolForceArgumentDescription     = "If true, will force the creation of the new branch even if it already exists."
 	CreateDoltBranchFromHeadToolDescription                  = "Creates a new branch from current HEAD."
-	CreateDoltBranchFromHeadToolCallSuccessFormatString      = "successfully created branch: %s"
-	CreateDoltBranchFromHeadToolSQLQueryFormatString         = "CALL DOLT_BRANCH('%s');"
-	CreateDoltBranchFromHeadToolForceSQLQueryFormatString    = "CALL DOLT_BRANCH('-f', '%s');"
+	CreateDoltBranchFromHeadToolCallSuccessFormatString = "successfully created branch: %s"
 )
 
 func NewCreateDoltBranchFromHeadTool() mcp.Tool {
@@ -79,10 +77,11 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 
 		force := GetBooleanArgumentFromCallToolRequest(request, ForceCallToolArgumentName)
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -96,13 +95,13 @@ func RegisterCreateDoltBranchFromHeadTool(server pkg.Server) {
 		}()
 
 		if force {
-			err = tx.ExecContext(ctx, fmt.Sprintf(CreateDoltBranchFromHeadToolForceSQLQueryFormatString, newBranch))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltBranch, "-f", newBranch))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return
 			}
 		} else {
-			err = tx.ExecContext(ctx, fmt.Sprintf(CreateDoltBranchFromHeadToolSQLQueryFormatString, newBranch))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltBranch, newBranch))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return

@@ -12,8 +12,8 @@ import (
 const (
 	DropTableToolName                         = "drop_table"
 	DropTableToolTableArgumentDescription     = "The name of the table to drop."
-	DropTableToolSQLQueryFormatString         = "DROP TABLE `%s`;"
-	DropTableIfExistsToolSQLQueryFormatString = "DROP TABLE IF EXISTS `%s`;"
+	DropTableToolSQLQueryFormatString         = "DROP TABLE %s;"
+	DropTableIfExistsToolSQLQueryFormatString = "DROP TABLE IF EXISTS %s;"
 	DropTableToolDescription                  = "Drops the specified table."
 	DropTableToolCallSuccessFormatString      = "successfully dropped table: %s"
 	DropTableToolIfExistsArgumentDescription  = "If true will only drop the specified table if it exists."
@@ -78,17 +78,18 @@ func RegisterDropTableTool(server pkg.Server) {
 
 		ifExists := GetBooleanArgumentFromCallToolRequest(request, IfExistsCallToolArgumentName)
 
+		dialect := server.Dialect()
 		var query string
 		if ifExists {
-			query = fmt.Sprintf(DropTableIfExistsToolSQLQueryFormatString, tableToDrop)
+			query = fmt.Sprintf(DropTableIfExistsToolSQLQueryFormatString, dialect.QuoteIdentifier(tableToDrop))
 		} else {
-			query = fmt.Sprintf(DropTableToolSQLQueryFormatString, tableToDrop)
+			query = fmt.Sprintf(DropTableToolSQLQueryFormatString, dialect.QuoteIdentifier(tableToDrop))
 		}
 
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

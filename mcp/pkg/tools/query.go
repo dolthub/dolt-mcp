@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"errors"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -14,20 +13,6 @@ const (
 	QueryToolQueryArgumentDescription = "The query to run."
 	QueryToolDescription              = "Executes a READ query."
 )
-
-var ErrInvalidSQLReadQuery = errors.New("invalid read query")
-
-func ValidateReadQuery(query string) error {
-	sqlStatement, err := ParseSQLQuery(query)
-	if err != nil {
-		return err
-	}
-
-	if IsReadOnlyStatement(sqlStatement) {
-		return nil
-	}
-	return ErrInvalidSQLReadQuery
-}
 
 func NewQueryTool() mcp.Tool {
 	return mcp.NewTool(
@@ -82,7 +67,9 @@ func RegisterQueryTool(server pkg.Server) {
 			return
 		}
 
-		err = ValidateReadQuery(query)
+		dialect := server.Dialect()
+
+		err = dialect.ValidateReadQuery(query)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -91,7 +78,7 @@ func RegisterQueryTool(server pkg.Server) {
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

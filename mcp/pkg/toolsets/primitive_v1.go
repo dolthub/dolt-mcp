@@ -9,50 +9,66 @@ type PrimitiveToolSetV1 struct{}
 
 var _ ToolSet = &PrimitiveToolSetV1{}
 
+type registerFunc func(pkg.Server)
+
+type toolRegistration struct {
+	name     string
+	register registerFunc
+}
+
+var toolRegistrations = []toolRegistration{
+	{tools.ListDatabasesToolName, tools.RegisterListDatabasesTool},
+	{tools.ListDoltBranchesToolName, tools.RegisterListDoltBranchesTool},
+	{tools.CreateDatabaseToolName, tools.RegisterCreateDatabaseTool},
+	{tools.DropDatabaseToolName, tools.RegisterDropDatabaseTool},
+	{tools.ShowTablesToolName, tools.RegisterShowTablesTool},
+	{tools.ShowProcesslistToolName, tools.RegisterShowProcesslistTool},
+	{tools.ShowCreateTableToolName, tools.RegisterShowCreateTableTool},
+	{tools.DescribeTableToolName, tools.RegisterDescribeTableTool},
+	{tools.CreateTableToolName, tools.RegisterCreateTableTool},
+	{tools.DropTableToolName, tools.RegisterDropTableTool},
+	{tools.AlterTableToolName, tools.RegisterAlterTableTool},
+	{tools.QueryToolName, tools.RegisterQueryTool},
+	{tools.ExecToolName, tools.RegisterExecTool},
+	{tools.KillProcessToolName, tools.RegisterKillProcessTool},
+	{tools.SelectActiveBranchToolName, tools.RegisterSelectActiveBranchTool},
+	{tools.SelectVersionToolName, tools.RegisterSelectVersionTool},
+	{tools.CreateDoltBranchFromHeadToolName, tools.RegisterCreateDoltBranchFromHeadTool},
+	{tools.CreateDoltBranchToolName, tools.RegisterCreateDoltBranchTool},
+	{tools.MoveDoltBranchToolName, tools.RegisterMoveDoltBranchTool},
+	{tools.DeleteDoltBranchToolName, tools.RegisterDeleteDoltBranchTool},
+	{tools.StageTableForDoltCommitToolName, tools.RegisterStageTableForDoltCommitTool},
+	{tools.StageAllTablesForDoltCommitToolName, tools.RegisterStageAllTablesForDoltCommitTool},
+	{tools.UnstageTableToolName, tools.RegisterUnstageTableTool},
+	{tools.UnstageAllTablesToolName, tools.RegisterUnstageAllTablesTool},
+	{tools.CreateDoltCommitToolName, tools.RegisterCreateDoltCommitTool},
+	{tools.DoltResetSoftToolName, tools.RegisterDoltResetSoftTool},
+	{tools.DoltResetHardToolName, tools.RegisterDoltResetHardTool},
+	{tools.ListDoltCommitsToolName, tools.RegisterListDoltCommitsTool},
+	{tools.ListDoltDiffChangesInWorkingSetToolName, tools.RegisterListDoltDiffChangesInWorkingSetTool},
+	{tools.ListDoltDiffChangesByTableNameToolName, tools.RegisterListDoltDiffChangesByTableNameTool},
+	{tools.ListDoltDiffChangesInDateRangeToolName, tools.RegisterListDoltDiffChangesInDateRangeTool},
+	{tools.GetDoltMergeStatusToolName, tools.RegisterGetDoltMergeStatusTool},
+	{tools.MergeDoltBranchToolName, tools.RegisterMergeDoltBranchTool},
+	{tools.MergeDoltBranchNoFastForwardToolName, tools.RegisterMergeDoltBranchNoFastForwardTool},
+	{tools.ListDoltRemotesToolName, tools.RegisterListDoltRemotesTool},
+	{tools.AddDoltRemoteToolName, tools.RegisterAddDoltRemoteTool},
+	{tools.RemoveDoltRemoteToolName, tools.RegisterRemoveDoltRemoteTool},
+	{tools.CloneDatabaseToolName, tools.RegisterCloneDatabaseTool},
+	{tools.DoltFetchBranchToolName, tools.RegisterDoltFetchBranchTool},
+	{tools.DoltFetchAllBranchesToolName, tools.RegisterDoltFetchAllBranchesTool},
+	{tools.DoltPushBranchToolName, tools.RegisterDoltPushBranchTool},
+	{tools.DoltPullBranchToolName, tools.RegisterDoltPullBranchTool},
+	{tools.RunDoltTestsToolName, tools.RegisterRunDoltTestsTool},
+	{tools.AddDoltTestToolName, tools.RegisterAddDoltTestTool},
+	{tools.RemoveDoltTestToolName, tools.RegisterRemoveDoltTestTool},
+}
+
 func (v *PrimitiveToolSetV1) RegisterTools(server pkg.Server) {
-	tools.RegisterListDatabasesTool(server)
-	tools.RegisterListDoltBranchesTool(server)
-	tools.RegisterCreateDatabaseTool(server)
-	tools.RegisterDropDatabaseTool(server)
-	tools.RegisterShowTablesTool(server)
-	tools.RegisterShowProcesslistTool(server)
-	tools.RegisterShowCreateTableTool(server)
-	tools.RegisterDescribeTableTool(server)
-	tools.RegisterCreateTableTool(server)
-	tools.RegisterDropTableTool(server)
-	tools.RegisterAlterTableTool(server)
-	tools.RegisterQueryTool(server)
-	tools.RegisterExecTool(server)
-	tools.RegisterKillProcessTool(server)
-	tools.RegisterSelectActiveBranchTool(server)
-	tools.RegisterSelectVersionTool(server)
-	tools.RegisterCreateDoltBranchFromHeadTool(server)
-	tools.RegisterCreateDoltBranchTool(server)
-	tools.RegisterMoveDoltBranchTool(server)
-	tools.RegisterDeleteDoltBranchTool(server)
-	tools.RegisterStageTableForDoltCommitTool(server)
-	tools.RegisterStageAllTablesForDoltCommitTool(server)
-	tools.RegisterUnstageTableTool(server)
-	tools.RegisterUnstageAllTablesTool(server)
-	tools.RegisterCreateDoltCommitTool(server)
-	tools.RegisterDoltResetSoftTool(server)
-	tools.RegisterDoltResetHardTool(server)
-	tools.RegisterListDoltCommitsTool(server)
-	tools.RegisterListDoltDiffChangesInWorkingSetTool(server)
-	tools.RegisterListDoltDiffChangesByTableNameTool(server)
-	tools.RegisterListDoltDiffChangesInDateRangeTool(server)
-	tools.RegisterGetDoltMergeStatusTool(server)
-	tools.RegisterMergeDoltBranchTool(server)
-	tools.RegisterMergeDoltBranchNoFastForwardTool(server)
-	tools.RegisterListDoltRemotesTool(server)
-	tools.RegisterAddDoltRemoteTool(server)
-	tools.RegisterRemoveDoltRemoteTool(server)
-	tools.RegisterCloneDatabaseTool(server)
-	tools.RegisterDoltFetchBranchTool(server)
-	tools.RegisterDoltFetchAllBranchesTool(server)
-	tools.RegisterDoltPushBranchTool(server)
-	tools.RegisterDoltPullBranchTool(server)
-	tools.RegisterRunDoltTestsTool(server)
-	tools.RegisterAddDoltTestTool(server)
-	tools.RegisterRemoveDoltTestTool(server)
+	dialect := server.Dialect()
+	for _, t := range toolRegistrations {
+		if dialect.SupportsTool(t.name) {
+			t.register(server)
+		}
+	}
 }

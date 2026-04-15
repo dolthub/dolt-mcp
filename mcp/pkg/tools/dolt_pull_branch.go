@@ -16,8 +16,6 @@ const (
 	DoltPullBranchToolForceArgumentDescription      = "If true, the specified branch is force pulled."
 	DoltPullBranchToolDescription                   = "Pulls the specified branch from the remote."
 	DoltPullBranchToolCallSuccessFormatString       = "successfully pulled branch: %s"
-	DoltPullBranchToolSQLQueryFormatString          = "CALL DOLT_PULL('%s', '%s');"
-	DoltPullBranchToolForceSQLQueryFormatString     = "CALL DOLT_PULL('%s', '%s', '--force');"
 )
 
 func NewDoltPullBranchTool() mcp.Tool {
@@ -79,10 +77,11 @@ func RegisterDoltPullBranchTool(server pkg.Server) {
 
 		force := GetBooleanArgumentFromCallToolRequest(request, ForceCallToolArgumentName)
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, workingDatabase)
+		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, dialect, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -96,13 +95,13 @@ func RegisterDoltPullBranchTool(server pkg.Server) {
 		}()
 
 		if force {
-			err = tx.ExecContext(ctx, fmt.Sprintf(DoltPullBranchToolForceSQLQueryFormatString, remote, branch))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltPull, remote, branch, "--force"))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return
 			}
 		} else {
-			err = tx.ExecContext(ctx, fmt.Sprintf(DoltPullBranchToolSQLQueryFormatString, remote, branch))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltPull, remote, branch))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return

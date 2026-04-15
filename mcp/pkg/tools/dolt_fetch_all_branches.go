@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -14,7 +13,6 @@ const (
 	DoltFetchAllBranchesToolRemoteNameArgumentDescription = "The name of the remote to fetch all branches from."
 	DoltFetchAllBranchesToolDescription                   = "Fetches all branches from the remote."
 	DoltFetchAllBranchesToolCallSuccessMessage            = "successfully fetched branches"
-	DoltFetchAllBranchesToolSQLQueryFormatString          = "CALL DOLT_FETCH('%s');"
 )
 
 func NewDoltFetchAllBranchesTool() mcp.Tool {
@@ -59,10 +57,11 @@ func RegisterDoltFetchAllBranchesTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, workingDatabase)
+		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, dialect, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -75,7 +74,7 @@ func RegisterDoltFetchAllBranchesTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltFetchAllBranchesToolSQLQueryFormatString, remote))
+		err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltFetch, remote))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

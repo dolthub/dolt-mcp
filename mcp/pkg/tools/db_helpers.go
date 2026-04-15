@@ -2,17 +2,9 @@ package tools
 
 import (
 	"context"
-	"fmt"
-	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
-	"github.com/dolthub/go-mysql-server/sql"
-	"github.com/dolthub/vitess/go/vt/sqlparser"
-)
 
-func ParseSQLQuery(query string) (sqlparser.Statement, error) {
-	sqlCtx := sql.NewEmptyContext()
-	sqlMode := sql.LoadSqlMode(sqlCtx)
-	return sqlparser.ParseWithOptions(sqlCtx, query, sqlMode.ParserOptions())
-}
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
+)
 
 func CommitTransactionOrRollbackOnError(ctx context.Context, tx db.DatabaseTransaction, err error) error {
 	if err == nil {
@@ -22,13 +14,13 @@ func CommitTransactionOrRollbackOnError(ctx context.Context, tx db.DatabaseTrans
 	return err
 }
 
-func NewDatabaseTransactionOnBranch(ctx context.Context, config db.Config, branch string) (db.DatabaseTransaction, error) {
+func NewDatabaseTransactionOnBranch(ctx context.Context, config db.Config, dialect db.Dialect, branch string) (db.DatabaseTransaction, error) {
 	tx, err := db.NewDatabaseTransaction(ctx, config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, branch))
+	err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltCheckout, branch))
 	if err != nil {
 		return nil, err
 	}
@@ -36,13 +28,13 @@ func NewDatabaseTransactionOnBranch(ctx context.Context, config db.Config, branc
 	return tx, nil
 }
 
-func NewDatabaseTransactionUsingDatabase(ctx context.Context, config db.Config, database string) (db.DatabaseTransaction, error) {
+func NewDatabaseTransactionUsingDatabase(ctx context.Context, config db.Config, dialect db.Dialect, database string) (db.DatabaseTransaction, error) {
 	tx, err := db.NewDatabaseTransaction(ctx, config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.ExecContext(ctx, fmt.Sprintf(DoltUseWorkingDatabaseSQLQueryFormatString, database))
+	err = tx.ExecContext(ctx, dialect.UseDatabase(database))
 	if err != nil {
 		return nil, err
 	}
@@ -50,18 +42,18 @@ func NewDatabaseTransactionUsingDatabase(ctx context.Context, config db.Config, 
 	return tx, nil
 }
 
-func NewDatabaseTransactionUsingDatabaseOnBranch(ctx context.Context, config db.Config, database, branch string) (db.DatabaseTransaction, error) {
+func NewDatabaseTransactionUsingDatabaseOnBranch(ctx context.Context, config db.Config, dialect db.Dialect, database, branch string) (db.DatabaseTransaction, error) {
 	tx, err := db.NewDatabaseTransaction(ctx, config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.ExecContext(ctx, fmt.Sprintf(DoltUseWorkingDatabaseSQLQueryFormatString, database))
+	err = tx.ExecContext(ctx, dialect.UseDatabase(database))
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.ExecContext(ctx, fmt.Sprintf(DoltCheckoutWorkingBranchSQLQueryFormatString, branch))
+	err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltCheckout, branch))
 	if err != nil {
 		return nil, err
 	}

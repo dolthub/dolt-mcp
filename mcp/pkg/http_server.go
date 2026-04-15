@@ -21,6 +21,7 @@ type httpServerImpl struct {
 	handler   http.Handler
 	port      int
 	dbConfig  db.Config
+	dialect   db.Dialect
 	logger    *zap.Logger
 	tlsConfig *tls.Config
 }
@@ -66,6 +67,7 @@ func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, jwkClaimsM
 		logger:    logger,
 		mcp:       mcp,
 		dbConfig:  config,
+		dialect:   db.NewDialect(config.DialectType),
 		port:      port,
 		handler:   handler,
 		tlsConfig: tlsConfig,
@@ -84,6 +86,10 @@ func (s *httpServerImpl) MCP() *server.MCPServer {
 
 func (s *httpServerImpl) DBConfig() db.Config {
 	return s.dbConfig
+}
+
+func (s *httpServerImpl) Dialect() db.Dialect {
+	return s.dialect
 }
 
 func (s *httpServerImpl) ListenAndServe(ctx context.Context) {

@@ -14,6 +14,7 @@ var DoltMCPServerVersion = "0.3.5"
 type Server interface {
 	MCP() *server.MCPServer
 	DBConfig() db.Config
+	Dialect() db.Dialect
 }
 
 type Option func(Server)

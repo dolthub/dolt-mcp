@@ -48,8 +48,9 @@ func RegisterRemoveDoltTestTool(server pkg.Server) {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
-		tx, err := NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dbName, branch)
+		tx, err := NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, dbName, branch)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}

@@ -12,7 +12,7 @@ import (
 const (
 	DescribeTableToolName                     = "describe_table"
 	DescribeTableToolTableArgumentDescription = "The name of the table to describe."
-	DescribeTableToolSQLQueryFormatString     = "DESCRIBE `%s`;"
+	DescribeTableToolSQLQueryFormatString     = "DESCRIBE %s;"
 	DescribeTableToolDescription              = "Describes a table in the current database."
 )
 
@@ -69,10 +69,11 @@ func RegisterDescribeTableTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -83,7 +84,7 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		}()
 
 		var formattedResult string
-		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(DescribeTableToolSQLQueryFormatString, tableToDescribe), db.ResultFormatMarkdown)
+		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(DescribeTableToolSQLQueryFormatString, dialect.QuoteIdentifier(tableToDescribe)), db.ResultFormatMarkdown)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

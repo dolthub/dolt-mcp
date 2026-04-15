@@ -63,9 +63,10 @@ func RegisterRunDoltTestsTool(server pkg.Server) {
 
 		target := GetStringArgumentFromCallToolRequest(request, TargetCallToolArgumentName)
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}

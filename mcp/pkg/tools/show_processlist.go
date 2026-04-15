@@ -64,8 +64,9 @@ func RegisterShowProcesslistTool(server pkg.Server) {
 
 		full := GetBooleanArgumentFromCallToolRequest(request, ShowProcesslistFullArgName)
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
-		tx, err := NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err := NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}

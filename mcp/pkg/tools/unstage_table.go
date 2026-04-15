@@ -13,7 +13,6 @@ const (
 	UnstageTableToolName                     = "unstage_table"
 	UnstageTableToolTableArgumentDescription = "The name of the table to remove from the staging area."
 	UnstageTableToolDescription              = "Removes a staged table from the staging area."
-	UnstageTableToolSQLQueryFormatString     = "CALL DOLT_RESET('%s');"
 	UnstageTableToolCallSuccessFormatString  = "successfully unstaged table: %s"
 )
 
@@ -70,10 +69,11 @@ func RegisterUnstageTableTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -86,7 +86,7 @@ func RegisterUnstageTableTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, fmt.Sprintf(UnstageTableToolSQLQueryFormatString, table))
+		err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltReset, table))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

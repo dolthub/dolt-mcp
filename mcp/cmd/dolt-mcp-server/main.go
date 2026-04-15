@@ -57,7 +57,6 @@ var httpKeyFile = flag.String(httpKeyFlag, "", "Path to TLS private key file for
 var httpCAFile = flag.String(httpCAFlag, "", "Path to TLS CA certificate file for HTTPS. If provided, all TLS parameters must be provided otherwise it will be ignored.")
 var jwkClaims = flag.String(jwkClaimsFlag, "", "A comma-separated list of key=value pairs for JWT claims for authentication.")
 var jwkURL = flag.String(jwkURLFlag, "", "The URL of the JWKS server for JWT authentication.")
-
 var help = flag.Bool(helpFlag, false, "If true, prints Dolt MCP server help information.")
 var version = flag.Bool(versionFlag, false, "If true, prints the Dolt MCP server version.")
 

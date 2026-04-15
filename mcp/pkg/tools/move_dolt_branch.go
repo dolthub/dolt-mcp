@@ -15,9 +15,7 @@ const (
 	MoveDoltBranchToolNewNameArgumentDescription = "The new name of the branch."
 	MoveDoltBranchToolForceArgumentDescription   = "If true, will force the original branch to be moved to its new name even if a branch of that name already exists."
 	MoveDoltBranchToolDescription                = "Moves/renames a branch from the specified original branch to the provided new name."
-	MoveDoltBranchToolCallSuccessFormatString    = "successfully moved branch: %s"
-	MoveDoltBranchToolSQLQueryFormatString       = "CALL DOLT_BRANCH('-m', '%s', '%s');"
-	MoveDoltBranchToolForceSQLQueryFormatString  = "CALL DOLT_BRANCH('-f', '-m', '%s', '%s');"
+	MoveDoltBranchToolCallSuccessFormatString = "successfully moved branch: %s"
 )
 
 func NewMoveDoltBranchTool() mcp.Tool {
@@ -80,10 +78,11 @@ func RegisterMoveDoltBranchTool(server pkg.Server) {
 
 		force := GetBooleanArgumentFromCallToolRequest(request, ForceCallToolArgumentName)
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, workingDatabase)
+		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, dialect, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -97,13 +96,13 @@ func RegisterMoveDoltBranchTool(server pkg.Server) {
 		}()
 
 		if force {
-			err = tx.ExecContext(ctx, fmt.Sprintf(MoveDoltBranchToolForceSQLQueryFormatString, oldName, newName))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltBranch, "-f", "-m", oldName, newName))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return
 			}
 		} else {
-			err = tx.ExecContext(ctx, fmt.Sprintf(MoveDoltBranchToolSQLQueryFormatString, oldName, newName))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltBranch, "-m", oldName, newName))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return

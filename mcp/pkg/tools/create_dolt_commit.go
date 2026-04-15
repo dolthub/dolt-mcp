@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -12,8 +11,7 @@ import (
 const (
 	CreateDoltCommitToolName                       = "create_dolt_commit"
 	CreateDoltCommitToolMessageArgumentDescription = "The message to use in the Dolt commit."
-	CreateDoltCommitToolSQLQueryFormatString       = "CALL DOLT_COMMIT('-m', '%s');"
-	CreateDoltCommitToolDescription                = "Creates a Dolt commit with the specified message."
+	CreateDoltCommitToolDescription = "Creates a Dolt commit with the specified message."
 	CreateDoltCommitToolCallSuccessMessage         = "successfully committed changes"
 )
 
@@ -70,10 +68,11 @@ func RegisterCreateDoltCommitTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -86,7 +85,7 @@ func RegisterCreateDoltCommitTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, fmt.Sprintf(CreateDoltCommitToolSQLQueryFormatString, message))
+		err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltCommit, "-m", message))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
