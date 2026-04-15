@@ -36,8 +36,8 @@ const (
 	logLevelFlag     = "log-level"
 	helpFlag         = "help"
 	versionFlag      = "version"
-	jwkClaimsFlag = "jwk-claims"
-	jwkURLFlag    = "jwk-url"
+	jwkClaimsFlag    = "jwk-claims"
+	jwkURLFlag       = "jwk-url"
 )
 
 var doltHost = flag.String(doltHostFlag, "", "The hostname for the Dolt server.")
