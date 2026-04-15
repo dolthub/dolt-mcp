@@ -68,13 +68,15 @@ func RegisterAddDoltTestTool(server pkg.Server) {
 		}
 		aval := GetStringArgumentFromCallToolRequest(request, AssertionValueCallToolArgumentName)
 
+		dialect := server.Dialect()
+
 		// Ensure the provided query is read-only, aligning with dolt_test_run rules
-		if err := ValidateReadQuery(query); err != nil {
+		if err := dialect.ValidateReadQuery(query); err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
 
 		config := server.DBConfig()
-		tx, err := NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dbName, branch)
+		tx, err := NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, dbName, branch)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
@@ -84,7 +86,7 @@ func RegisterAddDoltTestTool(server pkg.Server) {
 			}
 		}()
 
-		// Upsert semantics via REPLACE INTO to simplify
+		// Upsert via REPLACE INTO
 		// dolt_tests schema: test_name (PK), test_group, test_query, assertion_type, assertion_comparator, assertion_value
 		var stmt string
 		qName := singleQuoteEscape(name)

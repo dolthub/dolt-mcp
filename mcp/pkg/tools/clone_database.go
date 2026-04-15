@@ -15,8 +15,6 @@ const (
 	CloneDatabaseToolNameArgumentDescription           = "The local name of the cloned database."
 	CloneDatabaseToolDescription                       = "Clones a database from the specified remote URL."
 	CloneDatabaseToolCallSuccessFormatString           = "successfully cloned database: %s"
-	CloneDatabaseToolSQLQueryFormatString              = "CALL DOLT_CLONE('%s');"
-	CloneDatabaseToolWithLocalNameSQLQueryFormatString = "CALL DOLT_CLONE('%s', '%s');"
 )
 
 func NewCloneDatabaseTool() mcp.Tool {
@@ -54,6 +52,7 @@ func RegisterCloneDatabaseTool(server pkg.Server) {
 
 		localName := GetStringArgumentFromCallToolRequest(request, NameCallToolArgumentName)
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 		var tx db.DatabaseTransaction
 		tx, err = db.NewDatabaseTransaction(ctx, config)
@@ -70,13 +69,13 @@ func RegisterCloneDatabaseTool(server pkg.Server) {
 		}()
 
 		if localName != "" {
-			err = tx.ExecContext(ctx, fmt.Sprintf(CloneDatabaseToolWithLocalNameSQLQueryFormatString, url, localName))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltClone, url, localName))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return
 			}
 		} else {
-			err = tx.ExecContext(ctx, fmt.Sprintf(CloneDatabaseToolSQLQueryFormatString, url))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltClone, url))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return

@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -14,8 +13,6 @@ const (
 	MergeDoltBranchToolBranchArgumentDescription       = "The name of the branch to merge into the currently checked out branch."
 	MergeDoltBranchToolMessageArgumentDescription      = "The message for the Dolt commit resulting from a successful merge."
 	MergeDoltBranchToolDescription                     = "Merges the specified branch into the currently checked out branch."
-	MergeDoltBranchToolSQLQueryFormatString            = "CALL DOLT_MERGE('%s');"
-	MergeDoltBranchToolWithMessageSQLQueryFormatString = "CALL DOLT_MERGE('%s', '-m', '%s');"
 	MergeDoltBranchToolCallSuccessMessage              = "successfully merged branch"
 )
 
@@ -78,10 +75,11 @@ func RegisterMergeDoltBranchTool(server pkg.Server) {
 
 		commitMessage := GetStringArgumentFromCallToolRequest(request, MessageCallToolArgumentName)
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -95,13 +93,13 @@ func RegisterMergeDoltBranchTool(server pkg.Server) {
 		}()
 
 		if commitMessage != "" {
-			err = tx.ExecContext(ctx, fmt.Sprintf(MergeDoltBranchToolWithMessageSQLQueryFormatString, branch, commitMessage))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltMerge, branch, "-m", commitMessage))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return
 			}
 		} else {
-			err = tx.ExecContext(ctx, fmt.Sprintf(MergeDoltBranchToolSQLQueryFormatString, branch))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltMerge, branch))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return

@@ -16,6 +16,7 @@ type stdioServerImpl struct {
 	mcp         *server.MCPServer
 	stdioServer *server.StdioServer
 	dbConfig    db.Config
+	dialect     db.Dialect
 }
 
 type StdioServer interface {
@@ -42,6 +43,7 @@ func NewMCPStdioServer(logger *zap.Logger, config db.Config, opts ...Option) (St
 	srv := &stdioServerImpl{
 		mcp:         mcp,
 		dbConfig:    config,
+		dialect:     db.NewDialect(config.DialectType),
 		stdioServer: stdioServer,
 	}
 
@@ -54,6 +56,10 @@ func NewMCPStdioServer(logger *zap.Logger, config db.Config, opts ...Option) (St
 
 func (s *stdioServerImpl) DBConfig() db.Config {
 	return s.dbConfig
+}
+
+func (s *stdioServerImpl) Dialect() db.Dialect {
+	return s.dialect
 }
 
 func (s *stdioServerImpl) MCP() *server.MCPServer {

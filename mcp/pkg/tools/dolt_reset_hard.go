@@ -13,7 +13,6 @@ const (
 	DoltResetHardToolName                        = "dolt_reset_hard"
 	DoltResetHardToolRevisionArgumentDescription = "The revision to reset to (working set, table name, branch, commit sha, or '.' for all tables)."
 	DoltResetHardToolDescription                 = "Hard resets the working set to the specified revision."
-	DoltResetHardToolSQLQueryFormatString        = "CALL DOLT_RESET('--hard', '%s');"
 	DoltResetHardToolCallSuccessFormatString     = "successfully hard reset: %s"
 )
 
@@ -70,10 +69,11 @@ func RegisterDoltResetHardTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -86,7 +86,7 @@ func RegisterDoltResetHardTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltResetHardToolSQLQueryFormatString, revision))
+		err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltReset, "--hard", revision))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

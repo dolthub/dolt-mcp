@@ -2,11 +2,9 @@ package tools
 
 import (
 	"context"
-	"errors"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
-	"github.com/dolthub/vitess/go/vt/sqlparser"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -16,23 +14,6 @@ const (
 	CreateTableToolDescription              = "Creates a table."
 	CreateTableToolCallSuccessMessage       = "successfully created table"
 )
-
-var ErrInvalidCreateTableSQLQuery = errors.New("invalid create table statement")
-
-func ValidateCreateTableQuery(query string) error {
-	sqlStatement, err := ParseSQLQuery(query)
-	if err != nil {
-		return err
-	}
-
-	switch sqlStatement.(type) {
-	case *sqlparser.DDL:
-		// TODO: do more to determine if this is truly a create table statement
-		return nil
-	}
-
-	return ErrInvalidCreateTableSQLQuery
-}
 
 func NewCreateTableTool() mcp.Tool {
 	return mcp.NewTool(
@@ -87,7 +68,9 @@ func RegisterCreateTableTool(server pkg.Server) {
 			return
 		}
 
-		err = ValidateCreateTableQuery(createTableStatement)
+		dialect := server.Dialect()
+
+		err = dialect.ValidateCreateTableQuery(createTableStatement)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -96,7 +79,7 @@ func RegisterCreateTableTool(server pkg.Server) {
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

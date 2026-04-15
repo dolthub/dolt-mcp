@@ -37,8 +37,5 @@ const (
 	TargetCallToolArgumentName              = "target"
 )
 
-var DoltUseWorkingDatabaseSQLQueryFormatString = "USE `%s`;"
 var WorkingDatabaseCallToolArgumentDescription = "The name of the database to use prior to making the tool call."
-
-var DoltCheckoutWorkingBranchSQLQueryFormatString = "CALL DOLT_CHECKOUT('%s');"
 var WorkingBranchCallToolArgumentDescription = "The name of the working branch to checkout prior to making the tool call."

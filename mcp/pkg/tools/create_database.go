@@ -12,8 +12,8 @@ import (
 const (
 	CreateDatabaseToolName                            = "create_database"
 	CreateDatabaseToolDatabaseArgumentDescription     = "The name of the database to create."
-	CreateDatabaseToolSQLQueryFormatString            = "CREATE DATABASE `%s`;"
-	CreateDatabaseIfNotExistsToolSQLQueryFormatString = "CREATE DATABASE IF NOT EXISTS `%s`;"
+	CreateDatabaseToolSQLQueryFormatString            = "CREATE DATABASE %s;"
+	CreateDatabaseIfNotExistsToolSQLQueryFormatString = "CREATE DATABASE IF NOT EXISTS %s;"
 	CreateDatabaseToolDescription                     = "Creates a database in the Dolt server."
 	CreateDatabaseToolCallSuccessFormatString         = "successfully created database: %s"
 	CreateDatabaseToolIfNotExistsArgumentDescription  = "If true will only create the specified database if it does not exist in the Dolt server."
@@ -54,11 +54,12 @@ func RegisterCreateDatabaseTool(server pkg.Server) {
 
 		ifNotExists := GetBooleanArgumentFromCallToolRequest(request, IfNotExistsCallToolArgumentName)
 
+		dialect := server.Dialect()
 		var query string
 		if ifNotExists {
-			query = fmt.Sprintf(CreateDatabaseIfNotExistsToolSQLQueryFormatString, databaseToCreate)
+			query = fmt.Sprintf(CreateDatabaseIfNotExistsToolSQLQueryFormatString, dialect.QuoteIdentifier(databaseToCreate))
 		} else {
-			query = fmt.Sprintf(CreateDatabaseToolSQLQueryFormatString, databaseToCreate)
+			query = fmt.Sprintf(CreateDatabaseToolSQLQueryFormatString, dialect.QuoteIdentifier(databaseToCreate))
 		}
 
 		config := server.DBConfig()

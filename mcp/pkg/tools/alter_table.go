@@ -2,11 +2,9 @@ package tools
 
 import (
 	"context"
-	"errors"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
-	"github.com/dolthub/vitess/go/vt/sqlparser"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -16,22 +14,6 @@ const (
 	AlterTableToolDescription              = "Alters a table."
 	AlterTableToolCallSuccessMessage       = "successfully altered table"
 )
-
-var ErrInvalidAlterTableSQLQuery = errors.New("invalid alter table statement")
-
-func ValidateAlterTableQuery(query string) error {
-	sqlStatement, err := ParseSQLQuery(query)
-	if err != nil {
-		return err
-	}
-
-	switch sqlStatement.(type) {
-	case *sqlparser.AlterTable:
-		return nil
-	}
-
-	return ErrInvalidAlterTableSQLQuery
-}
 
 func NewAlterTableTool() mcp.Tool {
 	return mcp.NewTool(
@@ -86,7 +68,9 @@ func RegisterAlterTableTool(server pkg.Server) {
 			return
 		}
 
-		err = ValidateAlterTableQuery(alterTableStatement)
+		dialect := server.Dialect()
+
+		err = dialect.ValidateAlterTableQuery(alterTableStatement)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -95,7 +79,7 @@ func RegisterAlterTableTool(server pkg.Server) {
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

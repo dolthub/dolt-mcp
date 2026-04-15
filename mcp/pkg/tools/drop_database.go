@@ -12,8 +12,8 @@ import (
 const (
 	DropDatabaseToolName                         = "drop_database"
 	DropDatabaseToolDatabaseArgumentDescription  = "The name of the database to drop."
-	DropDatabaseToolSQLQueryFormatString         = "DROP DATABASE `%s`;"
-	DropDatabaseIfExistsToolSQLQueryFormatString = "DROP DATABASE IF EXISTS `%s`;"
+	DropDatabaseToolSQLQueryFormatString         = "DROP DATABASE %s;"
+	DropDatabaseIfExistsToolSQLQueryFormatString = "DROP DATABASE IF EXISTS %s;"
 	DropDatabaseToolDescription                  = "Drops a database in the Dolt server."
 	DropDatabaseToolCallSuccessFormatString      = "successfully dropped database: %s"
 	DropDatabaseToolIfExistsArgumentDescription  = "If true will only drop the specified database if it exists in the Dolt server."
@@ -54,11 +54,12 @@ func RegisterDropDatabaseTool(server pkg.Server) {
 
 		ifExists := GetBooleanArgumentFromCallToolRequest(request, IfExistsCallToolArgumentName)
 
+		dialect := server.Dialect()
 		var query string
 		if ifExists {
-			query = fmt.Sprintf(DropDatabaseIfExistsToolSQLQueryFormatString, databaseToDrop)
+			query = fmt.Sprintf(DropDatabaseIfExistsToolSQLQueryFormatString, dialect.QuoteIdentifier(databaseToDrop))
 		} else {
-			query = fmt.Sprintf(DropDatabaseToolSQLQueryFormatString, databaseToDrop)
+			query = fmt.Sprintf(DropDatabaseToolSQLQueryFormatString, dialect.QuoteIdentifier(databaseToDrop))
 		}
 
 		config := server.DBConfig()

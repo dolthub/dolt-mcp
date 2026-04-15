@@ -11,7 +11,7 @@ import (
 
 const (
 	ShowCreateTableToolName                 = "show_create_table"
-	ShowCreateTableToolSQLQueryFormatString = "SHOW CREATE TABLE `%s`;"
+	ShowCreateTableToolSQLQueryFormatString = "SHOW CREATE TABLE %s;"
 	ShowCreateTableToolDescription          = "Shows the schema of the specified table."
 	ShowCreateTableTableArgumentDescription = "The name of the table."
 )
@@ -69,10 +69,11 @@ func RegisterShowCreateTableTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -83,7 +84,7 @@ func RegisterShowCreateTableTool(server pkg.Server) {
 		}()
 
 		var formattedResult string
-		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(ShowCreateTableToolSQLQueryFormatString, table), db.ResultFormatMarkdown)
+		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(ShowCreateTableToolSQLQueryFormatString, dialect.QuoteIdentifier(table)), db.ResultFormatMarkdown)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

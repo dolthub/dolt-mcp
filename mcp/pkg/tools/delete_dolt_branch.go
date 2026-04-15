@@ -14,9 +14,7 @@ const (
 	DeleteDoltBranchToolBranchArgumentDescription = "The name of the branch to delete."
 	DeleteDoltBranchToolForceArgumentDescription  = "If true, will force the deletion of the specified branch even if it has uncommitted changes."
 	DeleteDoltBranchToolDescription               = "Deletes a branch."
-	DeleteDoltBranchToolCallSuccessFormatString   = "successfully deleted branch: %s"
-	DeleteDoltBranchToolSQLQueryFormatString      = "CALL DOLT_BRANCH('-d', '%s');"
-	DeleteDoltBranchToolForceSQLQueryFormatString = "CALL DOLT_BRANCH('-f', '-d', '%s');"
+	DeleteDoltBranchToolCallSuccessFormatString = "successfully deleted branch: %s"
 )
 
 func NewDeleteDoltBranchTool() mcp.Tool {
@@ -79,10 +77,11 @@ func RegisterDeleteDoltBranchTool(server pkg.Server) {
 
 		force := GetBooleanArgumentFromCallToolRequest(request, ForceCallToolArgumentName)
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -96,13 +95,13 @@ func RegisterDeleteDoltBranchTool(server pkg.Server) {
 		}()
 
 		if force {
-			err = tx.ExecContext(ctx, fmt.Sprintf(DeleteDoltBranchToolForceSQLQueryFormatString, branch))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltBranch, "-f", "-d", branch))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return
 			}
 		} else {
-			err = tx.ExecContext(ctx, fmt.Sprintf(DeleteDoltBranchToolSQLQueryFormatString, branch))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltBranch, "-d", branch))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return

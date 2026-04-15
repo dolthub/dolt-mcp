@@ -11,7 +11,6 @@ import (
 const (
 	StageAllTablesForDoltCommitToolName               = "stage_all_tables_for_dolt_commit"
 	StageAllTablesForDoltCommitToolDescription        = "Stages a table for a Dolt commit."
-	StageAllTablesForDoltCommitToolSQLQuery           = "CALL DOLT_ADD('-A');"
 	StageAllTablesForDoltCommitToolCallSuccessMessage = "successfully staged tables"
 )
 
@@ -56,10 +55,11 @@ func RegisterStageAllTablesForDoltCommitTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -72,7 +72,7 @@ func RegisterStageAllTablesForDoltCommitTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, StageAllTablesForDoltCommitToolSQLQuery)
+		err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltAdd, "-A"))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

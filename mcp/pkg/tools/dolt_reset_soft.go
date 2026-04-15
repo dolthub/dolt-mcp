@@ -13,7 +13,6 @@ const (
 	DoltResetSoftToolName                        = "dolt_reset_soft"
 	DoltResetSoftToolRevisionArgumentDescription = "The revision to reset to (working set, table name, branch, commit sha, or '.' for all tables)."
 	DoltResetSoftToolDescription                 = "Soft resets the working set to the specified revision."
-	DoltResetSoftToolSQLQueryFormatString        = "CALL DOLT_RESET('--soft', '%s');"
 	DoltResetSoftToolCallSuccessFormatString     = "successfully soft reset: %s"
 )
 
@@ -70,10 +69,11 @@ func RegisterDoltResetSoftTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -86,7 +86,7 @@ func RegisterDoltResetSoftTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltResetSoftToolSQLQueryFormatString, revision))
+		err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltReset, "--soft", revision))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

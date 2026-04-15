@@ -43,10 +43,11 @@ func RegisterListDoltRemotesTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, workingDatabase)
+		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, dialect, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

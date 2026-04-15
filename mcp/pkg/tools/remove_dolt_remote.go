@@ -12,7 +12,6 @@ import (
 const (
 	RemoveDoltRemoteToolName                          = "remove_dolt_remote"
 	RemoveDoltRemoteToolRemoteNameArgumentDescription = "The name of the remote to remove."
-	RemoveDoltRemoteToolSQLQueryFormatString          = "CALL DOLT_REMOTE('remove', '%s');"
 	RemoveDoltRemoteToolDescription                   = "Removes a remote from the Dolt server."
 	RemoveDoltRemoteToolCallSuccessFormatString       = "successfully removed remote: %s"
 )
@@ -59,10 +58,11 @@ func RegisterRemoveDoltRemoteTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, workingDatabase)
+		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, dialect, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -75,7 +75,7 @@ func RegisterRemoveDoltRemoteTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, fmt.Sprintf(RemoveDoltRemoteToolSQLQueryFormatString, name))
+		err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltRemote, "remove", name))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

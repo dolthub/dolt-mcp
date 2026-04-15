@@ -1,8 +1,13 @@
 package tools
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
+)
 
 func TestValidateReadQuery_AcceptsReadStatements(t *testing.T) {
+	dialect := db.NewDialect(db.DialectMySQL)
 	cases := []string{
 		"SHOW PROCESSLIST",
 		"SHOW TABLES",
@@ -12,7 +17,7 @@ func TestValidateReadQuery_AcceptsReadStatements(t *testing.T) {
 
 	for _, sql := range cases {
 		t.Run(sql, func(t *testing.T) {
-			if err := ValidateReadQuery(sql); err != nil {
+			if err := dialect.ValidateReadQuery(sql); err != nil {
 				t.Fatalf("expected read validation to pass, got err=%v", err)
 			}
 		})
@@ -20,6 +25,7 @@ func TestValidateReadQuery_AcceptsReadStatements(t *testing.T) {
 }
 
 func TestValidateReadQuery_RejectsNonReadStatements(t *testing.T) {
+	dialect := db.NewDialect(db.DialectMySQL)
 	cases := []string{
 		"KILL 123",
 		"INSERT INTO t VALUES (1)",
@@ -28,7 +34,7 @@ func TestValidateReadQuery_RejectsNonReadStatements(t *testing.T) {
 
 	for _, sql := range cases {
 		t.Run(sql, func(t *testing.T) {
-			if err := ValidateReadQuery(sql); err == nil {
+			if err := dialect.ValidateReadQuery(sql); err == nil {
 				t.Fatalf("expected read validation to fail, got nil")
 			}
 		})
@@ -36,6 +42,7 @@ func TestValidateReadQuery_RejectsNonReadStatements(t *testing.T) {
 }
 
 func TestValidateWriteQuery_AcceptsNonReadStatements(t *testing.T) {
+	dialect := db.NewDialect(db.DialectMySQL)
 	cases := []string{
 		"KILL 123",
 		"INSERT INTO t VALUES (1)",
@@ -48,7 +55,7 @@ func TestValidateWriteQuery_AcceptsNonReadStatements(t *testing.T) {
 
 	for _, sql := range cases {
 		t.Run(sql, func(t *testing.T) {
-			if err := ValidateWriteQuery(sql); err != nil {
+			if err := dialect.ValidateWriteQuery(sql); err != nil {
 				t.Fatalf("expected write validation to pass, got err=%v", err)
 			}
 		})
@@ -56,6 +63,7 @@ func TestValidateWriteQuery_AcceptsNonReadStatements(t *testing.T) {
 }
 
 func TestValidateWriteQuery_RejectsReadStatements(t *testing.T) {
+	dialect := db.NewDialect(db.DialectMySQL)
 	cases := []string{
 		"SELECT 1",
 		"SHOW PROCESSLIST",
@@ -65,7 +73,7 @@ func TestValidateWriteQuery_RejectsReadStatements(t *testing.T) {
 
 	for _, sql := range cases {
 		t.Run(sql, func(t *testing.T) {
-			if err := ValidateWriteQuery(sql); err == nil {
+			if err := dialect.ValidateWriteQuery(sql); err == nil {
 				t.Fatalf("expected write validation to fail, got nil")
 			}
 		})

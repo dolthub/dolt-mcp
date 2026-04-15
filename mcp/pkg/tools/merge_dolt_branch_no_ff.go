@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -12,8 +11,6 @@ import (
 const (
 	MergeDoltBranchNoFastForwardToolName                            = "merge_dolt_branch_no_fast_forward"
 	MergeDoltBranchNoFastForwardToolDescription                     = "Performs a non fast-foward merge of the specified branch into the currently checked out branch."
-	MergeDoltBranchNoFastForwardToolSQLQueryFormatString            = "CALL DOLT_MERGE('%s', '--no-ff');"
-	MergeDoltBranchNoFastForwardToolWithMessageSQLQueryFormatString = "CALL DOLT_MERGE('%s', '--no-ff', '-m', '%s');"
 )
 
 func NewMergeDoltBranchNoFastForwardTool() mcp.Tool {
@@ -75,10 +72,11 @@ func RegisterMergeDoltBranchNoFastForwardTool(server pkg.Server) {
 
 		commitMessage := GetStringArgumentFromCallToolRequest(request, MessageCallToolArgumentName)
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, workingDatabase, workingBranch)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -92,13 +90,13 @@ func RegisterMergeDoltBranchNoFastForwardTool(server pkg.Server) {
 		}()
 
 		if commitMessage != "" {
-			err = tx.ExecContext(ctx, fmt.Sprintf(MergeDoltBranchNoFastForwardToolWithMessageSQLQueryFormatString, branch, commitMessage))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltMerge, branch, "--no-ff", "-m", commitMessage))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return
 			}
 		} else {
-			err = tx.ExecContext(ctx, fmt.Sprintf(MergeDoltBranchNoFastForwardToolSQLQueryFormatString, branch))
+			err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltMerge, branch, "--no-ff"))
 			if err != nil {
 				result = mcp.NewToolResultError(err.Error())
 				return

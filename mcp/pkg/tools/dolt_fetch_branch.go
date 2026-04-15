@@ -15,7 +15,6 @@ const (
 	DoltFetchBranchToolBranchArgumentDescription     = "The name of the remote branch to fetch."
 	DoltFetchBranchToolDescription                   = "Fetches the specified branch from the remote."
 	DoltFetchBranchToolCallSuccessFormatString       = "successfully fetched branch: %s"
-	DoltFetchBranchToolSQLQueryFormatString          = "CALL DOLT_FETCH('%s', '%s');"
 )
 
 func NewDoltFetchBranchTool() mcp.Tool {
@@ -72,10 +71,11 @@ func RegisterDoltFetchBranchTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, workingDatabase)
+		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, dialect, workingDatabase)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -88,7 +88,7 @@ func RegisterDoltFetchBranchTool(server pkg.Server) {
 			}
 		}()
 
-		err = tx.ExecContext(ctx, fmt.Sprintf(DoltFetchBranchToolSQLQueryFormatString, remote, branch))
+		err = tx.ExecContext(ctx, dialect.CallProcedure(db.DoltFetch, remote, branch))
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
