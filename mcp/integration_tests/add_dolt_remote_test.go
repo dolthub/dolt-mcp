@@ -3,12 +3,16 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testAddDoltRemoteTeardownSQL = "CALL DOLT_REMOTE('remove', 'origin');"
+var testAddDoltRemoteTeardownSQL = DialectSQL{
+	db.DialectMySQL:    `CALL DOLT_REMOTE('remove', 'origin');`,
+	db.DialectPostgres: `SELECT dolt_remote('remove', 'origin');`,
+}
 
 func testAddDoltRemoteToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

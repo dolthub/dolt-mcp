@@ -3,18 +3,26 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testDeleteDoltBranchSetupSQL = `CALL DOLT_BRANCH('-c', 'main', 'deleteme');
+var testDeleteDoltBranchSetupSQL = DialectSQL{
+	db.DialectMySQL: `CALL DOLT_BRANCH('-c', 'main', 'deleteme');
 CALL DOLT_BRANCH('-c', 'main', 'forcedeleteme');
-SELECT ACTIVE_BRANCH() INTO @current_branch;
 CALL DOLT_CHECKOUT('forcedeleteme');
-INSERT INTO ` + "`" + `people` + "`" + ` VALUES (UUID(), 'mark', 'twain');
-CALL DOLT_CHECKOUT(@current_branch);
-`
+INSERT INTO people VALUES (UUID(), 'mark', 'twain');
+CALL DOLT_CHECKOUT('%s');
+`,
+	db.DialectPostgres: `SELECT dolt_branch('-c', 'main', 'deleteme');
+SELECT dolt_branch('-c', 'main', 'forcedeleteme');
+SELECT dolt_checkout('forcedeleteme');
+INSERT INTO people VALUES (UUID(), 'mark', 'twain');
+SELECT dolt_checkout('%s');
+`,
+}
 
 func testDeleteDoltBranchToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

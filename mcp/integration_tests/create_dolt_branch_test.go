@@ -3,12 +3,16 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testCreateDoltBranchTeardownSQL = "CALL DOLT_BRANCH('-D', 'valid');"
+var testCreateDoltBranchTeardownSQL = DialectSQL{
+	db.DialectMySQL:    `CALL DOLT_BRANCH('-D', 'valid');`,
+	db.DialectPostgres: `SELECT dolt_branch('-D', 'valid');`,
+}
 
 func testCreateDoltBranchToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

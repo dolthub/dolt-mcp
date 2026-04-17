@@ -3,16 +3,24 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testDoltResetSoftSetupSQL = `CREATE TABLE ` + "`" + `resetme` + "`" + ` (pk int primary key);
-INSERT INTO ` + "`" + `resetme` + "`" + ` VALUES (1);
+var testDoltResetSoftSetupSQL = DialectSQL{
+	db.DialectMySQL: `CREATE TABLE resetme (pk int primary key);
+INSERT INTO resetme VALUES (1);
 CALL DOLT_ADD('resetme');
-INSERT INTO ` + "`" + `resetme` + "`" + ` VALUES (2);
-`
+INSERT INTO resetme VALUES (2);
+`,
+	db.DialectPostgres: `CREATE TABLE resetme (pk int primary key);
+INSERT INTO resetme VALUES (1);
+SELECT dolt_add('resetme');
+INSERT INTO resetme VALUES (2);
+`,
+}
 
 func testDoltResetSoftToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

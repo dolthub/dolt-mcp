@@ -61,8 +61,8 @@ type Dialect interface {
 func NewDialect(dt DialectType) Dialect {
 	switch dt {
 	case DialectPostgres:
-		panic("postgres dialect not yet implemented")
+		return NewPostgresDialect()
 	default:
-		return &MySQLDialect{}
+		return NewMySQLDialect()
 	}
 }

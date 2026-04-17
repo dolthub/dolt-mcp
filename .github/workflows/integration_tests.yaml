@@ -12,8 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Integration Tests
+  test-dolt:
+    name: Integration Tests (Dolt / MySQL)
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -36,3 +36,35 @@ jobs:
       run: |
          go test -timeout 30m ./...
 
+  test-doltgres:
+    name: Integration Tests (DoltgreSQL / PostgreSQL)
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: ./go.mod
+      id: go
+    - name: Install latest DoltgreSQL
+      run: |
+        set -euo pipefail
+        ASSET_URL=$(curl -sL https://api.github.com/repos/dolthub/doltgresql/releases/latest \
+          | grep "browser_download_url.*linux-amd64" \
+          | head -n1 \
+          | cut -d '"' -f 4)
+        echo "Downloading: $ASSET_URL"
+        curl -L -o /tmp/doltgres.tar.gz "$ASSET_URL"
+        mkdir -p /tmp/doltgres-extract
+        tar -xzf /tmp/doltgres.tar.gz -C /tmp/doltgres-extract
+        sudo mv /tmp/doltgres-extract/*/bin/doltgres /usr/local/bin/doltgres
+        doltgres --version || true
+    - name: Test All
+      working-directory: ./mcp/integration_tests/
+      env:
+        DOLT_DIALECT: postgres
+      run: |
+         go test -timeout 30m ./...

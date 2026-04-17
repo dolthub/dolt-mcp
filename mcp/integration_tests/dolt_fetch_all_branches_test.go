@@ -4,18 +4,29 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testDoltFetchAllBranchesSetupSQL = "CALL DOLT_REMOTE('add', 'origin', 'http://localhost:2222/test');"
+var testDoltFetchAllBranchesSetupSQL = DialectSQL{
+	db.DialectMySQL:    `CALL DOLT_REMOTE('add', 'origin', 'http://localhost:2222/test');`,
+	db.DialectPostgres: `SELECT dolt_remote('add', 'origin', 'http://localhost:2222/test');`,
+}
 
-var testDoltFetchAllBranchesTeardownSQL = `CALL DOLT_REMOTE('remove', 'origin');
+var testDoltFetchAllBranchesTeardownSQL = DialectSQL{
+	db.DialectMySQL: `CALL DOLT_REMOTE('remove', 'origin');
 CALL DOLT_BRANCH('-D', 'fetchme');
 CALL DOLT_BRANCH('-D', 'fetchme2');
 CALL DOLT_BRANCH('-D', 'fetchme3');
-`
+`,
+	db.DialectPostgres: `SELECT dolt_remote('remove', 'origin');
+SELECT dolt_branch('-D', 'fetchme');
+SELECT dolt_branch('-D', 'fetchme2');
+SELECT dolt_branch('-D', 'fetchme3');
+`,
+}
 
 func testDoltFetchAllBranchesToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

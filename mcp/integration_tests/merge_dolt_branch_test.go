@@ -3,20 +3,31 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testMergeDoltBranchSetupSQL = `SELECT ACTIVE_BRANCH() INTO @current_branch;
-CALL DOLT_BRANCH('-c', @current_branch, 'mergeme');
+var testMergeDoltBranchSetupSQL = DialectSQL{
+	db.DialectMySQL: `CALL DOLT_BRANCH('-c', '%s', 'mergeme');
 CALL DOLT_CHECKOUT('mergeme');
-INSERT INTO ` + "`" + `people` + "`" + ` VALUES (UUID(), 'mark', 'twain');
+INSERT INTO people VALUES (UUID(), 'mark', 'twain');
 CALL DOLT_COMMIT('-Am', 'insert mark twain');
-CALL DOLT_CHECKOUT(@current_branch);
-`
+CALL DOLT_CHECKOUT('%s');
+`,
+	db.DialectPostgres: `SELECT dolt_branch('-c', '%s', 'mergeme');
+SELECT dolt_checkout('mergeme');
+INSERT INTO people VALUES (UUID(), 'mark', 'twain');
+SELECT dolt_commit('-Am', 'insert mark twain');
+SELECT dolt_checkout('%s');
+`,
+}
 
-var testMergeDoltBranchTeardownSQL = "CALL DOLT_BRANCH('-D', 'mergeme');"
+var testMergeDoltBranchTeardownSQL = DialectSQL{
+	db.DialectMySQL:    `CALL DOLT_BRANCH('-D', 'mergeme');`,
+	db.DialectPostgres: `SELECT dolt_branch('-D', 'mergeme');`,
+}
 
 func testMergeDoltBranchToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

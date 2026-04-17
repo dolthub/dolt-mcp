@@ -3,17 +3,27 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testMoveDoltBranchSetupSQL = `SELECT ACTIVE_BRANCH() INTO @current_branch;
-CALL DOLT_BRANCH('-c', @current_branch, 'moveme');
-CALL DOLT_BRANCH('-c', @current_branch, 'forcemoveme');
-`
-var testMoveDoltBranchTeardownSQL = `CALL DOLT_BRANCH('-D', 'imoved');
-CALL DOLT_BRANCH('-D', 'iforcemoved');`
+var testMoveDoltBranchSetupSQL = DialectSQL{
+	db.DialectMySQL: `CALL DOLT_BRANCH('-c', '%s', 'moveme');
+CALL DOLT_BRANCH('-c', '%s', 'forcemoveme');
+`,
+	db.DialectPostgres: `SELECT dolt_branch('-c', '%s', 'moveme');
+SELECT dolt_branch('-c', '%s', 'forcemoveme');
+`,
+}
+
+var testMoveDoltBranchTeardownSQL = DialectSQL{
+	db.DialectMySQL: `CALL DOLT_BRANCH('-D', 'imoved');
+CALL DOLT_BRANCH('-D', 'iforcemoved');`,
+	db.DialectPostgres: `SELECT dolt_branch('-D', 'imoved');
+SELECT dolt_branch('-D', 'iforcemoved');`,
+}
 
 func testMoveDoltBranchToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

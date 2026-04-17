@@ -3,10 +3,16 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
+
+var testQueryToolQuery = DialectSQL{
+	db.DialectMySQL:    "SELECT * FROM `people`;",
+	db.DialectPostgres: `SELECT * FROM "people";`,
+}
 
 func testQueryToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
@@ -183,7 +189,7 @@ func testQueryToolSuccess(s *testSuite, testBranchName string) {
 		Params: mcp.CallToolParams{
 			Name: tools.QueryToolName,
 			Arguments: map[string]any{
-				tools.QueryCallToolArgumentName:           "SELECT * FROM people;",
+				tools.QueryCallToolArgumentName:           testQueryToolQuery.Get(s.dialectType),
 				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},

@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testDoltPullBranchTeardownSQL = "DROP DATABASE alt;"
+var testDoltPullBranchTeardownSQL = DialectSQL{
+	db.DialectMySQL:    `DROP DATABASE alt;`,
+	db.DialectPostgres: `DROP DATABASE alt;`,
+}
 
 func testDoltPullBranchToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

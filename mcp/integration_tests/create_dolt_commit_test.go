@@ -3,14 +3,20 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testCreateDoltCommitSetupSQL = `CREATE TABLE ` + "`" + `commitme` + "`" + ` (pk int primary key);
+var testCreateDoltCommitSetupSQL = DialectSQL{
+	db.DialectMySQL: `CREATE TABLE commitme (pk int primary key);
 CALL DOLT_ADD('commitme');
-`
+`,
+	db.DialectPostgres: `CREATE TABLE commitme (pk int primary key);
+SELECT dolt_add('commitme');
+`,
+}
 
 func testCreateDoltCommitToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

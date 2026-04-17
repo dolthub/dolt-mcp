@@ -3,17 +3,26 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testDropTableSetupSQL = `CREATE TABLE ` + "`" + `places` + "`" + `(
-` + "`" + `id` + "`" + `VARCHAR(36) PRIMARY KEY,
-` + "`" + `name` + "`" + `VARCHAR(1024) NOT NULL,
-` + "`" + `address` + "`" + `VARCHAR(1024) NOT NULL,
-` + "`" + `city` + "`" + `VARCHAR(1024) NOT NULL,
-` + "`" + `country` + "`" + `VARCHAR(1024) NOT NULL);`
+var testDropTableSetupSQL = DialectSQL{
+	db.DialectMySQL: `CREATE TABLE places (
+id VARCHAR(36) PRIMARY KEY,
+name VARCHAR(1024) NOT NULL,
+address VARCHAR(1024) NOT NULL,
+city VARCHAR(1024) NOT NULL,
+country VARCHAR(1024) NOT NULL);`,
+	db.DialectPostgres: `CREATE TABLE places (
+id VARCHAR(36) PRIMARY KEY,
+name VARCHAR(1024) NOT NULL,
+address VARCHAR(1024) NOT NULL,
+city VARCHAR(1024) NOT NULL,
+country VARCHAR(1024) NOT NULL);`,
+}
 
 func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

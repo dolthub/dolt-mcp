@@ -38,6 +38,7 @@ const (
 	versionFlag      = "version"
 	jwkClaimsFlag    = "jwk-claims"
 	jwkURLFlag       = "jwk-url"
+	doltDialectFlag  = "dolt-dialect"
 )
 
 var doltHost = flag.String(doltHostFlag, "", "The hostname for the Dolt server.")
@@ -57,6 +58,7 @@ var httpKeyFile = flag.String(httpKeyFlag, "", "Path to TLS private key file for
 var httpCAFile = flag.String(httpCAFlag, "", "Path to TLS CA certificate file for HTTPS. If provided, all TLS parameters must be provided otherwise it will be ignored.")
 var jwkClaims = flag.String(jwkClaimsFlag, "", "A comma-separated list of key=value pairs for JWT claims for authentication.")
 var jwkURL = flag.String(jwkURLFlag, "", "The URL of the JWKS server for JWT authentication.")
+var doltDialect = flag.String(doltDialectFlag, "mysql", "Database dialect: 'mysql' for Dolt or 'postgres' for DoltgreSQL.")
 var help = flag.Bool(helpFlag, false, "If true, prints Dolt MCP server help information.")
 var version = flag.Bool(versionFlag, false, "If true, prints the Dolt MCP server version.")
 
@@ -165,6 +167,7 @@ func main() {
 		DatabaseName: *doltDatabase,
 		TLS:          *doltTLS,
 		TLSCAFile:    *doltTLSCA,
+		DialectType:  parseDialectType(*doltDialect),
 	}
 
 	tlsConfig, err := getTLSConfig(*httpCertFile, *httpKeyFile, *httpCAFile)
@@ -244,6 +247,15 @@ func parseClaimsMap(jwkClaims *string) (map[string]string, error) {
 		claimsMap[tup[0]] = tup[1]
 	}
 	return claimsMap, nil
+}
+
+func parseDialectType(s string) db.DialectType {
+	switch strings.ToLower(s) {
+	case "postgres", "postgresql", "pg", "doltgres", "doltgresql":
+		return db.DialectPostgres
+	default:
+		return db.DialectMySQL
+	}
 }
 
 func splitAndTrim(s string, sep string) []string {

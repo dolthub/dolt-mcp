@@ -3,6 +3,7 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
@@ -150,5 +151,10 @@ func testGetDoltMergeStatusToolSuccess(s *testSuite, testBranchName string) {
 	resultString, err := resultToString(getDoltMergeStatusCallToolResult)
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultString, "is_merging")
-	require.Contains(s.t, resultString, "0")
+	// MySQL returns boolean as "0"/"1" while PostgreSQL returns "true"/"false".
+	expectedNotMerging := "0"
+	if s.dialectType == db.DialectPostgres {
+		expectedNotMerging = "false"
+	}
+	require.Contains(s.t, resultString, expectedNotMerging)
 }

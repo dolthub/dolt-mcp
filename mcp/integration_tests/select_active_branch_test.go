@@ -147,6 +147,7 @@ func testSelectActiveBranchToolSuccess(s *testSuite, testBranchName string) {
 	require.NotEmpty(s.t, selectActiveBranchCallToolResult.Content)
 	resultStr, err := resultToString(selectActiveBranchCallToolResult)
 	require.NoError(s.t, err)
-	require.Contains(s.t, strings.ToLower(resultStr), "active_branch()")
+	// MySQL returns column header "ACTIVE_BRANCH()" while PostgreSQL returns "active_branch".
+	require.Contains(s.t, strings.ToLower(resultStr), "active_branch")
 	require.Contains(s.t, resultStr, testBranchName)
 }

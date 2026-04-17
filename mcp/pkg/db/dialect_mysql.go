@@ -20,6 +20,10 @@ type MySQLDialect struct {
 
 var _ Dialect = &MySQLDialect{}
 
+func NewMySQLDialect() *MySQLDialect {
+	return &MySQLDialect{}
+}
+
 func (d *MySQLDialect) SupportsTool(toolName string) bool {
 	if d.unsupportedTools == nil {
 		return true
