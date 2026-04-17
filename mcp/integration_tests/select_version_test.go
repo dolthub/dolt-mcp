@@ -39,6 +39,4 @@ func testSelectVersionTool(s *testSuite, _ string) {
 	require.NoError(s.t, err)
 	// MySQL returns column header "DOLT_VERSION()" while PostgreSQL returns "dolt_version".
 	require.Contains(s.t, strings.ToLower(resultStr), "dolt_version")
-	// TODO: REMOVE - intentional failure to verify CI reports DoltgreSQL failures.
-	require.Contains(s.t, resultStr, "this string will not be in the result to force a failure")
 }
