@@ -39,7 +39,8 @@ docker run -it --rm \
 
 ### Optional
 - `DOLT_PASSWORD` - Password for authentication (recommended to use Docker secrets in production)
-- `DOLT_PORT` - Dolt server port (default: 3306)
+- `DOLT_PORT` - Server port (default: 3306 for `dolt`, 5432 for `doltgres`)
+- `MCP_DIALECT` - SQL dialect: `dolt` (MySQL-compatible) or `doltgres` (PostgreSQL-compatible). Default: `dolt`
 - `MCP_MODE` - Server mode: `http` or `stdio` (default: stdio)
 - `MCP_PORT` - HTTP server port (default: 8080, HTTP mode only)
 
