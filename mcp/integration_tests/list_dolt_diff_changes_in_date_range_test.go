@@ -3,18 +3,28 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testListDoltDiffChangesInDateRangeSetupSQL = `CREATE TABLE ` + "`" + `t1` + "`" + ` (pk int primary key);
-INSERT INTO ` + "`" + `t1` + "`" + ` VALUES (1);
+var testListDoltDiffChangesInDateRangeSetupSQL = DialectSQL{
+	db.DialectMySQL: `CREATE TABLE t1 (pk int primary key);
+INSERT INTO t1 VALUES (1);
 CALL DOLT_COMMIT('-Am', 'add t1');
 CALL DOLT_COMMIT('--amend', '--date=2022-06-01');
-INSERT INTO ` + "`" + `t1` + "`" + ` VALUES (2);
+INSERT INTO t1 VALUES (2);
 CALL DOLT_ADD('t1');
-`
+`,
+	db.DialectPostgres: `CREATE TABLE t1 (pk int primary key);
+INSERT INTO t1 VALUES (1);
+SELECT dolt_commit('-Am', 'add t1');
+SELECT dolt_commit('--amend', '--date=2022-06-01');
+INSERT INTO t1 VALUES (2);
+SELECT dolt_add('t1');
+`,
+}
 
 func testListDoltDiffChangesInDateRangeToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

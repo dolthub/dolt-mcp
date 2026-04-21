@@ -21,19 +21,41 @@ if [ -z "$DOLT_USER" ]; then
     exit 1
 fi
 
+# Determine SQL dialect (default: dolt)
+MCP_DIALECT="${MCP_DIALECT:-dolt}"
+case "$MCP_DIALECT" in
+    dolt)
+        CMD_ARGS="$CMD_ARGS --dolt"
+        DEFAULT_PORT=3306
+        ;;
+    doltgres)
+        CMD_ARGS="$CMD_ARGS --doltgres"
+        DEFAULT_PORT=5432
+        ;;
+    *)
+        echo "Error: MCP_DIALECT must be either 'dolt' or 'doltgres' (got: $MCP_DIALECT)"
+        exit 1
+        ;;
+esac
+
+# Default port based on dialect if not explicitly provided
+if [ -z "$DOLT_PORT" ]; then
+    DOLT_PORT="$DEFAULT_PORT"
+fi
+
 # Add required parameters
-CMD_ARGS="$CMD_ARGS --dolt-host $DOLT_HOST"
-CMD_ARGS="$CMD_ARGS --dolt-port $DOLT_PORT"
-CMD_ARGS="$CMD_ARGS --dolt-user $DOLT_USER"
+CMD_ARGS="$CMD_ARGS --host $DOLT_HOST"
+CMD_ARGS="$CMD_ARGS --port $DOLT_PORT"
+CMD_ARGS="$CMD_ARGS --user $DOLT_USER"
 
 # Add password if provided
 if [ -n "$DOLT_PASSWORD" ]; then
-    CMD_ARGS="$CMD_ARGS --dolt-password $DOLT_PASSWORD"
+    CMD_ARGS="$CMD_ARGS --password $DOLT_PASSWORD"
 fi
 
 # Add database if provided
 if [ -n "$DOLT_DATABASE" ]; then
-    CMD_ARGS="$CMD_ARGS --dolt-database $DOLT_DATABASE"
+    CMD_ARGS="$CMD_ARGS --database $DOLT_DATABASE"
 fi
 
 # Determine server mode

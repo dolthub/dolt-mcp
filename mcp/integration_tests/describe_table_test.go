@@ -3,10 +3,16 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
+
+var testDescribeTableToolQuery = DialectSQL{
+	db.DialectMySQL:    "DESCRIBE `people`;",
+	db.DialectPostgres: `DESCRIBE "people";`,
+}
 
 func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
@@ -33,7 +39,7 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 				Params: mcp.CallToolParams{
 					Name: tools.DescribeTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:           "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName:           testDescribeTableToolQuery.Get(s.dialectType),
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -48,7 +54,7 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-						tools.QueryCallToolArgumentName:           "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName:           testDescribeTableToolQuery.Get(s.dialectType),
 					},
 				},
 			},
@@ -62,7 +68,7 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-						tools.QueryCallToolArgumentName:           "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName:           testDescribeTableToolQuery.Get(s.dialectType),
 					},
 				},
 			},
@@ -74,7 +80,7 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 				Params: mcp.CallToolParams{
 					Name: tools.DescribeTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:         "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName:         testDescribeTableToolQuery.Get(s.dialectType),
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
 					},
 				},
@@ -89,7 +95,7 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.QueryCallToolArgumentName:           "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName:           testDescribeTableToolQuery.Get(s.dialectType),
 					},
 				},
 			},
@@ -103,7 +109,7 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.QueryCallToolArgumentName:           "DESCRIBE `people`;",
+						tools.QueryCallToolArgumentName:           testDescribeTableToolQuery.Get(s.dialectType),
 					},
 				},
 			},

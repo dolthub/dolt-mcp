@@ -3,14 +3,15 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testDoltPushBranchSetupSQL = `SELECT ACTIVE_BRANCH() INTO @current_branch;
-CALL DOLT_BRANCH('-c', @current_branch, 'pushme');
-CALL DOLT_BRANCH('-c', @current_branch, 'forcepushme');
+var testDoltPushBranchSetupSQL = DialectSQL{
+	db.DialectMySQL: `CALL DOLT_BRANCH('-c', '%s', 'pushme');
+CALL DOLT_BRANCH('-c', '%s', 'forcepushme');
 CALL DOLT_CHECKOUT('pushme');
 CREATE TABLE t1 (pk INT PRIMARY KEY);
 INSERT INTO t1 VALUES (1);
@@ -20,11 +21,29 @@ CREATE TABLE t1 (pk INT PRIMARY KEY);
 INSERT INTO t1 VALUES (1);
 CALL DOLT_COMMIT('-Am', 'add t1 and 1');
 CALL DOLT_REMOTE('add', 'origin', 'http://localhost:2222/test');
-CALL DOLT_CHECKOUT(@current_branch);`
+CALL DOLT_CHECKOUT('%s');`,
+	db.DialectPostgres: `SELECT dolt_branch('-c', '%s', 'pushme');
+SELECT dolt_branch('-c', '%s', 'forcepushme');
+SELECT dolt_checkout('pushme');
+CREATE TABLE t1 (pk INT PRIMARY KEY);
+INSERT INTO t1 VALUES (1);
+SELECT dolt_commit('-Am', 'add t1 and 1');
+SELECT dolt_checkout('forcepushme');
+CREATE TABLE t1 (pk INT PRIMARY KEY);
+INSERT INTO t1 VALUES (1);
+SELECT dolt_commit('-Am', 'add t1 and 1');
+SELECT dolt_remote('add', 'origin', 'http://localhost:2222/test');
+SELECT dolt_checkout('%s');`,
+}
 
-var testDoltPushBranchTeardownSQL = `CALL DOLT_BRANCH('-D', 'pushme');
+var testDoltPushBranchTeardownSQL = DialectSQL{
+	db.DialectMySQL: `CALL DOLT_BRANCH('-D', 'pushme');
 CALL DOLT_BRANCH('-D', 'forcepushme');
-CALL DOLT_REMOTE('remove', 'origin');`
+CALL DOLT_REMOTE('remove', 'origin');`,
+	db.DialectPostgres: `SELECT dolt_branch('-D', 'pushme');
+SELECT dolt_branch('-D', 'forcepushme');
+SELECT dolt_remote('remove', 'origin');`,
+}
 
 func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

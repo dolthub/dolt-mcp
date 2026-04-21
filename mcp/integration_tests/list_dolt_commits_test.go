@@ -3,18 +3,28 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testListDoltCommitsSetupSQL = `CREATE TABLE ` + "`" + `t1` + "`" + ` (pk int primary key);
+var testListDoltCommitsSetupSQL = DialectSQL{
+	db.DialectMySQL: `CREATE TABLE t1 (pk int primary key);
 CALL DOLT_COMMIT('-Am', 'add t1');
-INSERT INTO ` + "`" + `t1` + "`" + ` VALUES (1);
+INSERT INTO t1 VALUES (1);
 CALL DOLT_COMMIT('-Am', 'insert 1');
-INSERT INTO ` + "`" + `t1` + "`" + ` VALUES (2);
+INSERT INTO t1 VALUES (2);
 CALL DOLT_COMMIT('-Am', 'insert 2');
-`
+`,
+	db.DialectPostgres: `CREATE TABLE t1 (pk int primary key);
+SELECT dolt_commit('-Am', 'add t1');
+INSERT INTO t1 VALUES (1);
+SELECT dolt_commit('-Am', 'insert 1');
+INSERT INTO t1 VALUES (2);
+SELECT dolt_commit('-Am', 'insert 2');
+`,
+}
 
 func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

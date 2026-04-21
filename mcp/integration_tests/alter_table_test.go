@@ -3,10 +3,16 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
+
+var testAlterTableToolQuery = DialectSQL{
+	db.DialectMySQL:    "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+	db.DialectPostgres: `ALTER TABLE "people" ADD COLUMN "age" INT NOT NULL;`,
+}
 
 func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
@@ -33,7 +39,7 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.QueryCallToolArgumentName:           testAlterTableToolQuery.Get(s.dialectType),
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -47,7 +53,7 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "",
-						tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.QueryCallToolArgumentName:           testAlterTableToolQuery.Get(s.dialectType),
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -61,7 +67,7 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName:   "doesnotexist",
-						tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.QueryCallToolArgumentName:           testAlterTableToolQuery.Get(s.dialectType),
 						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 					},
 				},
@@ -75,7 +81,7 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.AlterTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.QueryCallToolArgumentName:         "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.QueryCallToolArgumentName:         testAlterTableToolQuery.Get(s.dialectType),
 					},
 				},
 			},
@@ -89,7 +95,7 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.QueryCallToolArgumentName:           testAlterTableToolQuery.Get(s.dialectType),
 					},
 				},
 			},
@@ -103,7 +109,7 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+						tools.QueryCallToolArgumentName:           testAlterTableToolQuery.Get(s.dialectType),
 					},
 				},
 			},
@@ -183,7 +189,7 @@ func testAlterTableToolSuccess(s *testSuite, testBranchName string) {
 		Params: mcp.CallToolParams{
 			Name: tools.AlterTableToolName,
 			Arguments: map[string]any{
-				tools.QueryCallToolArgumentName:           "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
+				tools.QueryCallToolArgumentName:           testAlterTableToolQuery.Get(s.dialectType),
 				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},

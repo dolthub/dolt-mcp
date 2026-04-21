@@ -3,14 +3,20 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testStageAllTablesForDoltCommitSetupSQL = `CREATE TABLE ` + "`" + `stagemeone` + "`" + ` (pk int primary key);
-CREATE TABLE ` + "`" + `stagemetwo` + "`" + ` (pk int primary key);
-`
+var testStageAllTablesForDoltCommitSetupSQL = DialectSQL{
+	db.DialectMySQL: `CREATE TABLE stagemeone (pk int primary key);
+CREATE TABLE stagemetwo (pk int primary key);
+`,
+	db.DialectPostgres: `CREATE TABLE stagemeone (pk int primary key);
+CREATE TABLE stagemetwo (pk int primary key);
+`,
+}
 
 func testStageAllTablesForDoltCommitToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

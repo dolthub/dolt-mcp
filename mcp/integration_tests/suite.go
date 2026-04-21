@@ -1,19 +1,19 @@
 package integration_tests
 
 import (
+	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
-	"path/filepath"
-	"strings"
-	"testing"
-
-	"context"
-
-	"errors"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
+	"testing"
+	"time"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -32,19 +32,43 @@ const (
 	mcpTestRootPassword         = ""
 	doltServerHost              = "0.0.0.0"
 	doltServerPort              = 3306
+	doltgresServerPort          = 5432
+	doltgresRootUserName        = "postgres"
+	doltgresRootPassword        = "password"
 	mcpServerPort               = 8080
 )
 
 var ErrNoDatabaseConnection = errors.New("no database connection")
 
+// DialectSQL maps a dialect type to the SQL for that dialect. The SQL may
+// contain a single %s placeholder that will be substituted via fmt.Sprintf
+// with the current test branch name when Setup/Teardown runs.
+type DialectSQL map[db.DialectType]string
+
+// Get returns the SQL for the given dialect, or "" if unset.
+func (d DialectSQL) Get(dialectType db.DialectType) string {
+	if d == nil {
+		return ""
+	}
+	return d[dialectType]
+}
+
+// serverProcess abstracts the lifecycle of a database server process.
+type serverProcess interface {
+	Start() error
+	Stop() error
+}
+
 type testSuite struct {
 	t                     *testing.T
+	dialect               db.Dialect
+	dialectType           db.DialectType
 	doltBinPath           string
 	doltDatabaseParentDir string
 	doltDatabaseDir       string
 	dsn                   string
 	testDb                *sql.DB
-	doltServer            benchmark_runner.Server
+	doltServer            serverProcess
 	mcpServer             pkg.Server
 	mcpErrGroup           *errgroup.Group
 	mcpErrGroupCancelFunc context.CancelFunc
@@ -61,12 +85,26 @@ func (s *testSuite) GetMCPServerUrl() string {
 	return "http://0.0.0.0:8080/mcp"
 }
 
+// formatBranchSQL substitutes each %s in sql with the branch name. If sql
+// contains no %s, it is returned unchanged.
+func formatBranchSQL(sql, branchName string) string {
+	n := strings.Count(sql, "%s")
+	if n == 0 {
+		return sql
+	}
+	args := make([]any, n)
+	for i := range args {
+		args[i] = branchName
+	}
+	return fmt.Sprintf(sql, args...)
+}
+
 func (s *testSuite) checkoutBranch(branchName string) error {
 	err := s.Ping()
 	if err != nil {
 		s.t.Fatalf("failed to reach database before checking out a branch: %s", err.Error())
 	}
-	_, err = s.testDb.Exec(fmt.Sprintf("CALL DOLT_CHECKOUT('%s');", branchName))
+	_, err = s.testDb.Exec(s.dialect.CallProcedure(db.DoltCheckout, branchName))
 	return err
 }
 
@@ -75,7 +113,7 @@ func (s *testSuite) createBranch(branchName string) error {
 	if err != nil {
 		s.t.Fatalf("failed to reach database before creating a branch: %s", err.Error())
 	}
-	_, err = s.testDb.Exec(fmt.Sprintf("CALL DOLT_BRANCH('-c', 'main', '%s');", branchName))
+	_, err = s.testDb.Exec(s.dialect.CallProcedure(db.DoltBranch, "-c", "main", branchName))
 	return err
 }
 
@@ -84,7 +122,7 @@ func (s *testSuite) deleteBranch(branchName string) error {
 	if err != nil {
 		s.t.Fatalf("failed to reach database before deleting a branch: %s", err.Error())
 	}
-	_, err = s.testDb.Exec(fmt.Sprintf("CALL DOLT_BRANCH('-D', '%s');", branchName))
+	_, err = s.testDb.Exec(s.dialect.CallProcedure(db.DoltBranch, "-D", branchName))
 	return err
 }
 
@@ -93,7 +131,7 @@ func (s *testSuite) addAndCommitChanges(commitMessage string) error {
 	if err != nil {
 		s.t.Fatalf("failed to reach database before adding and committing changes: %s", err.Error())
 	}
-	_, err = s.testDb.Exec(fmt.Sprintf("CALL DOLT_COMMIT('-Am', '%s');", commitMessage))
+	_, err = s.testDb.Exec(s.dialect.CallProcedure(db.DoltCommit, "-Am", commitMessage))
 	return err
 }
 
@@ -106,12 +144,12 @@ func (s *testSuite) exec(sql string) error {
 	return err
 }
 
-func (s *testSuite) Setup(newBranchName, setupSQL string, skipDoltCommit bool) {
+func (s *testSuite) Setup(newBranchName string, setupSQL DialectSQL, skipDoltCommit bool) {
 	if newBranchName == "" {
 		s.t.Fatalf("no new branch name provided")
 	}
 
-	err := s.exec(fmt.Sprintf("USE %s;", mcpTestDatabaseName))
+	err := s.exec(s.dialect.UseDatabase(mcpTestDatabaseName))
 	if err != nil {
 		s.t.Fatalf("failed to use database during test setup: %s", err.Error())
 	}
@@ -131,8 +169,9 @@ func (s *testSuite) Setup(newBranchName, setupSQL string, skipDoltCommit bool) {
 		s.t.Fatalf("failed checkout main branch during test setup: %s", err.Error())
 	}
 
-	if setupSQL != "" {
-		err = s.exec(setupSQL)
+	sqlText := formatBranchSQL(setupSQL.Get(s.dialectType), newBranchName)
+	if sqlText != "" {
+		err = s.exec(sqlText)
 		if err != nil {
 			s.t.Fatalf("failed setup database with setup sql: %s", err.Error())
 		}
@@ -141,7 +180,6 @@ func (s *testSuite) Setup(newBranchName, setupSQL string, skipDoltCommit bool) {
 			err = s.addAndCommitChanges("add test setup changes")
 			if err != nil {
 				if !strings.Contains(err.Error(), "nothing to commit") {
-
 					s.t.Fatalf("failed add and commit changes during test setup: %s", err.Error())
 				}
 			}
@@ -149,7 +187,7 @@ func (s *testSuite) Setup(newBranchName, setupSQL string, skipDoltCommit bool) {
 	}
 }
 
-func (s *testSuite) Teardown(branchName, teardownSQL string, skipDoltCommit bool) {
+func (s *testSuite) Teardown(branchName string, teardownSQL DialectSQL, skipDoltCommit bool) {
 	if branchName == "" {
 		s.t.Fatalf("no new branch name provided")
 	}
@@ -159,13 +197,14 @@ func (s *testSuite) Teardown(branchName, teardownSQL string, skipDoltCommit bool
 		s.t.Fatalf("failed to reach database: %s", err.Error())
 	}
 
-	err = s.exec(fmt.Sprintf("USE %s;", mcpTestDatabaseName))
+	err = s.exec(s.dialect.UseDatabase(mcpTestDatabaseName))
 	if err != nil {
 		s.t.Fatalf("failed to use database during test setup: %s", err.Error())
 	}
 
-	if teardownSQL != "" {
-		err = s.exec(teardownSQL)
+	sqlText := formatBranchSQL(teardownSQL.Get(s.dialectType), branchName)
+	if sqlText != "" {
+		err = s.exec(sqlText)
 		if err != nil {
 			s.t.Fatalf("failed to execute teardown sql: %s", err.Error())
 		}
@@ -174,7 +213,6 @@ func (s *testSuite) Teardown(branchName, teardownSQL string, skipDoltCommit bool
 			err = s.addAndCommitChanges("teardown test changes")
 			if err != nil {
 				if !strings.Contains(err.Error(), "nothing to commit") {
-
 					s.t.Fatalf("failed add and commit changes during test teardown: %s", err.Error())
 				}
 			}
@@ -192,7 +230,19 @@ func (s *testSuite) Teardown(branchName, teardownSQL string, skipDoltCommit bool
 	}
 }
 
-func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*testSuite, error) {
+func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string, dialectType db.DialectType) (*testSuite, error) {
+	switch dialectType {
+	case db.DialectPostgres:
+		return createDoltgresTestSuite(ctx, doltBinPath)
+	default:
+		return createDoltTestSuite(ctx, doltBinPath)
+	}
+}
+
+func createDoltTestSuite(ctx context.Context, doltBinPath string) (*testSuite, error) {
+	dialectType := db.DialectMySQL
+	dialect := db.NewDialect(dialectType)
+
 	doltDatabaseParentDir, err := os.MkdirTemp("", "mcp-server-tests-*")
 	if err != nil {
 		return nil, err
@@ -231,8 +281,18 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 		return nil, err
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?multiStatements=true&parseTime=true", mcpTestRootUserName, mcpTestRootPassword, doltServerHost, doltServerPort, mcpTestDatabaseName)
-	testDb, err := sql.Open("mysql", dsn)
+	dsnConfig := db.Config{
+		Host:            doltServerHost,
+		Port:            doltServerPort,
+		User:            mcpTestRootUserName,
+		Password:        mcpTestRootPassword,
+		DatabaseName:    mcpTestDatabaseName,
+		ParseTime:       true,
+		MultiStatements: true,
+		DialectType:     dialectType,
+	}
+	dsn := dialect.FormatDSN(dsnConfig)
+	testDb, err := sql.Open(dialect.DriverName(), dsn)
 	if err != nil {
 		doltServer.Stop()
 		return nil, err
@@ -245,7 +305,7 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 		return nil, err
 	}
 
-	_, err = testDb.ExecContext(ctx, fmt.Sprintf("USE %s;", mcpTestDatabaseName))
+	_, err = testDb.ExecContext(ctx, dialect.UseDatabase(mcpTestDatabaseName))
 	if err != nil {
 		return nil, err
 	}
@@ -260,58 +320,219 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string) (*tes
 		return nil, err
 	}
 
-	seedSQLBytes, err := readSeedSQLFile()
+	err = seedDatabase(ctx, testDb, dialect)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(seedSQLBytes) > 0 {
-		_, err = testDb.ExecContext(ctx, string(seedSQLBytes))
-		if err != nil {
-			return nil, err
-		}
-		_, err = testDb.ExecContext(ctx, "CALL DOLT_COMMIT('-Am', 'seed test database');")
-		if err != nil {
-			return nil, err
-		}
+	mcpConfig := db.Config{
+		Host:        doltServerHost,
+		Port:        doltServerPort,
+		User:        mcpTestMCPServerSQLUser,
+		Password:    mcpTestMCPServerSQLPassword,
+		DialectType: dialectType,
 	}
 
-	config := db.Config{
-		Host:     doltServerHost,
-		Port:     doltServerPort,
-		User:     mcpTestMCPServerSQLUser,
-		Password: mcpTestMCPServerSQLPassword,
+	return finishTestSuite(ctx, dialect, dialectType, doltBinPath, doltDatabaseParentDir, doltDatabaseDir, dsn, testDb, doltServer, mcpConfig)
+}
+
+func createDoltgresTestSuite(ctx context.Context, doltgresBinPath string) (*testSuite, error) {
+	dialectType := db.DialectPostgres
+	dialect := db.NewDialect(dialectType)
+
+	dataDir, err := os.MkdirTemp("", "mcp-server-tests-doltgres-*")
+	if err != nil {
+		return nil, err
 	}
 
+	server := &doltgresServer{
+		binPath: doltgresBinPath,
+		dataDir: dataDir,
+	}
+	err = server.Start()
+	if err != nil {
+		os.RemoveAll(dataDir)
+		return nil, err
+	}
+
+	// Connect as the default postgres superuser to set up the test database
+	adminDsnConfig := db.Config{
+		Host:        doltServerHost,
+		Port:        doltgresServerPort,
+		User:        doltgresRootUserName,
+		Password:    doltgresRootPassword,
+		DialectType: dialectType,
+	}
+	adminDsn := dialect.FormatDSN(adminDsnConfig)
+	adminDb, err := sql.Open(dialect.DriverName(), adminDsn)
+	if err != nil {
+		server.Stop()
+		os.RemoveAll(dataDir)
+		return nil, err
+	}
+
+	err = adminDb.PingContext(ctx)
+	if err != nil {
+		adminDb.Close()
+		server.Stop()
+		os.RemoveAll(dataDir)
+		return nil, err
+	}
+
+	_, err = adminDb.ExecContext(ctx, fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s;", dialect.QuoteIdentifier(mcpTestDatabaseName)))
+	if err != nil {
+		adminDb.Close()
+		server.Stop()
+		os.RemoveAll(dataDir)
+		return nil, err
+	}
+	adminDb.Close()
+
+	testDsnConfig := db.Config{
+		Host:            doltServerHost,
+		Port:            doltgresServerPort,
+		User:            doltgresRootUserName,
+		Password:        doltgresRootPassword,
+		DatabaseName:    mcpTestDatabaseName,
+		MultiStatements: true,
+		DialectType:     dialectType,
+	}
+	dsn := dialect.FormatDSN(testDsnConfig)
+	testDb, err := sql.Open(dialect.DriverName(), dsn)
+	if err != nil {
+		server.Stop()
+		os.RemoveAll(dataDir)
+		return nil, err
+	}
+
+	err = testDb.PingContext(ctx)
+	if err != nil {
+		testDb.Close()
+		server.Stop()
+		os.RemoveAll(dataDir)
+		return nil, err
+	}
+
+	err = seedDatabase(ctx, testDb, dialect)
+	if err != nil {
+		return nil, err
+	}
+
+	// MCP server connects as the same superuser for DoltgreSQL
+	mcpConfig := db.Config{
+		Host:        doltServerHost,
+		Port:        doltgresServerPort,
+		User:        doltgresRootUserName,
+		Password:    doltgresRootPassword,
+		DialectType: dialectType,
+	}
+
+	return finishTestSuite(ctx, dialect, dialectType, doltgresBinPath, dataDir, dataDir, dsn, testDb, server, mcpConfig)
+}
+
+// seedDatabase loads and executes the dialect-appropriate seed SQL, then commits.
+func seedDatabase(ctx context.Context, testDb *sql.DB, dialect db.Dialect) error {
+	seedSQLBytes, err := readSeedSQLFile()
+	if err != nil {
+		return err
+	}
+
+	if len(seedSQLBytes) == 0 {
+		return nil
+	}
+
+	if _, err := testDb.ExecContext(ctx, string(seedSQLBytes)); err != nil {
+		return fmt.Errorf("failed to execute seed SQL: %w", err)
+	}
+
+	if _, err := testDb.ExecContext(ctx, dialect.CallProcedure(db.DoltCommit, "-Am", "seed test database")); err != nil {
+		return err
+	}
+	return nil
+}
+
+func finishTestSuite(ctx context.Context, dialect db.Dialect, dialectType db.DialectType, binPath, databaseParentDir, databaseDir, dsn string, testDb *sql.DB, server serverProcess, mcpConfig db.Config) (*testSuite, error) {
 	logger := zap.NewNop()
 
-	mcpServer, err := pkg.NewMCPHTTPServer(logger, config, mcpServerPort, nil, "", nil, toolsets.WithToolSet(&toolsets.PrimitiveToolSetV1{}))
+	mcpServer, err := pkg.NewMCPHTTPServer(logger, mcpConfig, mcpServerPort, nil, "", nil, toolsets.WithToolSet(&toolsets.PrimitiveToolSetV1{}))
 	if err != nil {
-		doltServer.Stop()
+		server.Stop()
 		testDb.Close()
 		return nil, err
 	}
 
 	newCtx, cancelFunc := context.WithCancel(ctx)
-
 	eg, egCtx := errgroup.WithContext(newCtx)
-
 	eg.Go(func() error {
 		mcpServer.ListenAndServe(egCtx)
 		return nil
 	})
 
 	return &testSuite{
-		doltBinPath:           doltBinPath,
+		dialect:               dialect,
+		dialectType:           dialectType,
+		doltBinPath:           binPath,
 		dsn:                   dsn,
-		doltServer:            doltServer,
-		doltDatabaseParentDir: doltDatabaseParentDir,
-		doltDatabaseDir:       doltDatabaseDir,
+		doltServer:            server,
+		doltDatabaseParentDir: databaseParentDir,
+		doltDatabaseDir:       databaseDir,
 		testDb:                testDb,
 		mcpServer:             mcpServer,
 		mcpErrGroup:           eg,
 		mcpErrGroupCancelFunc: cancelFunc,
 	}, nil
+}
+
+// doltgresServer manages a DoltgreSQL server process.
+type doltgresServer struct {
+	binPath string
+	dataDir string
+	cmd     *exec.Cmd
+}
+
+func (s *doltgresServer) Start() error {
+	s.cmd = exec.Command(s.binPath)
+	s.cmd.Env = append(os.Environ(), fmt.Sprintf("DOLTGRES_DATA_DIR=%s", s.dataDir))
+	s.cmd.Stdout = os.Stdout
+	s.cmd.Stderr = os.Stderr
+
+	if err := s.cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start doltgres: %w", err)
+	}
+
+	// Poll the connection until the server is ready.
+	dialect := db.NewPostgresDialect()
+	dsn := dialect.FormatDSN(db.Config{
+		Host:     doltServerHost,
+		Port:     doltgresServerPort,
+		User:     doltgresRootUserName,
+		Password: doltgresRootPassword,
+	})
+
+	for i := 0; i < 30; i++ {
+		testDb, err := sql.Open(dialect.DriverName(), dsn)
+		if err == nil {
+			if err = testDb.Ping(); err == nil {
+				testDb.Close()
+				fmt.Println("Successfully started database server")
+				return nil
+			}
+			testDb.Close()
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	s.Stop()
+	return fmt.Errorf("doltgres server failed to become ready")
+}
+
+func (s *doltgresServer) Stop() error {
+	if s.cmd != nil && s.cmd.Process != nil {
+		s.cmd.Process.Signal(syscall.SIGTERM)
+		s.cmd.Wait()
+		fmt.Println("Successfully killed database server")
+	}
+	return nil
 }
 
 type FileRemoteDatabase struct {
@@ -378,9 +599,19 @@ func (r *FileRemoteDatabase) Setup(ctx context.Context, setupSQL string) error {
 		return err
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?multiStatements=true&parseTime=true", mcpTestRootUserName, mcpTestRootPassword, doltServerHost, altServerPort, r.name)
+	remoteDsnConfig := db.Config{
+		Host:            doltServerHost,
+		Port:            altServerPort,
+		User:            mcpTestRootUserName,
+		Password:        mcpTestRootPassword,
+		DatabaseName:    r.name,
+		ParseTime:       true,
+		MultiStatements: true,
+	}
+	mysqlDialect := db.NewMySQLDialect()
+	dsn := mysqlDialect.FormatDSN(remoteDsnConfig)
 
-	testDb, err := sql.Open("mysql", dsn)
+	testDb, err := sql.Open(mysqlDialect.DriverName(), dsn)
 	if err != nil {
 		return err
 	}
@@ -425,7 +656,7 @@ func (r *FileRemoteDatabase) GetRemoteURL() string {
 }
 
 func generateFileRemoteDatabaseConfigFile(ctx context.Context, dbPort, remoteServePort int) (configFilePath string, err error) {
-	configBody := `log_level: debug 
+	configBody := `log_level: debug
 log_format: text
 
 behavior:
@@ -439,14 +670,14 @@ behavior:
     archive_level: 0
 
 listener:
-  host: 0.0.0.0 
-  port: ` + fmt.Sprintf("%d", dbPort) + ` 
+  host: 0.0.0.0
+  port: ` + fmt.Sprintf("%d", dbPort) + `
 remotesapi:
-  port: ` + fmt.Sprintf("%d", remoteServePort) + ` 
+  port: ` + fmt.Sprintf("%d", remoteServePort) + `
 `
 
 	var file *os.File
-	file, err = os.CreateTemp("", "config-*.yaml") // prefix "example-" and random suffix
+	file, err = os.CreateTemp("", "config-*.yaml")
 	if err != nil {
 		return
 	}

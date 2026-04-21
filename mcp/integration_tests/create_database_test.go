@@ -3,12 +3,16 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testCreateDatabaseTeardownSQL = "DROP DATABASE foo;"
+var testCreateDatabaseTeardownSQL = DialectSQL{
+	db.DialectMySQL:    `DROP DATABASE foo;`,
+	db.DialectPostgres: `DROP DATABASE foo;`,
+}
 
 func testCreateDatabaseToolInvalidArguments(s *testSuite, _ string) {
 	ctx := context.Background()

@@ -2,7 +2,33 @@ package integration_tests
 
 import (
 	"testing"
+
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
+	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 )
+
+// skipIfToolUnsupported skips the test if the active dialect doesn't support the given tool.
+func skipIfToolUnsupported(t *testing.T, toolName string) {
+	t.Helper()
+	if suite == nil || suite.dialect == nil {
+		return
+	}
+	if !suite.dialect.SupportsTool(toolName) {
+		t.Skipf("tool %q is not supported by the %s dialect", toolName, suite.dialectType)
+	}
+}
+
+// skipIfRemoteTestsUnsupported skips tests that require the FileRemoteDatabase
+// infrastructure, which only supports MySQL-based Dolt today.
+func skipIfRemoteTestsUnsupported(t *testing.T) {
+	t.Helper()
+	if suite == nil {
+		return
+	}
+	if suite.dialectType != db.DialectMySQL {
+		t.Skipf("remote tests are only supported against the mysql dialect")
+	}
+}
 
 func TestTools(t *testing.T) {
 	RunTest(t, "TestListDatabasesTool", testListDatabasesTool)
@@ -140,34 +166,42 @@ func TestTools(t *testing.T) {
 		RunTestWithSetupSQL(t, "TestSuccess", testRemoveDoltRemoteSetupSQL, testRemoveDoltRemoteToolSuccess)
 	})
 	t.Run("TestCloneDatabaseTool", func(t *testing.T) {
+		skipIfRemoteTestsUnsupported(t)
 		RunTest(t, "TestInvalidArguments", testCloneDatabaseToolInvalidArguments)
 		RunTestWithTeardownSQL(t, "TestSuccess", testCloneDatabaseTeardownSQL, testCloneDatabaseToolSuccess)
 	})
 	t.Run("TestDoltFetchBranchTool", func(t *testing.T) {
+		skipIfRemoteTestsUnsupported(t)
 		RunTest(t, "TestInvalidArguments", testDoltFetchBranchToolInvalidArguments)
 		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testDoltFetchBranchSetupSQL, testDoltFetchBranchTeardownSQL, testDoltFetchBranchToolSuccess)
 	})
 	t.Run("TestDoltFetchAllBranchesTool", func(t *testing.T) {
+		skipIfRemoteTestsUnsupported(t)
 		RunTest(t, "TestInvalidArguments", testDoltFetchAllBranchesToolInvalidArguments)
 		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testDoltFetchAllBranchesSetupSQL, testDoltFetchAllBranchesTeardownSQL, testDoltFetchAllBranchesToolSuccess)
 	})
 	t.Run("TestDoltPushBranchTool", func(t *testing.T) {
+		skipIfRemoteTestsUnsupported(t)
 		RunTest(t, "TestInvalidArguments", testDoltPushBranchToolInvalidArguments)
 		RunTestWithSetupAndTeardownSQL(t, "TestSuccess", testDoltPushBranchSetupSQL, testDoltPushBranchTeardownSQL, testDoltPushBranchToolSuccess)
 	})
 	t.Run("TestDoltPullBranchTool", func(t *testing.T) {
+		skipIfRemoteTestsUnsupported(t)
 		RunTest(t, "TestInvalidArguments", testDoltPullBranchToolInvalidArguments)
 		RunTestWithTeardownSQL(t, "TestSuccess", testDoltPullBranchTeardownSQL, testDoltPullBranchToolSuccess)
 	})
 	t.Run("TestRunDoltTestsTool", func(t *testing.T) {
+		skipIfToolUnsupported(t, tools.RunDoltTestsToolName)
 		RunTest(t, "TestInvalidArguments", testRunDoltTestsToolInvalidArguments)
 		RunTestWithSetupSQL(t, "TestSuccess", testRunDoltTestsSetupSQL, testRunDoltTestsToolSuccess)
 	})
 	t.Run("TestAddDoltTestTool", func(t *testing.T) {
+		skipIfToolUnsupported(t, tools.AddDoltTestToolName)
 		RunTest(t, "TestInvalidArguments", testAddDoltTestToolInvalidArguments)
 		RunTest(t, "TestAddSuccess", testAddDoltTestToolSuccess)
 	})
 	t.Run("TestRemoveDoltTestTool", func(t *testing.T) {
+		skipIfToolUnsupported(t, tools.RemoveDoltTestToolName)
 		RunTest(t, "TestInvalidArguments", testRemoveDoltTestToolInvalidArguments)
 		RunTestWithSetupSQL(t, "TestRemoveSuccess", testRemoveDoltTestSetupSQL, testRemoveDoltTestToolSuccess)
 	})

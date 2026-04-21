@@ -64,7 +64,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Set default environment variables
 ENV DOLT_HOST=127.0.0.1
-ENV DOLT_PORT=3306
 ENV DOLT_USER=root
 ENV DOLT_DATABASE=
 ENV MCP_MODE=stdio

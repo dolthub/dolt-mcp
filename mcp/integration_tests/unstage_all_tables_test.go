@@ -3,16 +3,24 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-var testUnstageAllTablesSetupSQL = `CREATE TABLE ` + "`" + `stagemeone` + "`" + ` (pk int primary key);
-CREATE TABLE ` + "`" + `stagemetwo` + "`" + ` (pk int primary key);
+var testUnstageAllTablesSetupSQL = DialectSQL{
+	db.DialectMySQL: `CREATE TABLE stagemeone (pk int primary key);
+CREATE TABLE stagemetwo (pk int primary key);
 CALL DOLT_ADD('stagemeone');
 CALL DOLT_ADD('stagemetwo');
-`
+`,
+	db.DialectPostgres: `CREATE TABLE stagemeone (pk int primary key);
+CREATE TABLE stagemetwo (pk int primary key);
+SELECT dolt_add('stagemeone');
+SELECT dolt_add('stagemetwo');
+`,
+}
 
 func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()

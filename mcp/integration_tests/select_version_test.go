@@ -37,5 +37,6 @@ func testSelectVersionTool(s *testSuite, _ string) {
 	require.NotEmpty(s.t, selectVersionCallToolResult.Content)
 	resultStr, err := resultToString(selectVersionCallToolResult)
 	require.NoError(s.t, err)
-	require.Contains(s.t, strings.ToLower(resultStr), "dolt_version()")
+	// Dolt returns column header "DOLT_VERSION()" while Doltgres returns "dolt_version".
+	require.Contains(s.t, strings.ToLower(resultStr), "dolt_version")
 }

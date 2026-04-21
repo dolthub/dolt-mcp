@@ -3,15 +3,18 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
 
-// Remove test setup: pre-create a test to delete
-var testRemoveDoltTestSetupSQL = `
+var testRemoveDoltTestSetupSQL = DialectSQL{
+	db.DialectMySQL: `
 REPLACE INTO dolt_tests VALUES ('test_remove_me', 'grp', 'SELECT 1', 'expected_single_value', '==', '1');
-`
+`,
+	db.DialectPostgres: "",
+}
 
 func testRemoveDoltTestToolSuccess(s *testSuite, testBranchName string) {
 	ctx := context.Background()

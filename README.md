@@ -1,6 +1,6 @@
 # Dolt MCP Server
 
-A Model Context Protocol (MCP) server that provides AI assistants with direct access to Dolt databases. This server enables AI tools like Claude to interact with Dolt's version-controlled SQL databases, allowing for database operations, version control workflows, and data management tasks.
+A Model Context Protocol (MCP) server that provides AI assistants with direct access to Dolt and DoltgreSQL databases. This server enables AI tools like Claude to interact with Dolt's version-controlled SQL databases over either the MySQL or PostgreSQL wire protocol, allowing for database operations, version control workflows, and data management tasks.
 
 ## Overview
 
@@ -12,12 +12,14 @@ The Dolt MCP Server acts as a bridge between AI assistants and Dolt databases, e
 - **Data Operations**: Insert, update, delete, and query data
 - **Remote Operations**: Clone, fetch, push, and pull from remote repositories
 
+Both [Dolt](https://github.com/dolthub/dolt) (MySQL-compatible) and [DoltgreSQL](https://github.com/dolthub/doltgresql) (PostgreSQL-compatible) backends are supported. The SQL dialect is selected at startup with the `--dolt` or `--doltgres` flag.
+
 ## Installation
 
 ### Prerequisites
 
 - Go 1.24.4 or later
-- A running Dolt SQL server instance
+- A running Dolt or DoltgreSQL SQL server instance
 
 ### Building from Source
 
@@ -67,20 +69,54 @@ docker run -it --rm \
   dolthub/dolt-mcp:latest
 ```
 
+#### Connecting to DoltgreSQL from Docker
+
+Set `MCP_DIALECT=doltgres` to point the container at a DoltgreSQL server. `DOLT_PORT` defaults to `5432` when the dialect is `doltgres`.
+
+```bash
+docker run -d \
+  --name dolt-mcp-server \
+  -p 8080:8080 \
+  -e MCP_MODE=http \
+  -e MCP_DIALECT=doltgres \
+  -e DOLT_HOST=your-doltgres-host \
+  -e DOLT_USER=postgres \
+  -e DOLT_DATABASE=your_database \
+  -e DOLT_PASSWORD=your_password \
+  dolthub/dolt-mcp:latest
+```
+
 ### Native Binary Usage
 
 #### 1. Stdio Server (Recommended for AI Assistants)
 
 The stdio server communicates over standard input/output, making it ideal for integration with AI assistants like Claude Desktop.
 
+Against Dolt (MySQL dialect, the default):
+
 ```bash
 ./dolt-mcp-server \
   --stdio \
-  --dolt-host 0.0.0.0 \
-  --dolt-port 3306 \
-  --dolt-user root \
-  --dolt-database mydb
+  --dolt \
+  --host 0.0.0.0 \
+  --port 3306 \
+  --user root \
+  --database mydb
 ```
+
+Against DoltgreSQL (PostgreSQL dialect):
+
+```bash
+./dolt-mcp-server \
+  --stdio \
+  --doltgres \
+  --host 0.0.0.0 \
+  --port 5432 \
+  --user postgres \
+  --database mydb
+```
+
+If `--port` is omitted, it defaults to `3306` for Dolt and `5432` for DoltgreSQL.
 
 #### Claude Desktop Configuration
 
@@ -93,10 +129,11 @@ Add this configuration to your Claude Desktop MCP settings:
       "command": "/path/to/dolt-mcp-server",
       "args": [
         "--stdio",
-        "--dolt-host", "0.0.0.0",
-        "--dolt-port", "3306", 
-        "--dolt-user", "root",
-        "--dolt-database", "your_database_name"
+        "--dolt",
+        "--host", "0.0.0.0",
+        "--port", "3306",
+        "--user", "root",
+        "--database", "your_database_name"
       ],
       "env": {
         "DOLT_PASSWORD": "your_password_if_needed"
@@ -105,6 +142,8 @@ Add this configuration to your Claude Desktop MCP settings:
   }
 }
 ```
+
+For a DoltgreSQL backend, swap `--dolt` for `--doltgres` and adjust the port/user to match your server.
 
 #### HTTP Client Configuration
 
@@ -144,25 +183,37 @@ The HTTP server exposes a REST API for MCP tool calls, useful for web applicatio
 ./dolt-mcp-server \
   --http \
   --mcp-port 8080 \
-  --dolt-host 0.0.0.0 \
-  --dolt-port 3306 \
-  --dolt-user root \
-  --dolt-database mydb
+  --dolt \
+  --host 0.0.0.0 \
+  --port 3306 \
+  --user root \
+  --database mydb
 ```
+
+Pass `--doltgres` in place of `--dolt` to connect to a DoltgreSQL server.
 
 ## Configuration Options
 
 ### Required Parameters
 
-- `--dolt-host`: Hostname of the Dolt SQL server
-- `--dolt-user`: Username for Dolt server authentication  
+- `--host`: Hostname of the Dolt or DoltgreSQL server
+- `--user`: Username for server authentication
 - `--stdio` or `--http`: Server mode selection
+
+### Dialect Selection
+
+- `--dolt`: Use the Dolt (MySQL-compatible) dialect. This is the default when neither flag is passed.
+- `--doltgres`: Use the DoltgreSQL (PostgreSQL-compatible) dialect.
+
+`--dolt` and `--doltgres` are mutually exclusive.
 
 ### Optional Parameters
 
-- `--dolt-database`: Name of the database to connect to
-- `--dolt-port`: Dolt server port (default: 3306)
-- `--dolt-password`: Password for authentication (can also use environment variable)
+- `--database`: Name of the database to connect to
+- `--port`: Server port. Defaults to `3306` for Dolt and `5432` for DoltgreSQL.
+- `--password`: Password for authentication (can also use environment variable)
+- `--tls`: TLS mode for the database connection: `true`, `false`, `skip-verify`, or `preferred`
+- `--tls-ca`: Path to a CA certificate file for the database TLS connection
 - `--mcp-port`: HTTP server port (default: 8080, HTTP mode only)
 
 ### Environment Variables
@@ -180,7 +231,8 @@ When using Docker, you can configure the server using environment variables:
 #### Optional
 - `DOLT_DATABASE`: Name of the database to connect to
 - `DOLT_PASSWORD`: Password for authentication
-- `DOLT_PORT`: Dolt server port (default: 3306)
+- `DOLT_PORT`: Server port (default: 3306 for `dolt`, 5432 for `doltgres`)
+- `MCP_DIALECT`: SQL dialect: `dolt` (MySQL-compatible) or `doltgres` (PostgreSQL-compatible). Default: `dolt`
 - `MCP_MODE`: Server mode: `http` or `stdio` (default: stdio)
 - `MCP_PORT`: HTTP server port (default: 8080, HTTP mode only)
 
@@ -287,7 +339,7 @@ The Dolt MCP Server provides 40+ tools organized by functionality:
 
 ```bash
 # Start the MCP server
-./dolt-mcp-server --stdio --dolt-host localhost --dolt-user root --dolt-database testdb
+./dolt-mcp-server --stdio --dolt --host localhost --user root --database testdb
 
 # Example AI interactions:
 # "Show me all tables in the database"

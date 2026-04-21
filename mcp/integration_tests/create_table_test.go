@@ -3,10 +3,35 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
+
+var testCreateTableT1Query = DialectSQL{
+	db.DialectMySQL:    "CREATE TABLE `t1` (pk int primary key);",
+	db.DialectPostgres: `CREATE TABLE "t1" (pk int primary key);`,
+}
+
+var testCreateTablePlacesQuery = DialectSQL{
+	db.DialectMySQL: "\n" +
+		"CREATE TABLE `places`(\n" +
+		"	`id` VARCHAR(36) PRIMARY KEY,\n" +
+		"	`name` VARCHAR(1024) NOT NULL,\n" +
+		"	`address` VARCHAR(1024) NOT NULL,\n" +
+		"	`city` VARCHAR(1024) NOT NULL,\n" +
+		"	`country` VARCHAR(1024) NOT NULL\n" +
+		");",
+	db.DialectPostgres: `
+CREATE TABLE "places"(
+	"id" VARCHAR(36) PRIMARY KEY,
+	"name" VARCHAR(1024) NOT NULL,
+	"address" VARCHAR(1024) NOT NULL,
+	"city" VARCHAR(1024) NOT NULL,
+	"country" VARCHAR(1024) NOT NULL
+);`,
+}
 
 func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
@@ -33,7 +58,7 @@ func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 				Params: mcp.CallToolParams{
 					Name: tools.CreateTableToolName,
 					Arguments: map[string]any{
-						tools.QueryCallToolArgumentName: "CREATE TABLE `t1` (pk int primary key);",
+						tools.QueryCallToolArgumentName: testCreateTableT1Query.Get(s.dialectType),
 					},
 				},
 			},
@@ -46,7 +71,7 @@ func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.CreateTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: "",
-						tools.QueryCallToolArgumentName:         "CREATE TABLE `t1` (pk int primary key);",
+						tools.QueryCallToolArgumentName:         testCreateTableT1Query.Get(s.dialectType),
 					},
 				},
 			},
@@ -59,7 +84,7 @@ func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.CreateTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: "doesnotexist",
-						tools.QueryCallToolArgumentName:         "CREATE TABLE `t1` (pk int primary key);",
+						tools.QueryCallToolArgumentName:         testCreateTableT1Query.Get(s.dialectType),
 					},
 				},
 			},
@@ -72,7 +97,7 @@ func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Name: tools.CreateTableToolName,
 					Arguments: map[string]any{
 						tools.WorkingBranchCallToolArgumentName: testBranchName,
-						tools.QueryCallToolArgumentName:         "CREATE TABLE `t1` (pk int primary key);",
+						tools.QueryCallToolArgumentName:         testCreateTableT1Query.Get(s.dialectType),
 					},
 				},
 			},
@@ -86,7 +111,7 @@ func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.QueryCallToolArgumentName:           "CREATE TABLE `t1` (pk int primary key);",
+						tools.QueryCallToolArgumentName:           testCreateTableT1Query.Get(s.dialectType),
 					},
 				},
 			},
@@ -100,7 +125,7 @@ func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 					Arguments: map[string]any{
 						tools.WorkingDatabaseCallToolArgumentName: "doesnotexist",
 						tools.WorkingBranchCallToolArgumentName:   testBranchName,
-						tools.QueryCallToolArgumentName:           "CREATE TABLE `t1` (pk int primary key);",
+						tools.QueryCallToolArgumentName:           testCreateTableT1Query.Get(s.dialectType),
 					},
 				},
 			},
@@ -182,14 +207,7 @@ func testCreateTableToolSuccess(s *testSuite, testBranchName string) {
 			Arguments: map[string]any{
 				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-				tools.QueryCallToolArgumentName: `
-CREATE TABLE ` + "`" + `places` + "`" + `(
-	` + "`" + `id` + "`" + `VARCHAR(36) PRIMARY KEY,
-	` + "`" + `name` + "`" + `VARCHAR(1024) NOT NULL,
-	` + "`" + `address` + "`" + `VARCHAR(1024) NOT NULL,
-	` + "`" + `city` + "`" + `VARCHAR(1024) NOT NULL,
-	` + "`" + `country` + "`" + `VARCHAR(1024) NOT NULL
-);`,
+				tools.QueryCallToolArgumentName: testCreateTablePlacesQuery.Get(s.dialectType),
 			},
 		},
 	}

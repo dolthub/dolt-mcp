@@ -99,59 +99,53 @@ func TestParseClaimsMapWithEmptyInput(t *testing.T) {
 }
 
 func TestValidateArgsWithValidArgs(t *testing.T) {
-	doltHost = stringPtr("localhost")
-	doltPort = intPtr(3306)
-	doltUser = stringPtr("user")
 	serveHTTP = boolPtr(true)
 	mcpPort = intPtr(8080)
 
-	err := validateArgs()
+	err := validateArgs("localhost", "user", 3306)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 }
 
-func TestValidateArgsWithMissingDoltHost(t *testing.T) {
-	doltHost = stringPtr("")
-	doltPort = intPtr(3306)
-	doltUser = stringPtr("user")
+func TestValidateArgsWithMissingHost(t *testing.T) {
 	serveHTTP = boolPtr(true)
 	mcpPort = intPtr(8080)
 
-	err := validateArgs()
+	err := validateArgs("", "user", 3306)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 }
 
-func TestValidateArgsWithMissingDoltUser(t *testing.T) {
-	doltHost = stringPtr("localhost")
-	doltPort = intPtr(3306)
-	doltUser = stringPtr("")
+func TestValidateArgsWithMissingUser(t *testing.T) {
 	serveHTTP = boolPtr(true)
 	mcpPort = intPtr(8080)
 
-	err := validateArgs()
+	err := validateArgs("localhost", "", 3306)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}
+
+func TestValidateArgsWithMissingPort(t *testing.T) {
+	serveHTTP = boolPtr(true)
+	mcpPort = intPtr(8080)
+
+	err := validateArgs("localhost", "user", 0)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 }
 
 func TestValidateArgsWithMissingMCPPort(t *testing.T) {
-	doltHost = stringPtr("localhost")
-	doltPort = intPtr(3306)
-	doltUser = stringPtr("user")
 	serveHTTP = boolPtr(true)
 	mcpPort = intPtr(0)
 
-	err := validateArgs()
+	err := validateArgs("localhost", "user", 3306)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-}
-
-func stringPtr(s string) *string {
-	return &s
 }
 
 func intPtr(i int) *int {
