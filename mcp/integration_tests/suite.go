@@ -144,32 +144,6 @@ func (s *testSuite) exec(sql string) error {
 	return err
 }
 
-// execStatements executes a multi-statement SQL string one statement at a time,
-// which is required for the pgx driver (which does not support multiStatements).
-func (s *testSuite) execStatements(sql string) error {
-	for _, stmt := range splitSQLStatements(sql) {
-		if err := s.exec(stmt); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// splitSQLStatements splits a SQL string into individual statements by ';'.
-// Empty statements are dropped. This is a simple splitter that does not
-// handle semicolons inside string literals - test SQL should avoid those.
-func splitSQLStatements(sql string) []string {
-	parts := strings.Split(sql, ";")
-	stmts := make([]string, 0, len(parts))
-	for _, p := range parts {
-		trimmed := strings.TrimSpace(p)
-		if trimmed != "" {
-			stmts = append(stmts, trimmed)
-		}
-	}
-	return stmts
-}
-
 func (s *testSuite) Setup(newBranchName string, setupSQL DialectSQL, skipDoltCommit bool) {
 	if newBranchName == "" {
 		s.t.Fatalf("no new branch name provided")
@@ -197,7 +171,7 @@ func (s *testSuite) Setup(newBranchName string, setupSQL DialectSQL, skipDoltCom
 
 	sqlText := formatBranchSQL(setupSQL.Get(s.dialectType), newBranchName)
 	if sqlText != "" {
-		err = s.execStatements(sqlText)
+		err = s.exec(sqlText)
 		if err != nil {
 			s.t.Fatalf("failed setup database with setup sql: %s", err.Error())
 		}
@@ -230,7 +204,7 @@ func (s *testSuite) Teardown(branchName string, teardownSQL DialectSQL, skipDolt
 
 	sqlText := formatBranchSQL(teardownSQL.Get(s.dialectType), branchName)
 	if sqlText != "" {
-		err = s.execStatements(sqlText)
+		err = s.exec(sqlText)
 		if err != nil {
 			s.t.Fatalf("failed to execute teardown sql: %s", err.Error())
 		}
@@ -415,12 +389,13 @@ func createDoltgresTestSuite(ctx context.Context, doltgresBinPath string) (*test
 	adminDb.Close()
 
 	testDsnConfig := db.Config{
-		Host:         doltServerHost,
-		Port:         doltgresServerPort,
-		User:         doltgresRootUserName,
-		Password:     doltgresRootPassword,
-		DatabaseName: mcpTestDatabaseName,
-		DialectType:  dialectType,
+		Host:            doltServerHost,
+		Port:            doltgresServerPort,
+		User:            doltgresRootUserName,
+		Password:        doltgresRootPassword,
+		DatabaseName:    mcpTestDatabaseName,
+		MultiStatements: true,
+		DialectType:     dialectType,
 	}
 	dsn := dialect.FormatDSN(testDsnConfig)
 	testDb, err := sql.Open(dialect.DriverName(), dsn)
@@ -466,11 +441,8 @@ func seedDatabase(ctx context.Context, testDb *sql.DB, dialect db.Dialect) error
 		return nil
 	}
 
-	// Execute each statement individually to support both mysql and pgx drivers.
-	for _, stmt := range splitSQLStatements(string(seedSQLBytes)) {
-		if _, err := testDb.ExecContext(ctx, stmt); err != nil {
-			return fmt.Errorf("failed to execute seed statement %q: %w", stmt, err)
-		}
+	if _, err := testDb.ExecContext(ctx, string(seedSQLBytes)); err != nil {
+		return fmt.Errorf("failed to execute seed SQL: %w", err)
 	}
 
 	if _, err := testDb.ExecContext(ctx, dialect.CallProcedure(db.DoltCommit, "-Am", "seed test database")); err != nil {

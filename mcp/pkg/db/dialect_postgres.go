@@ -54,6 +54,12 @@ func (d *PostgresDialect) FormatDSN(c Config) string {
 	if c.TLSCAFile != "" {
 		options = append(options, fmt.Sprintf("sslrootcert=%s", c.TLSCAFile))
 	}
+	if c.MultiStatements {
+		// PostgreSQL's extended query protocol (pgx's default) handles only
+		// one statement per call. Simple protocol supports ';'-separated
+		// multi-statement queries, mirroring MySQL's multiStatements=true.
+		options = append(options, "default_query_exec_mode=simple_protocol")
+	}
 	if len(options) > 0 {
 		dsn += "?" + strings.Join(options, "&")
 	}

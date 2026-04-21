@@ -15,7 +15,7 @@ var testDoltStatusNewTable = "new table"
 var testDoltStatusModifiedTable = "modified"
 
 // countRowsInTableSQL counts the rows in a table. The table name is inserted
-// via fmt.Sprintf. Backticks are used for MySQL and double-quotes for Postgres
+// via fmt.Sprintf. Backticks are used for Dolt and double-quotes for Doltgres
 // to correctly quote identifiers.
 var countRowsInTableSQL = DialectSQL{
 	db.DialectMySQL:    "SELECT COUNT(*) AS count FROM `%s`;",
@@ -23,8 +23,8 @@ var countRowsInTableSQL = DialectSQL{
 }
 
 // selectDoltStatusForTableSQL selects rows from dolt_status for a given table.
-// DoltgreSQL qualifies the table name with the schema (e.g. "public.foo"),
-// while MySQL Dolt uses the bare table name. The bare table name is inserted
+// Doltgres qualifies the table name with the schema (e.g. "public.foo"),
+// while Dolt uses the bare table name. The bare table name is inserted
 // via fmt.Sprintf.
 var selectDoltStatusForTableSQL = DialectSQL{
 	db.DialectMySQL:    "SELECT * FROM dolt_status WHERE table_name = '%s';",
