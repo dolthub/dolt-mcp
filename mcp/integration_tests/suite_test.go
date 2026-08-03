@@ -33,16 +33,26 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 
+	// os.Exit below skips deferred cleanup, so every exit path removes this explicitly.
+	doltRootPath, err := isolateDoltRootPath()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to isolate dolt root path: %v\n", err)
+		os.RemoveAll(doltRootPath)
+		os.Exit(1)
+	}
+
 	suite, err = createMCPDoltServerTestSuite(ctx, doltBinPath, dialectType)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to create dolt server test suite: %v\n", err)
 		teardownMCPDoltServerTestSuite(suite)
+		os.RemoveAll(doltRootPath)
 		os.Exit(1)
 	}
 
 	code := m.Run()
 
 	teardownMCPDoltServerTestSuite(suite)
+	os.RemoveAll(doltRootPath)
 
 	os.Exit(code)
 }

@@ -37,6 +37,10 @@ var selectLastCommitHashSQL = DialectSQL{
 	db.DialectPostgres: "SELECT commit_hash FROM dolt_log ORDER BY date DESC LIMIT 1;",
 }
 
+// selectCommitHashesSQL selects every commit hash reachable from the current
+// HEAD, most recent first. Identical in both dialects.
+var selectCommitHashesSQL = "SELECT commit_hash FROM dolt_log ORDER BY date DESC;"
+
 type TableStatus struct {
 	Status    string
 	Staged    bool
@@ -119,6 +123,29 @@ func getDoltStatus(s *testSuite, ctx context.Context, tableName string) ([]*Tabl
 	}
 
 	return tableStatuses, nil
+}
+
+func getCommitHashes(s *testSuite, ctx context.Context) ([]string, error) {
+	rows, err := s.testDb.QueryContext(ctx, selectCommitHashesSQL)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	hashes := make([]string, 0)
+	for rows.Next() {
+		var hash string
+		if err := rows.Scan(&hash); err != nil {
+			return nil, err
+		}
+		hashes = append(hashes, hash)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return hashes, nil
 }
 
 func getLastCommitHash(s *testSuite, ctx context.Context) (string, error) {

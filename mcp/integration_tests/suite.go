@@ -36,6 +36,8 @@ const (
 	doltgresRootUserName        = "postgres"
 	doltgresRootPassword        = "password"
 	mcpServerPort               = 8080
+	mcpTestCommitterName        = "dolt-mcp-tests"
+	mcpTestCommitterEmail       = "dolt-mcp-tests@dolthub.com"
 )
 
 var ErrNoDatabaseConnection = errors.New("no database connection")
@@ -228,6 +230,42 @@ func (s *testSuite) Teardown(branchName string, teardownSQL DialectSQL, skipDolt
 	if err != nil {
 		s.t.Fatalf("failed delete branch during test teardown: %s", err.Error())
 	}
+}
+
+// isolateDoltRootPath creates a throwaway dolt root directory and points
+// DOLT_ROOT_PATH at it, so that the dolt/doltgres processes these tests spawn
+// use a known-good global config instead of the one in the developer's home
+// directory. This matters for more than tidiness: if the developer has run
+// `dolt login`, the global config's `user.creds` makes the server send a JWT
+// bearer token to the FileRemoteDatabase's remotesapi, which only accepts basic
+// auth, and every clone/fetch/push/pull test fails to authenticate. The config
+// written here also supplies the committer identity that DOLT_COMMIT requires.
+// Callers own the returned directory and must remove it.
+func isolateDoltRootPath() (string, error) {
+	doltRootPath, err := os.MkdirTemp("", "mcp-server-tests-dolt-root-*")
+	if err != nil {
+		return "", err
+	}
+
+	doltDir := filepath.Join(doltRootPath, ".dolt")
+	if err = os.MkdirAll(doltDir, os.ModePerm); err != nil {
+		return doltRootPath, err
+	}
+
+	globalConfig := fmt.Sprintf(
+		`{"user.name":"%s","user.email":"%s","metrics.disabled":"true","versioncheck.disabled":"true"}`,
+		mcpTestCommitterName,
+		mcpTestCommitterEmail,
+	)
+	if err = os.WriteFile(filepath.Join(doltDir, "config_global.json"), []byte(globalConfig), 0644); err != nil {
+		return doltRootPath, err
+	}
+
+	if err = os.Setenv("DOLT_ROOT_PATH", doltRootPath); err != nil {
+		return doltRootPath, err
+	}
+
+	return doltRootPath, nil
 }
 
 func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string, dialectType db.DialectType) (*testSuite, error) {

@@ -11,8 +11,8 @@ import (
 
 const (
 	DoltResetHardToolName                        = "dolt_reset_hard"
-	DoltResetHardToolRevisionArgumentDescription = "The revision to reset to (working set, table name, branch, commit sha, or '.' for all tables)."
-	DoltResetHardToolDescription                 = "Hard resets the working set to the specified revision."
+	DoltResetHardToolRevisionArgumentDescription = "The revision to reset to (a branch name, commit sha, or ancestor spec such as 'HEAD~1'). Table names are not valid revisions."
+	DoltResetHardToolDescription                 = "Hard resets the branch HEAD, staging area, and working set to the specified revision, discarding uncommitted changes."
 	DoltResetHardToolCallSuccessFormatString     = "successfully hard reset: %s"
 )
 
