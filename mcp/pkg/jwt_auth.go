@@ -48,6 +48,7 @@ func withBearerAuth(logger *zap.Logger, next http.Handler, jwkClaimsMap map[stri
 		if err != nil || !valid {
 			logger.Info("unable to authorize jwt", zap.Bool("valid", valid), zap.Error(err))
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
 		}
 
 		next.ServeHTTP(w, r)
