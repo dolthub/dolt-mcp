@@ -11,8 +11,8 @@ import (
 
 const (
 	DoltResetSoftToolName                        = "dolt_reset_soft"
-	DoltResetSoftToolRevisionArgumentDescription = "The revision to reset to (working set, table name, branch, commit sha, or '.' for all tables)."
-	DoltResetSoftToolDescription                 = "Soft resets the working set to the specified revision."
+	DoltResetSoftToolRevisionArgumentDescription = "The revision to move the branch HEAD to (a branch name, commit sha, or ancestor spec such as 'HEAD~1'). Table names are not valid revisions."
+	DoltResetSoftToolDescription                 = "Moves the branch HEAD to the specified revision, leaving the staging area and working set unchanged. To unstage tables instead, use the unstage_table or unstage_all_tables tools."
 	DoltResetSoftToolCallSuccessFormatString     = "successfully soft reset: %s"
 )
 

@@ -9,16 +9,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// testDoltResetSoftSetupSQL commits `resetme`, then stages one more row and
+// leaves a third row unstaged. That gives the soft reset a commit to move HEAD
+// off of, plus staged and working changes that the reset must leave alone.
 var testDoltResetSoftSetupSQL = DialectSQL{
 	db.DialectMySQL: `CREATE TABLE resetme (pk int primary key);
 INSERT INTO resetme VALUES (1);
-CALL DOLT_ADD('resetme');
+CALL DOLT_COMMIT('-Am', 'add resetme');
 INSERT INTO resetme VALUES (2);
+CALL DOLT_ADD('resetme');
+INSERT INTO resetme VALUES (3);
 `,
 	db.DialectPostgres: `CREATE TABLE resetme (pk int primary key);
 INSERT INTO resetme VALUES (1);
-SELECT dolt_add('resetme');
+SELECT dolt_commit('-Am', 'add resetme');
 INSERT INTO resetme VALUES (2);
+SELECT dolt_add('resetme');
+INSERT INTO resetme VALUES (3);
 `,
 }
 
@@ -193,24 +200,27 @@ func testDoltResetSoftToolSuccess(s *testSuite, testBranchName string) {
 
 	requireToolExists(s, ctx, client, serverInfo, tools.DoltResetSoftToolName)
 
+	commitHashes, err := getCommitHashes(s, ctx)
+	require.NoError(s.t, err)
+	require.GreaterOrEqual(s.t, len(commitHashes), 2)
+	headBeforeReset, parentOfHead := commitHashes[0], commitHashes[1]
+
+	// Both entries are modifications relative to the setup commit: the staged
+	// row and the unstaged row.
 	tableStatuses, err := getDoltStatus(s, ctx, "resetme")
 	require.NoError(s.t, err)
-
+	require.Len(s.t, tableStatuses, 2)
 	for _, ts := range tableStatuses {
-		if ts.Status == testDoltStatusNewTable {
-			require.True(s.t, ts.Staged)
-		} else if ts.Status == testDoltStatusModifiedTable {
-			require.False(s.t, ts.Staged)
-		}
+		require.Equal(s.t, testDoltStatusModifiedTable, ts.Status)
 	}
 
-	requireTableHasNRows(s, ctx, "resetme", 2)
+	requireTableHasNRows(s, ctx, "resetme", 3)
 
 	doltResetSoftCallToolRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: tools.DoltResetSoftToolName,
 			Arguments: map[string]any{
-				tools.RevisionCallToolArgumentName:        testBranchName,
+				tools.RevisionCallToolArgumentName:        "HEAD~1",
 				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},
@@ -226,16 +236,25 @@ func testDoltResetSoftToolSuccess(s *testSuite, testBranchName string) {
 	require.NoError(s.t, err)
 	require.Contains(s.t, resultString, "successfully soft reset")
 
+	// The branch HEAD moved back one commit...
+	headAfterReset, err := getLastCommitHash(s, ctx)
+	require.NoError(s.t, err)
+	require.NotEqual(s.t, headBeforeReset, headAfterReset)
+	require.Equal(s.t, parentOfHead, headAfterReset)
+
+	// ...while the staging area and the working set were left alone. The staged
+	// copy of the table now reads as new because HEAD no longer contains it.
 	tableStatuses, err = getDoltStatus(s, ctx, "resetme")
 	require.NoError(s.t, err)
-
+	require.Len(s.t, tableStatuses, 2)
 	for _, ts := range tableStatuses {
 		if ts.Status == testDoltStatusNewTable {
-			require.False(s.t, ts.Staged)
-		} else if ts.Status == testDoltStatusModifiedTable {
+			require.True(s.t, ts.Staged)
+		} else {
+			require.Equal(s.t, testDoltStatusModifiedTable, ts.Status)
 			require.False(s.t, ts.Staged)
 		}
 	}
 
-	requireTableHasNRows(s, ctx, "resetme", 2)
+	requireTableHasNRows(s, ctx, "resetme", 3)
 }
