@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 )
 
 func TestGetTLSConfigWithValidCertAndKey(t *testing.T) {
@@ -102,7 +104,7 @@ func TestValidateArgsWithValidArgs(t *testing.T) {
 	serveHTTP = boolPtr(true)
 	mcpPort = intPtr(8080)
 
-	err := validateArgs("localhost", "user", 3306)
+	err := validateArgs(db.DialectMySQL, "localhost", "user", 3306, "")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -112,7 +114,7 @@ func TestValidateArgsWithMissingHost(t *testing.T) {
 	serveHTTP = boolPtr(true)
 	mcpPort = intPtr(8080)
 
-	err := validateArgs("", "user", 3306)
+	err := validateArgs(db.DialectMySQL, "", "user", 3306, "")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -122,7 +124,7 @@ func TestValidateArgsWithMissingUser(t *testing.T) {
 	serveHTTP = boolPtr(true)
 	mcpPort = intPtr(8080)
 
-	err := validateArgs("localhost", "", 3306)
+	err := validateArgs(db.DialectMySQL, "localhost", "", 3306, "")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -132,7 +134,7 @@ func TestValidateArgsWithMissingPort(t *testing.T) {
 	serveHTTP = boolPtr(true)
 	mcpPort = intPtr(8080)
 
-	err := validateArgs("localhost", "user", 0)
+	err := validateArgs(db.DialectMySQL, "localhost", "user", 0, "")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -142,9 +144,45 @@ func TestValidateArgsWithMissingMCPPort(t *testing.T) {
 	serveHTTP = boolPtr(true)
 	mcpPort = intPtr(0)
 
-	err := validateArgs("localhost", "user", 3306)
+	err := validateArgs(db.DialectMySQL, "localhost", "user", 3306, "")
 	if err == nil {
 		t.Fatal("expected error, got nil")
+	}
+}
+
+func TestValidateArgsDoltLiteRequiresDBFile(t *testing.T) {
+	serveHTTP = boolPtr(true)
+	mcpPort = intPtr(8080)
+
+	err := validateArgs(db.DialectDoltLite, "", "", 0, "")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	err = validateArgs(db.DialectDoltLite, "", "", 0, "/tmp/test.db")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+}
+
+func TestResolveDialectDoltLite(t *testing.T) {
+	oldDolt, oldDoltgres, oldDoltLite := *useDolt, *doltgres, *doltlite
+	t.Cleanup(func() {
+		*useDolt, *doltgres, *doltlite = oldDolt, oldDoltgres, oldDoltLite
+	})
+
+	*useDolt, *doltgres, *doltlite = false, false, true
+	dialectType, err := resolveDialect(map[string]bool{doltliteFlag: true})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if dialectType != db.DialectDoltLite {
+		t.Fatalf("expected DoltLite dialect, got %s", dialectType)
+	}
+
+	_, err = resolveDialect(map[string]bool{doltFlag: true, doltliteFlag: true})
+	if err == nil {
+		t.Fatal("expected mutually exclusive dialect error")
 	}
 }
 

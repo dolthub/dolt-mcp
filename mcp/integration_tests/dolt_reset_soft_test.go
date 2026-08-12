@@ -27,6 +27,13 @@ INSERT INTO resetme VALUES (2);
 SELECT dolt_add('resetme');
 INSERT INTO resetme VALUES (3);
 `,
+	db.DialectDoltLite: `CREATE TABLE resetme (pk int primary key);
+INSERT INTO resetme VALUES (1);
+SELECT dolt_commit('-Am', 'add resetme');
+INSERT INTO resetme VALUES (2);
+SELECT dolt_add('resetme');
+INSERT INTO resetme VALUES (3);
+`,
 }
 
 func testDoltResetSoftToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -173,6 +180,9 @@ func testDoltResetSoftToolInvalidArguments(s *testSuite, testBranchName string) 
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		doltResetTableSoftCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

@@ -189,6 +189,9 @@ func testDoltPushBranchToolInvalidArguments(s *testSuite, testBranchName string)
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		doltPushBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -255,6 +258,9 @@ func testDoltPushBranchToolSuccess(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		doltPushBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 		require.False(s.t, doltPushBranchCallToolResult.IsError)

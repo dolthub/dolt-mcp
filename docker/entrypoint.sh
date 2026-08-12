@@ -7,10 +7,50 @@ if [ $# -gt 0 ]; then
     exec ./dolt-mcp-server "$@"
 fi
 
+# Determine SQL dialect (default: dolt)
+MCP_DIALECT="${MCP_DIALECT:-dolt}"
+
+# DoltLite runs against an embedded database file: no host, port, user, or
+# password is needed, so it is handled separately from the server dialects.
+if [ "$MCP_DIALECT" = "doltlite" ]; then
+    if [ -z "$DOLT_DB_FILE" ]; then
+        echo "Error: DOLT_DB_FILE environment variable is required when MCP_DIALECT=doltlite" >&2
+        exit 1
+    fi
+
+    set -- --doltlite --db-file "$DOLT_DB_FILE"
+
+    # Commit author (recommended: commits are authored as "doltlite" otherwise)
+    if [ -n "$DOLT_COMMIT_NAME" ]; then
+        set -- "$@" --commit-name "$DOLT_COMMIT_NAME"
+    fi
+    if [ -n "$DOLT_COMMIT_EMAIL" ]; then
+        set -- "$@" --commit-email "$DOLT_COMMIT_EMAIL"
+    fi
+
+    if [ "$MCP_MODE" = "http" ]; then
+        set -- "$@" --http
+        if [ -n "$MCP_PORT" ]; then
+            set -- "$@" --mcp-port "$MCP_PORT"
+        fi
+        echo "Starting Dolt MCP Server (DoltLite) in HTTP mode on port ${MCP_PORT:-8080}" >&2
+    elif [ "$MCP_MODE" = "stdio" ]; then
+        set -- "$@" --stdio
+        echo "Starting Dolt MCP Server (DoltLite) in stdio mode" >&2
+    else
+        echo "Error: MCP_MODE must be either 'http' or 'stdio'" >&2
+        exit 1
+    fi
+
+    echo "DoltLite database file: $DOLT_DB_FILE" >&2
+
+    exec ./dolt-mcp-server "$@"
+fi
+
 # Build command based on environment variables
 CMD_ARGS=""
 
-# Required parameters
+# Required parameters (server dialects only)
 if [ -z "$DOLT_HOST" ]; then
     echo "Error: DOLT_HOST environment variable is required"
     exit 1
@@ -21,8 +61,6 @@ if [ -z "$DOLT_USER" ]; then
     exit 1
 fi
 
-# Determine SQL dialect (default: dolt)
-MCP_DIALECT="${MCP_DIALECT:-dolt}"
 case "$MCP_DIALECT" in
     dolt)
         CMD_ARGS="$CMD_ARGS --dolt"
@@ -33,7 +71,7 @@ case "$MCP_DIALECT" in
         DEFAULT_PORT=5432
         ;;
     *)
-        echo "Error: MCP_DIALECT must be either 'dolt' or 'doltgres' (got: $MCP_DIALECT)"
+        echo "Error: MCP_DIALECT must be 'dolt', 'doltgres', or 'doltlite' (got: $MCP_DIALECT)"
         exit 1
         ;;
 esac

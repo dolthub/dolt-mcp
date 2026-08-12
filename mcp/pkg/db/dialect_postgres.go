@@ -107,6 +107,26 @@ func (d *PostgresDialect) UseDatabase(database string) string {
 	return fmt.Sprintf(`USE "%s";`, database)
 }
 
+func (d *PostgresDialect) ShowTablesQuery() string {
+	return "SHOW TABLES;"
+}
+
+func (d *PostgresDialect) ShowCreateTableQuery(table string) string {
+	return fmt.Sprintf("SHOW CREATE TABLE %s;", d.QuoteIdentifier(table))
+}
+
+func (d *PostgresDialect) DescribeTableQuery(table string) string {
+	return fmt.Sprintf("DESCRIBE %s;", d.QuoteIdentifier(table))
+}
+
+func (d *PostgresDialect) HashOfFunction(ref string) string {
+	return fmt.Sprintf("HASHOF('%s')", ref)
+}
+
+func (d *PostgresDialect) ListTableDiffChangesQuery(table, fromExpr, toExpr string) string {
+	return fmt.Sprintf("SELECT * FROM dolt_diff_%s WHERE from_commit = %s AND to_commit = %s;", table, fromExpr, toExpr)
+}
+
 // SQL validation using the PostgreSQL parser.
 
 func (d *PostgresDialect) parseSQLQuery(query string) (*pganalyze.ParseResult, error) {

@@ -24,21 +24,33 @@ func TestMain(m *testing.M) {
 		case "postgres", "postgresql", "pg", "doltgres", "doltgresql":
 			dialectType = db.DialectPostgres
 			binName = "doltgres"
+		case "doltlite":
+			// DoltLite is embedded in the test binary itself; there is no
+			// external server binary and no dolt global config to isolate.
+			dialectType = db.DialectDoltLite
+			binName = ""
 		}
 	}
 
-	doltBinPath, err := exec.LookPath(binName)
-	if err != nil {
-		fmt.Printf("%s binary not found in PATH, skipping mcp test\n", binName)
-		os.Exit(0)
+	var err error
+	doltBinPath := ""
+	if binName != "" {
+		doltBinPath, err = exec.LookPath(binName)
+		if err != nil {
+			fmt.Printf("%s binary not found in PATH, skipping mcp test\n", binName)
+			os.Exit(0)
+		}
 	}
 
 	// os.Exit below skips deferred cleanup, so every exit path removes this explicitly.
-	doltRootPath, err := isolateDoltRootPath()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to isolate dolt root path: %v\n", err)
-		os.RemoveAll(doltRootPath)
-		os.Exit(1)
+	doltRootPath := ""
+	if dialectType != db.DialectDoltLite {
+		doltRootPath, err = isolateDoltRootPath()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to isolate dolt root path: %v\n", err)
+			os.RemoveAll(doltRootPath)
+			os.Exit(1)
+		}
 	}
 
 	suite, err = createMCPDoltServerTestSuite(ctx, doltBinPath, dialectType)
@@ -61,6 +73,22 @@ func generateTestBranchName() string {
 	return uuid.NewString()
 }
 
+// skipUnlessDialectSQLDefined skips the test when any provided non-nil
+// DialectSQL map has no entry for the suite's dialect. This lets tests whose
+// SQL or semantics don't translate to a dialect (e.g. DoltLite) opt out by
+// simply omitting that dialect's entry.
+func skipUnlessDialectSQLDefined(t *testing.T, sqls ...DialectSQL) {
+	t.Helper()
+	if suite == nil {
+		return
+	}
+	for _, sqlMap := range sqls {
+		if sqlMap != nil && sqlMap.Get(suite.dialectType) == "" {
+			t.Skipf("test SQL is not defined for the %s dialect", suite.dialectType)
+		}
+	}
+}
+
 func RunTest(t *testing.T, testName string, testFunc func(s *testSuite, testBranchName string)) {
 	t.Run(testName, func(t *testing.T) {
 		if suite == nil {
@@ -80,6 +108,7 @@ func RunTestWithSetupSQL(t *testing.T, testName string, setupSQL DialectSQL, tes
 			t.Fatalf("no test suite")
 		}
 		suite.t = t
+		skipUnlessDialectSQLDefined(t, setupSQL)
 		generatedTestBranchName := generateTestBranchName()
 		suite.Setup(generatedTestBranchName, setupSQL, false)
 		defer suite.Teardown(generatedTestBranchName, nil, false)
@@ -93,6 +122,7 @@ func RunTestWithSetupSQLSkipDoltCommit(t *testing.T, testName string, setupSQL D
 			t.Fatalf("no test suite")
 		}
 		suite.t = t
+		skipUnlessDialectSQLDefined(t, setupSQL)
 		generatedTestBranchName := generateTestBranchName()
 		suite.Setup(generatedTestBranchName, setupSQL, true)
 		defer suite.Teardown(generatedTestBranchName, nil, false)
@@ -106,6 +136,7 @@ func RunTestWithTeardownSQL(t *testing.T, testName string, teardownSQL DialectSQ
 			t.Fatalf("no test suite")
 		}
 		suite.t = t
+		skipUnlessDialectSQLDefined(t, teardownSQL)
 		generatedTestBranchName := generateTestBranchName()
 		suite.Setup(generatedTestBranchName, nil, false)
 		defer suite.Teardown(generatedTestBranchName, teardownSQL, false)
@@ -119,6 +150,7 @@ func RunTestWithSetupAndTeardownSQL(t *testing.T, testName string, setupSQL, tea
 			t.Fatalf("no test suite")
 		}
 		suite.t = t
+		skipUnlessDialectSQLDefined(t, setupSQL, teardownSQL)
 		generatedTestBranchName := generateTestBranchName()
 		suite.Setup(generatedTestBranchName, setupSQL, false)
 		defer suite.Teardown(generatedTestBranchName, teardownSQL, false)
@@ -132,6 +164,7 @@ func RunTestWithSetupAndTeardownSQLSkipDoltCommit(t *testing.T, testName string,
 			t.Fatalf("no test suite")
 		}
 		suite.t = t
+		skipUnlessDialectSQLDefined(t, setupSQL, teardownSQL)
 		generatedTestBranchName := generateTestBranchName()
 		suite.Setup(generatedTestBranchName, setupSQL, true)
 		defer suite.Teardown(generatedTestBranchName, teardownSQL, true)

@@ -16,12 +16,17 @@ CALL DOLT_BRANCH('-c', '%s', 'forcemoveme');
 	db.DialectPostgres: `SELECT dolt_branch('-c', '%s', 'moveme');
 SELECT dolt_branch('-c', '%s', 'forcemoveme');
 `,
+	db.DialectDoltLite: `SELECT dolt_branch('-c', '%s', 'moveme');
+SELECT dolt_branch('-c', '%s', 'forcemoveme');
+`,
 }
 
 var testMoveDoltBranchTeardownSQL = DialectSQL{
 	db.DialectMySQL: `CALL DOLT_BRANCH('-D', 'imoved');
 CALL DOLT_BRANCH('-D', 'iforcemoved');`,
 	db.DialectPostgres: `SELECT dolt_branch('-D', 'imoved');
+SELECT dolt_branch('-D', 'iforcemoved');`,
+	db.DialectDoltLite: `SELECT dolt_branch('-D', 'imoved');
 SELECT dolt_branch('-D', 'iforcemoved');`,
 }
 
@@ -207,6 +212,9 @@ func testMoveDoltBranchToolInvalidArguments(s *testSuite, testBranchName string)
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		moveDoltBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -271,6 +279,9 @@ func testMoveDoltBranchToolSuccess(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		moveDoltBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 		require.False(s.t, moveDoltBranchCallToolResult.IsError)

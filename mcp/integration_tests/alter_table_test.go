@@ -12,6 +12,9 @@ import (
 var testAlterTableToolQuery = DialectSQL{
 	db.DialectMySQL:    "ALTER TABLE `people` ADD COLUMN `age` INT NOT NULL;",
 	db.DialectPostgres: `ALTER TABLE "people" ADD COLUMN "age" INT NOT NULL;`,
+	// SQLite requires a default value when adding a NOT NULL column to a
+	// non-empty table.
+	db.DialectDoltLite: `ALTER TABLE "people" ADD COLUMN "age" INT NOT NULL DEFAULT 0;`,
 }
 
 func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -158,6 +161,9 @@ func testAlterTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		alterTableCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

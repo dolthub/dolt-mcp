@@ -63,6 +63,10 @@ func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, jwkClaimsM
 		}
 	}
 
+	if err := db.PrepareDatabase(config); err != nil {
+		return nil, fmt.Errorf("failed to prepare database: %w", err)
+	}
+
 	srv := &httpServerImpl{
 		logger:    logger,
 		mcp:       mcp,
@@ -93,6 +97,11 @@ func (s *httpServerImpl) Dialect() db.Dialect {
 }
 
 func (s *httpServerImpl) ListenAndServe(ctx context.Context) {
+	defer func() {
+		if err := db.CloseDatabase(s.dbConfig); err != nil {
+			s.logger.Error("failed to close database", zap.Error(err))
+		}
+	}()
 	serve(ctx, s.logger, s.handler, s.port, s.tlsConfig)
 }
 

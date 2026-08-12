@@ -22,6 +22,12 @@ SELECT dolt_checkout('forcedeleteme');
 INSERT INTO people VALUES (UUID(), 'mark', 'twain');
 SELECT dolt_checkout('%s');
 `,
+	db.DialectDoltLite: `SELECT dolt_branch('-c', 'main', 'deleteme');
+SELECT dolt_branch('-c', 'main', 'forcedeleteme');
+SELECT dolt_checkout('forcedeleteme');
+INSERT INTO people VALUES (lower(hex(randomblob(16))), 'mark', 'twain');
+SELECT dolt_checkout('%s');
+`,
 }
 
 func testDeleteDoltBranchToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -168,6 +174,9 @@ func testDeleteDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		deleteDoltBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -230,6 +239,9 @@ func testDeleteDoltBranchToolSuccess(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		deleteDoltBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 		require.False(s.t, deleteDoltBranchCallToolResult.IsError)

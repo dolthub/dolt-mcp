@@ -31,6 +31,12 @@ const (
 	doltFlag     = "dolt"
 	doltgresFlag = "doltgres"
 
+	// DoltLite (embedded) flags.
+	doltliteFlag    = "doltlite"
+	dbFileFlag      = "db-file"
+	commitNameFlag  = "commit-name"
+	commitEmailFlag = "commit-email"
+
 	// Deprecated flag names (kept for backwards compatibility).
 	doltHostFlag     = "dolt-host"
 	doltPortFlag     = "dolt-port"
@@ -69,8 +75,16 @@ var (
 	database = flag.String(databaseFlag, "", "The database name for connecting to the server.")
 	tlsMode  = flag.String(tlsFlag, "", "TLS mode for the database connection: 'true', 'false', 'skip-verify', or 'preferred'. Leave empty to disable TLS.")
 	tlsCA    = flag.String(tlsCAFlag, "", "Path to CA certificate file for the database TLS connection. When provided, enables TLS with custom CA.")
-	useDolt  = flag.Bool(doltFlag, false, "Use the Dolt (MySQL-compatible) dialect. This is the default when neither --dolt nor --doltgres is specified.")
+	useDolt  = flag.Bool(doltFlag, false, "Use the Dolt (MySQL-compatible) dialect. This is the default when neither --dolt, --doltgres, nor --doltlite is specified.")
 	doltgres = flag.Bool(doltgresFlag, false, "Use the DoltgreSQL (PostgreSQL-compatible) dialect.")
+)
+
+// DoltLite (embedded) flags.
+var (
+	doltlite    = flag.Bool(doltliteFlag, false, "Use the DoltLite (embedded, SQLite-compatible) dialect. Requires --db-file. Only available in binaries built with DoltLite support.")
+	dbFile      = flag.String(dbFileFlag, "", "Path to the DoltLite database file. The file is created if it does not exist. Only used with --doltlite.")
+	commitName  = flag.String(commitNameFlag, "", "The author name used for Dolt commits. Only used with --doltlite.")
+	commitEmail = flag.String(commitEmailFlag, "", "The author email used for Dolt commits. Only used with --doltlite.")
 )
 
 // Deprecated flags (kept for backwards compatibility).
@@ -131,14 +145,23 @@ func coalesceIntFlag(set map[string]bool, newName string, newVal int, oldName st
 	return newVal
 }
 
-// resolveDialect determines the dialect from the --dolt/--doltgres flags.
-// Defaults to Dolt (MySQL) if neither is set.
+// resolveDialect determines the dialect from the --dolt/--doltgres/--doltlite
+// flags. Defaults to Dolt (MySQL) if none is set.
 func resolveDialect(set map[string]bool) (db.DialectType, error) {
-	if set[doltFlag] && set[doltgresFlag] {
-		return "", errors.New("--dolt and --doltgres are mutually exclusive")
+	dialectFlagsSet := 0
+	for _, f := range []string{doltFlag, doltgresFlag, doltliteFlag} {
+		if set[f] {
+			dialectFlagsSet++
+		}
+	}
+	if dialectFlagsSet > 1 {
+		return "", errors.New("--dolt, --doltgres, and --doltlite are mutually exclusive")
 	}
 	if set[doltgresFlag] && *doltgres {
 		return db.DialectPostgres, nil
+	}
+	if set[doltliteFlag] && *doltlite {
+		return db.DialectDoltLite, nil
 	}
 	return db.DialectMySQL, nil
 }
@@ -243,7 +266,8 @@ func main() {
 	}
 
 	// Apply the dialect-appropriate default port if no port was explicitly set.
-	if portVal == 0 {
+	// DoltLite is embedded and has no port.
+	if portVal == 0 && dialectType != db.DialectDoltLite {
 		switch dialectType {
 		case db.DialectPostgres:
 			portVal = defaultDoltgresPort
@@ -252,7 +276,7 @@ func main() {
 		}
 	}
 
-	if err := validateArgs(hostVal, userVal, portVal); err != nil {
+	if err := validateArgs(dialectType, hostVal, userVal, portVal, *dbFile); err != nil {
 		logger.Fatal("invalid arguments", zap.Error(err))
 	}
 
@@ -270,6 +294,9 @@ func main() {
 		TLS:          tlsVal,
 		TLSCAFile:    tlsCAVal,
 		DialectType:  dialectType,
+		Path:         *dbFile,
+		CommitName:   *commitName,
+		CommitEmail:  *commitEmail,
 	}
 
 	tlsConfig, err := getTLSConfig(*httpCertFile, *httpKeyFile, *httpCAFile)
@@ -316,15 +343,21 @@ func mustSupplyError(flg string) error {
 	return errors.New(fmt.Sprintf("must supply --%s", flg))
 }
 
-func validateArgs(host, user string, port int) error {
-	if host == "" {
-		return mustSupplyError(hostFlag)
-	}
-	if port == 0 {
-		return mustSupplyError(portFlag)
-	}
-	if user == "" {
-		return mustSupplyError(userFlag)
+func validateArgs(dialectType db.DialectType, host, user string, port int, dbFile string) error {
+	if dialectType == db.DialectDoltLite {
+		if dbFile == "" {
+			return mustSupplyError(dbFileFlag)
+		}
+	} else {
+		if host == "" {
+			return mustSupplyError(hostFlag)
+		}
+		if port == 0 {
+			return mustSupplyError(portFlag)
+		}
+		if user == "" {
+			return mustSupplyError(userFlag)
+		}
 	}
 	if *serveHTTP {
 		if *mcpPort == 0 {

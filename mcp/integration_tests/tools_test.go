@@ -19,7 +19,9 @@ func skipIfToolUnsupported(t *testing.T, toolName string) {
 }
 
 // skipIfRemoteTestsUnsupported skips tests that require the FileRemoteDatabase
-// infrastructure, which only supports MySQL-based Dolt today.
+// infrastructure, which only supports MySQL-based Dolt today. DoltLite cannot
+// talk to the dolt sql-server remotesapi that FileRemoteDatabase exposes, so
+// clone/fetch/push/pull tests are skipped for it as well.
 func skipIfRemoteTestsUnsupported(t *testing.T) {
 	t.Helper()
 	if suite == nil {
@@ -31,16 +33,21 @@ func skipIfRemoteTestsUnsupported(t *testing.T) {
 }
 
 func TestTools(t *testing.T) {
-	RunTest(t, "TestListDatabasesTool", testListDatabasesTool)
+	t.Run("TestListDatabasesTool", func(t *testing.T) {
+		skipIfToolUnsupported(t, tools.ListDatabasesToolName)
+		RunTest(t, "TestSuccess", testListDatabasesTool)
+	})
 	t.Run("TestListDoltBranchesTool", func(t *testing.T) {
 		RunTest(t, "TestInvalidArguments", testListDoltBranchesToolInvalidArguments)
 		RunTest(t, "TestSuccess", testListDoltBranchesToolSuccess)
 	})
 	t.Run("TestCreateDatabaseTool", func(t *testing.T) {
+		skipIfToolUnsupported(t, tools.CreateDatabaseToolName)
 		RunTest(t, "TestInvalidArguments", testCreateDatabaseToolInvalidArguments)
 		RunTestWithTeardownSQL(t, "TestSuccess", testCreateDatabaseTeardownSQL, testCreateDatabaseToolSuccess)
 	})
 	t.Run("TestDropDatabaseTool", func(t *testing.T) {
+		skipIfToolUnsupported(t, tools.DropDatabaseToolName)
 		RunTest(t, "TestInvalidArguments", testDropDatabaseToolInvalidArguments)
 		RunTestWithSetupSQL(t, "TestSuccess", testDropDatabaseSetupSQL, testDropDatabaseToolSuccess)
 	})
@@ -142,6 +149,7 @@ func TestTools(t *testing.T) {
 		RunTestWithSetupSQL(t, "TestSuccess", testListDoltDiffChangesInDateRangeSetupSQL, testListDoltDiffChangesInDateRangeToolSuccess)
 	})
 	t.Run("TestGetDoltMergeStatusTool", func(t *testing.T) {
+		skipIfToolUnsupported(t, tools.GetDoltMergeStatusToolName)
 		RunTest(t, "TestInvalidArguments", testGetDoltMergeStatusToolInvalidArguments)
 		RunTest(t, "TestSuccess", testGetDoltMergeStatusToolSuccess)
 	})

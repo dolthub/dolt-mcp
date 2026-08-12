@@ -61,6 +61,13 @@ type serverProcess interface {
 	Stop() error
 }
 
+// noopServerProcess satisfies serverProcess for embedded engines (DoltLite)
+// that run inside the test binary itself and have no external process.
+type noopServerProcess struct{}
+
+func (noopServerProcess) Start() error { return nil }
+func (noopServerProcess) Stop() error  { return nil }
+
 type testSuite struct {
 	t                     *testing.T
 	dialect               db.Dialect
@@ -146,17 +153,43 @@ func (s *testSuite) exec(sql string) error {
 	return err
 }
 
+// refreshDoltLiteSession reloads the active branch into the suite's
+// connection. DoltLite intentionally keeps branch, staging, and merge state
+// per SQLite connection; MCP tool calls use a different long-lived
+// connection, so assertions must refresh before inspecting their effects.
+func (s *testSuite) refreshDoltLiteSession() error {
+	if s.dialectType != db.DialectDoltLite {
+		return nil
+	}
+	var branch string
+	if err := s.testDb.QueryRow("SELECT active_branch();").Scan(&branch); err != nil {
+		return err
+	}
+	if branch == "main" {
+		_, err := s.testDb.Exec("SELECT dolt_connect_branch('main');")
+		return err
+	}
+	if _, err := s.testDb.Exec("SELECT dolt_connect_branch('main');"); err != nil {
+		return err
+	}
+	_, err := s.testDb.Exec("SELECT dolt_connect_branch(?);", branch)
+	return err
+}
+
 func (s *testSuite) Setup(newBranchName string, setupSQL DialectSQL, skipDoltCommit bool) {
 	if newBranchName == "" {
 		s.t.Fatalf("no new branch name provided")
 	}
 
-	err := s.exec(s.dialect.UseDatabase(mcpTestDatabaseName))
-	if err != nil {
-		s.t.Fatalf("failed to use database during test setup: %s", err.Error())
+	// Single-database dialects (DoltLite) have no USE statement.
+	if useStmt := s.dialect.UseDatabase(mcpTestDatabaseName); useStmt != "" {
+		err := s.exec(useStmt)
+		if err != nil {
+			s.t.Fatalf("failed to use database during test setup: %s", err.Error())
+		}
 	}
 
-	err = s.checkoutBranch("main")
+	err := s.checkoutBranch("main")
 	if err != nil {
 		s.t.Fatalf("failed checkout main branch during test setup: %s", err.Error())
 	}
@@ -198,10 +231,16 @@ func (s *testSuite) Teardown(branchName string, teardownSQL DialectSQL, skipDolt
 	if err != nil {
 		s.t.Fatalf("failed to reach database: %s", err.Error())
 	}
+	if err = s.refreshDoltLiteSession(); err != nil {
+		s.t.Fatalf("failed to refresh DoltLite session during test teardown: %s", err.Error())
+	}
 
-	err = s.exec(s.dialect.UseDatabase(mcpTestDatabaseName))
-	if err != nil {
-		s.t.Fatalf("failed to use database during test setup: %s", err.Error())
+	// Single-database dialects (DoltLite) have no USE statement.
+	if useStmt := s.dialect.UseDatabase(mcpTestDatabaseName); useStmt != "" {
+		err = s.exec(useStmt)
+		if err != nil {
+			s.t.Fatalf("failed to use database during test setup: %s", err.Error())
+		}
 	}
 
 	sqlText := formatBranchSQL(teardownSQL.Get(s.dialectType), branchName)
@@ -272,9 +311,72 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string, diale
 	switch dialectType {
 	case db.DialectPostgres:
 		return createDoltgresTestSuite(ctx, doltBinPath)
+	case db.DialectDoltLite:
+		return createDoltLiteTestSuite(ctx)
 	default:
 		return createDoltTestSuite(ctx, doltBinPath)
 	}
+}
+
+// createDoltLiteTestSuite builds a test suite backed by an embedded DoltLite
+// database file. There is no server process: the engine is linked into this
+// test binary (build with -tags "doltlite libsqlite3" and CGO flags pointing
+// at libdoltlite), and the MCP server opens the file directly.
+func createDoltLiteTestSuite(ctx context.Context) (*testSuite, error) {
+	dialectType := db.DialectDoltLite
+	dialect := db.NewDialect(dialectType)
+
+	databaseParentDir, err := os.MkdirTemp("", "mcp-server-tests-doltlite-*")
+	if err != nil {
+		return nil, err
+	}
+
+	dbPath := filepath.Join(databaseParentDir, mcpTestDatabaseName+".db")
+
+	mcpConfig := db.Config{
+		DialectType: dialectType,
+		Path:        dbPath,
+		CommitName:  mcpTestCommitterName,
+		CommitEmail: mcpTestCommitterEmail,
+	}
+
+	// Open (and thereby create) the database file through the db package
+	// once. This registers the "doltlite" database/sql driver and verifies
+	// the linked engine, failing fast when the binary was built without the
+	// doltlite build tag.
+	tx, err := db.NewDatabaseTransaction(ctx, mcpConfig)
+	if err != nil {
+		os.RemoveAll(databaseParentDir)
+		return nil, err
+	}
+	if err = tx.Rollback(ctx); err != nil {
+		os.RemoveAll(databaseParentDir)
+		return nil, err
+	}
+
+	dsn := dialect.FormatDSN(mcpConfig)
+	testDb, err := sql.Open(dialect.DriverName(), dsn)
+	if err != nil {
+		os.RemoveAll(databaseParentDir)
+		return nil, err
+	}
+	// DoltLite session state (active branch, working set) lives on the
+	// connection, so the suite must reuse one connection for all statements.
+	testDb.SetMaxOpenConns(1)
+
+	if err = testDb.PingContext(ctx); err != nil {
+		testDb.Close()
+		os.RemoveAll(databaseParentDir)
+		return nil, err
+	}
+
+	if err = seedDatabase(ctx, testDb, dialect, dialectType); err != nil {
+		testDb.Close()
+		os.RemoveAll(databaseParentDir)
+		return nil, err
+	}
+
+	return finishTestSuite(ctx, dialect, dialectType, "", databaseParentDir, databaseParentDir, dsn, testDb, noopServerProcess{}, mcpConfig)
 }
 
 func createDoltTestSuite(ctx context.Context, doltBinPath string) (*testSuite, error) {
@@ -358,7 +460,7 @@ func createDoltTestSuite(ctx context.Context, doltBinPath string) (*testSuite, e
 		return nil, err
 	}
 
-	err = seedDatabase(ctx, testDb, dialect)
+	err = seedDatabase(ctx, testDb, dialect, dialectType)
 	if err != nil {
 		return nil, err
 	}
@@ -451,7 +553,7 @@ func createDoltgresTestSuite(ctx context.Context, doltgresBinPath string) (*test
 		return nil, err
 	}
 
-	err = seedDatabase(ctx, testDb, dialect)
+	err = seedDatabase(ctx, testDb, dialect, dialectType)
 	if err != nil {
 		return nil, err
 	}
@@ -469,8 +571,8 @@ func createDoltgresTestSuite(ctx context.Context, doltgresBinPath string) (*test
 }
 
 // seedDatabase loads and executes the dialect-appropriate seed SQL, then commits.
-func seedDatabase(ctx context.Context, testDb *sql.DB, dialect db.Dialect) error {
-	seedSQLBytes, err := readSeedSQLFile()
+func seedDatabase(ctx context.Context, testDb *sql.DB, dialect db.Dialect, dialectType db.DialectType) error {
+	seedSQLBytes, err := readSeedSQLFile(dialectType)
 	if err != nil {
 		return err
 	}
@@ -760,15 +862,21 @@ func teardownMCPDoltServerTestSuite(s *testSuite) {
 	}
 }
 
-func readSeedSQLFile() ([]byte, error) {
+func readSeedSQLFile(dialectType db.DialectType) ([]byte, error) {
 	// Get the absolute path of the current source file
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		return nil, errors.New("could not determine caller path")
 	}
 
+	// DoltLite speaks the SQLite dialect and needs its own seed file.
+	seedFileName := "seed.sql"
+	if dialectType == db.DialectDoltLite {
+		seedFileName = "seed_doltlite.sql"
+	}
+
 	// Build path relative to this source file
-	path := filepath.Join(filepath.Dir(filename), "testdata", "seed.sql")
+	path := filepath.Join(filepath.Dir(filename), "testdata", seedFileName)
 
 	return os.ReadFile(path)
 }

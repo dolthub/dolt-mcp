@@ -12,6 +12,7 @@ import (
 var testStageTableForDoltCommitSetupSQL = DialectSQL{
 	db.DialectMySQL:    `CREATE TABLE stageme (pk int primary key);`,
 	db.DialectPostgres: `CREATE TABLE stageme (pk int primary key);`,
+	db.DialectDoltLite: `CREATE TABLE stageme (pk int primary key);`,
 }
 
 func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -158,6 +159,9 @@ func testStageTableForDoltCommitToolInvalidArguments(s *testSuite, testBranchNam
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		stageTableForDoltCommitCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

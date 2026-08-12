@@ -1,0 +1,190 @@
+name: Upload Dolt MCP Server DoltLite Assets
+
+# Builds DoltLite-enabled (cgo) dolt-mcp-server binaries on native runners
+# for the platforms dolthub/doltlite ships static libraries for, and uploads
+# them to an existing GitHub release. Called automatically by release.yaml
+# and can also be dispatched manually to (re)build assets for a release.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'SemVer release tag to upload assets to (e.g. 0.24.5 or v0.24.5)'
+        required: true
+  workflow_call:
+    inputs:
+      version:
+        description: 'SemVer release tag to upload assets to (e.g. 0.24.5 or v0.24.5)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  # Single pin for the dolthub/doltlite release the binaries link against.
+  DOLTLITE_VERSION: v0.11.45
+
+jobs:
+  format-version:
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.format_version.outputs.version }}
+      tag: ${{ steps.format_version.outputs.tag }}
+    steps:
+      - name: Format Input
+        id: format_version
+        run: |
+          version="${{ inputs.version }}"
+          if [[ $version == v* ]]; then
+            version="${version:1}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+  build-and-upload:
+    needs: format-version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            doltlite_platform: linux-x64
+            archive_platform: linux-amd64
+          - os: ubuntu-24.04-arm
+            doltlite_platform: linux-arm64
+            archive_platform: linux-arm64
+          - os: macos-15-intel
+            doltlite_platform: osx-x64
+            archive_platform: darwin-amd64
+          - os: macos-15
+            doltlite_platform: osx-arm64
+            archive_platform: darwin-arm64
+    runs-on: ${{ matrix.os }}
+    env:
+      TAG: ${{ needs.format-version.outputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Copy build script from main
+        run: |
+          cp .github/scripts/build_doltlite_binary.sh "$RUNNER_TEMP/build_doltlite_binary.sh"
+          chmod +x "$RUNNER_TEMP/build_doltlite_binary.sh"
+
+      - name: Checkout code at tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
+
+      - name: Install build dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y build-essential tcl zlib1g-dev
+
+      - name: Set OUT_DIR
+        run: echo "OUT_DIR=$RUNNER_TEMP/dolt-mcp-doltlite-assets" >> "$GITHUB_ENV"
+
+      - name: Prepare output directory
+        run: mkdir -p "$OUT_DIR"
+
+        # cgo build against the pinned doltlite static library (native only)
+      - name: Build DoltLite Binary
+        run: |
+          "$RUNNER_TEMP/build_doltlite_binary.sh" \
+            "${{ matrix.doltlite_platform }}" \
+            "${{ matrix.archive_platform }}" \
+            "$OUT_DIR"
+
+      - name: Upload asset to existing release (clobber)
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" \
+            "$OUT_DIR/dolt-mcp-server-doltlite-${{ matrix.archive_platform }}.tar.gz" \
+            --clobber
+
+  # The doltlite win-x64 release ships only libdoltlite.dll (no static or
+  # import library), so this job generates an import library with
+  # gendef/dlltool, links against the DLL, and ships the DLL inside the zip
+  # next to the executable.
+  build-and-upload-windows:
+    needs: format-version
+    runs-on: windows-latest
+    env:
+      TAG: ${{ needs.format-version.outputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout code at tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Set up MSYS2 (MINGW64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          path-type: inherit
+          install: >-
+            curl
+            unzip
+            zip
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-tools-git
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
+
+      - name: Build DoltLite Binary
+        run: |
+          set -euo pipefail
+          version_num="${DOLTLITE_VERSION#v}"
+          lib_zip_name="doltlite-lib-win-x64-${version_num}"
+          lib_url="https://github.com/dolthub/doltlite/releases/download/${DOLTLITE_VERSION}/${lib_zip_name}.zip"
+
+          mkdir -p doltlite-lib staging out
+          echo "Downloading ${lib_url}"
+          curl -fsSL -o doltlite-lib/doltlite-lib.zip "$lib_url"
+          unzip -q doltlite-lib/doltlite-lib.zip -d doltlite-lib
+          lib_dir="$(pwd)/doltlite-lib/${lib_zip_name}"
+
+          # mattn/go-sqlite3 (libsqlite3 tag) includes <sqlite3.h> and links
+          # -lsqlite3. The win-x64 release only ships libdoltlite.dll, so
+          # generate an import library named libsqlite3.dll.a whose internal
+          # DLL name stays libdoltlite.dll.
+          cp "${lib_dir}/doltlite.h" "${lib_dir}/sqlite3.h"
+          (
+            cd "$lib_dir"
+            gendef libdoltlite.dll
+            dlltool -d libdoltlite.def -D libdoltlite.dll -l libsqlite3.dll.a
+          )
+
+          export CGO_ENABLED=1
+          export CGO_CFLAGS="-I${lib_dir}"
+          export CGO_LDFLAGS="-L${lib_dir}"
+          go build -trimpath -tags "doltlite libsqlite3" -ldflags "-s -w" \
+            -o staging/dolt-mcp-server-doltlite.exe ./mcp/cmd/dolt-mcp-server
+
+          # Ship the DLL next to the executable: the binary loads it at runtime.
+          cp "${lib_dir}/libdoltlite.dll" staging/
+          out_abs="$(pwd)/out"
+          (cd staging && zip -q "${out_abs}/dolt-mcp-server-doltlite-windows-amd64.zip" \
+            dolt-mcp-server-doltlite.exe libdoltlite.dll)
+
+      - name: Upload asset to existing release (clobber)
+        shell: pwsh
+        run: gh release upload "$env:TAG" "out/dolt-mcp-server-doltlite-windows-amd64.zip" --clobber

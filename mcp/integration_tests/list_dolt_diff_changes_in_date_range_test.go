@@ -193,6 +193,9 @@ func testListDoltDiffChangesInDateRangeToolInvalidArguments(s *testSuite, testBr
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		listDoltDiffChangesInDateRangeCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

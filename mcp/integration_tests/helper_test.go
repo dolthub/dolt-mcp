@@ -20,6 +20,7 @@ var testDoltStatusModifiedTable = "modified"
 var countRowsInTableSQL = DialectSQL{
 	db.DialectMySQL:    "SELECT COUNT(*) AS count FROM `%s`;",
 	db.DialectPostgres: `SELECT COUNT(*) AS count FROM "%s";`,
+	db.DialectDoltLite: `SELECT COUNT(*) AS count FROM "%s";`,
 }
 
 // selectDoltStatusForTableSQL selects rows from dolt_status for a given table.
@@ -29,12 +30,14 @@ var countRowsInTableSQL = DialectSQL{
 var selectDoltStatusForTableSQL = DialectSQL{
 	db.DialectMySQL:    "SELECT * FROM dolt_status WHERE table_name = '%s';",
 	db.DialectPostgres: `SELECT * FROM dolt_status WHERE table_name = 'public.%s';`,
+	db.DialectDoltLite: "SELECT * FROM dolt_status WHERE table_name = '%s';",
 }
 
 // selectLastCommitHashSQL selects the most recent commit hash from dolt_log.
 var selectLastCommitHashSQL = DialectSQL{
 	db.DialectMySQL:    "SELECT commit_hash FROM dolt_log ORDER BY date DESC LIMIT 1;",
 	db.DialectPostgres: "SELECT commit_hash FROM dolt_log ORDER BY date DESC LIMIT 1;",
+	db.DialectDoltLite: "SELECT commit_hash FROM dolt_log ORDER BY date DESC LIMIT 1;",
 }
 
 // selectCommitHashesSQL selects every commit hash reachable from the current
@@ -45,6 +48,15 @@ type TableStatus struct {
 	Status    string
 	Staged    bool
 	TableName string
+}
+
+// shouldSkipCallToolCase reports whether a table-driven CallTool case does
+// not apply to the current dialect. DoltLite is a single-database embedded
+// engine that ignores working_database, so passing a non-existent database
+// name is not an error there.
+func shouldSkipCallToolCase(s *testSuite, description string) bool {
+	return s.dialectType == db.DialectDoltLite &&
+		strings.Contains(description, "Non-existent working_database")
 }
 
 func requireToolExists(s *testSuite, ctx context.Context, client *TestClient, serverInfo *mcp.InitializeResult, toolName string) {
@@ -64,6 +76,7 @@ func requireToolExists(s *testSuite, ctx context.Context, client *TestClient, se
 
 func requireTableHasNRows(s *testSuite, ctx context.Context, tableName string, numberOfRows int) {
 	var actualCount int
+	require.NoError(s.t, s.refreshDoltLiteSession())
 
 	row := s.testDb.QueryRowContext(ctx, fmt.Sprintf(countRowsInTableSQL.Get(s.dialectType), tableName))
 
@@ -95,6 +108,9 @@ func resultToString(result *mcp.CallToolResult) (string, error) {
 }
 
 func getDoltStatus(s *testSuite, ctx context.Context, tableName string) ([]*TableStatus, error) {
+	if err := s.refreshDoltLiteSession(); err != nil {
+		return nil, err
+	}
 	rows, err := s.testDb.QueryContext(ctx, fmt.Sprintf(selectDoltStatusForTableSQL.Get(s.dialectType), tableName))
 	if err != nil {
 		return nil, err
@@ -126,6 +142,9 @@ func getDoltStatus(s *testSuite, ctx context.Context, tableName string) ([]*Tabl
 }
 
 func getCommitHashes(s *testSuite, ctx context.Context) ([]string, error) {
+	if err := s.refreshDoltLiteSession(); err != nil {
+		return nil, err
+	}
 	rows, err := s.testDb.QueryContext(ctx, selectCommitHashesSQL)
 	if err != nil {
 		return nil, err
@@ -150,6 +169,9 @@ func getCommitHashes(s *testSuite, ctx context.Context) ([]string, error) {
 
 func getLastCommitHash(s *testSuite, ctx context.Context) (string, error) {
 	var hash string
+	if err := s.refreshDoltLiteSession(); err != nil {
+		return "", err
+	}
 
 	row := s.testDb.QueryRowContext(ctx, selectLastCommitHashSQL.Get(s.dialectType))
 

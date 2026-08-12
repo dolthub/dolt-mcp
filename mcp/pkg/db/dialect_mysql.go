@@ -100,6 +100,26 @@ func (d *MySQLDialect) UseDatabase(database string) string {
 	return fmt.Sprintf("USE `%s`;", database)
 }
 
+func (d *MySQLDialect) ShowTablesQuery() string {
+	return "SHOW TABLES;"
+}
+
+func (d *MySQLDialect) ShowCreateTableQuery(table string) string {
+	return fmt.Sprintf("SHOW CREATE TABLE %s;", d.QuoteIdentifier(table))
+}
+
+func (d *MySQLDialect) DescribeTableQuery(table string) string {
+	return fmt.Sprintf("DESCRIBE %s;", d.QuoteIdentifier(table))
+}
+
+func (d *MySQLDialect) HashOfFunction(ref string) string {
+	return fmt.Sprintf("HASHOF('%s')", ref)
+}
+
+func (d *MySQLDialect) ListTableDiffChangesQuery(table, fromExpr, toExpr string) string {
+	return fmt.Sprintf("SELECT * FROM dolt_diff_%s WHERE from_commit = %s AND to_commit = %s;", table, fromExpr, toExpr)
+}
+
 // SQL validation using the Vitess MySQL parser.
 
 func (d *MySQLDialect) parseSQLQuery(query string) (sqlparser.Statement, error) {

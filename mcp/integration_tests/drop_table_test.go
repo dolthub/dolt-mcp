@@ -22,6 +22,12 @@ name VARCHAR(1024) NOT NULL,
 address VARCHAR(1024) NOT NULL,
 city VARCHAR(1024) NOT NULL,
 country VARCHAR(1024) NOT NULL);`,
+	db.DialectDoltLite: `CREATE TABLE places (
+id VARCHAR(36) PRIMARY KEY,
+name VARCHAR(1024) NOT NULL,
+address VARCHAR(1024) NOT NULL,
+city VARCHAR(1024) NOT NULL,
+country VARCHAR(1024) NOT NULL);`,
 }
 
 func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -168,6 +174,9 @@ func testDropTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		dropTableCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -230,6 +239,9 @@ func testDropTableToolSuccess(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		dropTableCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 		require.False(s.t, dropTableCallToolResult.IsError)

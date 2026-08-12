@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -84,7 +83,7 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		}()
 
 		var formattedResult string
-		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(DescribeTableToolSQLQueryFormatString, dialect.QuoteIdentifier(tableToDescribe)), db.ResultFormatMarkdown)
+		formattedResult, err = tx.QueryContext(ctx, dialect.DescribeTableQuery(tableToDescribe), db.ResultFormatMarkdown)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

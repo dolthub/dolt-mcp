@@ -8,6 +8,7 @@ type DialectType string
 const (
 	DialectMySQL    DialectType = "mysql"
 	DialectPostgres DialectType = "postgres"
+	DialectDoltLite DialectType = "doltlite"
 )
 
 // Validation errors returned by Dialect validation methods.
@@ -48,7 +49,22 @@ type Dialect interface {
 	// SQL generation
 	QuoteIdentifier(name string) string
 	CallProcedure(proc DoltProcedure, args ...string) string
+	// UseDatabase returns a statement selecting the given database, or ""
+	// when the dialect has no database selection (single-database engines).
 	UseDatabase(database string) string
+
+	// Schema inspection statements, which have no common syntax across engines.
+	ShowTablesQuery() string
+	ShowCreateTableQuery(table string) string
+	DescribeTableQuery(table string) string
+
+	// HashOfFunction returns a SQL expression resolving the given ref to a
+	// commit hash.
+	HashOfFunction(ref string) string
+	// ListTableDiffChangesQuery returns a query listing dolt_diff_<table>
+	// changes between two commits. fromExpr and toExpr are SQL expressions
+	// (a quoted ref string or a HashOfFunction expression).
+	ListTableDiffChangesQuery(table, fromExpr, toExpr string) string
 
 	// SQL validation
 	ValidateReadQuery(query string) error
@@ -62,6 +78,8 @@ func NewDialect(dt DialectType) Dialect {
 	switch dt {
 	case DialectPostgres:
 		return NewPostgresDialect()
+	case DialectDoltLite:
+		return NewDoltLiteDialect()
 	default:
 		return NewMySQLDialect()
 	}

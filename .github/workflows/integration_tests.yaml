@@ -36,6 +36,46 @@ jobs:
       run: |
          go test -timeout 30m ./...
 
+  test-doltlite:
+    name: Integration Tests (DoltLite / SQLite)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      DOLTLITE_VERSION: v0.11.45
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: ./go.mod
+      id: go
+    - name: Check out DoltLite
+      uses: actions/checkout@v4
+      with:
+        repository: dolthub/doltlite
+        ref: ${{ env.DOLTLITE_VERSION }}
+        path: doltlite
+    - name: Install DoltLite build dependencies
+      run: |
+        sudo apt-get update && sudo apt-get install -y build-essential tcl zlib1g-dev
+    - name: Build libdoltlite
+      working-directory: ./doltlite
+      run: |
+        mkdir -p build
+        cd build
+        ../configure
+        make doltlite-lib -j$(nproc)
+    - name: Test All
+      working-directory: ./mcp/integration_tests/
+      env:
+        DOLT_DIALECT: doltlite
+        CGO_CFLAGS: -I${{ github.workspace }}/doltlite/build
+        CGO_LDFLAGS: ${{ github.workspace }}/doltlite/build/libdoltlite.a -lz -lpthread
+      run: |
+         go test -tags "doltlite libsqlite3" -timeout 30m ./...
+
   test-doltgres:
     name: Integration Tests (DoltgreSQL / PostgreSQL)
     runs-on: ubuntu-22.04

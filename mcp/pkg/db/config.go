@@ -8,6 +8,7 @@ var ErrNoHostDefined = errors.New("no host defined")
 var ErrNoUserDefined = errors.New("no user defined")
 var ErrNoDatabaseNameDefined = errors.New("no database name defined")
 var ErrNoPortDefined = errors.New("no port defined")
+var ErrNoDatabaseFileDefined = errors.New("no database file defined")
 
 type Config struct {
 	DSN             string      `yaml:"dsn" json:"dsn"`
@@ -21,19 +22,35 @@ type Config struct {
 	TLS             string      `yaml:"tls" json:"tls"`
 	TLSCAFile       string      `yaml:"tls_ca_file" json:"tls_ca_file"`
 	DialectType     DialectType `yaml:"dialect_type" json:"dialect_type"`
+
+	// DoltLite (embedded) configuration.
+	// Path is the filesystem path of the DoltLite database file.
+	Path string `yaml:"path" json:"path"`
+	// CommitName and CommitEmail set the Dolt commit author on every
+	// connection. DoltLite stores author config per connection and does not
+	// persist it.
+	CommitName  string `yaml:"commit_name" json:"commit_name"`
+	CommitEmail string `yaml:"commit_email" json:"commit_email"`
 }
 
 func (c *Config) Validate() error {
-	if c.DSN == "" {
-		if c.Host == "" {
-			return ErrNoHostDefined
+	if c.DSN != "" {
+		return nil
+	}
+	if c.DialectType == DialectDoltLite {
+		if c.Path == "" {
+			return ErrNoDatabaseFileDefined
 		}
-		if c.User == "" {
-			return ErrNoUserDefined
-		}
-		if c.Port == 0 {
-			return ErrNoPortDefined
-		}
+		return nil
+	}
+	if c.Host == "" {
+		return ErrNoHostDefined
+	}
+	if c.User == "" {
+		return ErrNoUserDefined
+	}
+	if c.Port == 0 {
+		return ErrNoPortDefined
 	}
 	return nil
 }

@@ -22,11 +22,18 @@ INSERT INTO people VALUES (UUID(), 'mark', 'twain');
 SELECT dolt_commit('-Am', 'insert mark twain');
 SELECT dolt_checkout('%s');
 `,
+	db.DialectDoltLite: `SELECT dolt_branch('-c', '%s', 'mergeme');
+SELECT dolt_checkout('mergeme');
+INSERT INTO people VALUES (lower(hex(randomblob(16))), 'mark', 'twain');
+SELECT dolt_commit('-Am', 'insert mark twain');
+SELECT dolt_checkout('%s');
+`,
 }
 
 var testMergeDoltBranchNoFastForwardTeardownSQL = DialectSQL{
 	db.DialectMySQL:    `CALL DOLT_BRANCH('-D', 'mergeme');`,
 	db.DialectPostgres: `SELECT dolt_branch('-D', 'mergeme');`,
+	db.DialectDoltLite: `SELECT dolt_branch('-D', 'mergeme');`,
 }
 
 func testMergeDoltBranchNoFastForwardToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -173,6 +180,9 @@ func testMergeDoltBranchNoFastForwardToolInvalidArguments(s *testSuite, testBran
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		mergeDoltBranchNoFastForwardCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

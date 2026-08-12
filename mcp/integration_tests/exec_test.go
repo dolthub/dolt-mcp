@@ -3,10 +3,17 @@ package integration_tests
 import (
 	"context"
 
+	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/tools"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
+
+var testExecToolQuery = DialectSQL{
+	db.DialectMySQL:    "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+	db.DialectPostgres: "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+	db.DialectDoltLite: "INSERT INTO people (id, first_name, last_name) VALUES (lower(hex(randomblob(16))), 'homer', 'simpson');",
+}
 
 func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 	ctx := context.Background()
@@ -152,6 +159,9 @@ func testExecToolInvalidArguments(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		execCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -183,7 +193,7 @@ func testExecToolSuccess(s *testSuite, testBranchName string) {
 		Params: mcp.CallToolParams{
 			Name: tools.ExecToolName,
 			Arguments: map[string]any{
-				tools.QueryCallToolArgumentName:           "INSERT INTO people (id, first_name, last_name) VALUES (UUID(), 'homer', 'simpson');",
+				tools.QueryCallToolArgumentName:           testExecToolQuery.Get(s.dialectType),
 				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			},

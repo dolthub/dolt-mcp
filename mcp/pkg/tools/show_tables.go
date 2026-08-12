@@ -70,7 +70,7 @@ func RegisterShowTablesTool(server pkg.Server) {
 		}()
 
 		var formattedResult string
-		formattedResult, err = tx.QueryContext(ctx, ShowTablesToolSQLQuery, db.ResultFormatMarkdown)
+		formattedResult, err = tx.QueryContext(ctx, dialect.ShowTablesQuery(), db.ResultFormatMarkdown)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

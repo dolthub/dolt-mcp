@@ -152,6 +152,9 @@ func testCreateDoltBranchFromHeadToolInvalidArguments(s *testSuite, testBranchNa
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		createDoltBranchFromHeadCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -214,6 +217,9 @@ func testCreateDoltBranchFromHeadToolSuccess(s *testSuite, testBranchName string
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		createDoltBranchFromHeadCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 		require.False(s.t, createDoltBranchFromHeadCallToolResult.IsError)

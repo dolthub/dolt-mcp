@@ -152,6 +152,9 @@ func testShowCreateTableToolInvalidArguments(s *testSuite, testBranchName string
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		showCreateTableCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

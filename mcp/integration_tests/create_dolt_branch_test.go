@@ -12,6 +12,7 @@ import (
 var testCreateDoltBranchTeardownSQL = DialectSQL{
 	db.DialectMySQL:    `CALL DOLT_BRANCH('-D', 'valid');`,
 	db.DialectPostgres: `SELECT dolt_branch('-D', 'valid');`,
+	db.DialectDoltLite: `SELECT dolt_branch('-D', 'valid');`,
 }
 
 func testCreateDoltBranchToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -145,6 +146,9 @@ func testCreateDoltBranchToolInvalidArguments(s *testSuite, testBranchName strin
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		createDoltBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -207,6 +211,9 @@ func testCreateDoltBranchToolSuccess(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		createDoltBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 		require.False(s.t, createDoltBranchCallToolResult.IsError)

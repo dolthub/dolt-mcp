@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 )
 
 type ResultFormat int
@@ -33,22 +34,69 @@ type DatabaseTransaction interface {
 type databaseTransactionImpl struct {
 	db     *sql.DB
 	config Config
+	// keepOpen indicates the *sql.DB is a shared long-lived handle that must
+	// not be closed when the transaction finishes (used by embedded DoltLite).
+	keepOpen bool
+	// release is invoked exactly once when the transaction finishes.
+	release func()
 }
 
 var _ DatabaseTransaction = &databaseTransactionImpl{}
 
 func NewDatabaseTransaction(ctx context.Context, config Config) (DatabaseTransaction, error) {
+	if config.DialectType == DialectDoltLite {
+		return newDoltLiteTransaction(ctx, config)
+	}
+
 	db, err := newDB(config)
 	if err != nil {
 		return nil, err
 	}
 	_, err = db.ExecContext(ctx, "BEGIN;")
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 	return &databaseTransactionImpl{
 		db:     db,
 		config: config,
+	}, nil
+}
+
+// newDoltLiteTransaction begins a transaction on the shared DoltLite handle.
+// DoltLite session state (checked-out branch, merge/rebase state, conflict
+// catalogs) lives on the underlying connection, so all tool calls share one
+// long-lived single-connection handle; a per-handle lock serializes
+// transactions since BEGIN/COMMIT are issued as plain statements.
+func newDoltLiteTransaction(ctx context.Context, config Config) (DatabaseTransaction, error) {
+	handle, err := getDoltLiteHandle(config)
+	if err != nil {
+		return nil, err
+	}
+
+	handle.mu.Lock()
+	if config.CommitName != "" {
+		if _, err = handle.db.ExecContext(ctx, "SELECT dolt_config('user.name', ?);", config.CommitName); err != nil {
+			handle.mu.Unlock()
+			return nil, fmt.Errorf("failed to configure DoltLite commit author name: %w", err)
+		}
+	}
+	if config.CommitEmail != "" {
+		if _, err = handle.db.ExecContext(ctx, "SELECT dolt_config('user.email', ?);", config.CommitEmail); err != nil {
+			handle.mu.Unlock()
+			return nil, fmt.Errorf("failed to configure DoltLite commit author email: %w", err)
+		}
+	}
+	_, err = handle.db.ExecContext(ctx, "BEGIN;")
+	if err != nil {
+		handle.mu.Unlock()
+		return nil, err
+	}
+	return &databaseTransactionImpl{
+		db:       handle.db,
+		config:   config,
+		keepOpen: true,
+		release:  handle.mu.Unlock,
 	}, nil
 }
 
@@ -200,6 +248,33 @@ func (d *databaseTransactionImpl) ExecContext(ctx context.Context, query string)
 	return d.doExecContext(ctx, query)
 }
 
+// isNoActiveTransactionError reports whether err is SQLite's "cannot commit
+// - no transaction is active" (or the rollback equivalent). DoltLite
+// version-control functions (dolt_commit, dolt_merge, ...) seal the
+// enclosing SQL transaction as a side effect, so the transaction this type
+// opened may already be gone by the time Commit or Rollback runs; that is
+// expected, not an error.
+func isNoActiveTransactionError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "no transaction is active")
+}
+
+// finish releases the transaction's resources: shared handles are unlocked
+// but kept open, per-transaction handles are closed.
+func (d *databaseTransactionImpl) finish(err error) error {
+	if !d.keepOpen {
+		cerr := d.db.Close()
+		if err == nil {
+			err = cerr
+		}
+	}
+	d.db = nil
+	if d.release != nil {
+		d.release()
+		d.release = nil
+	}
+	return err
+}
+
 func (d *databaseTransactionImpl) Rollback(ctx context.Context) (err error) {
 	if d.db == nil {
 		err = ErrTransactionHasBeenCommittedOrRolledBack
@@ -207,14 +282,13 @@ func (d *databaseTransactionImpl) Rollback(ctx context.Context) (err error) {
 	}
 
 	defer func() {
-		rerr := d.db.Close()
-		if err == nil {
-			err = rerr
-		}
-		d.db = nil
+		err = d.finish(err)
 	}()
 
 	err = d.doExecContext(ctx, "ROLLBACK;")
+	if d.keepOpen && isNoActiveTransactionError(err) {
+		err = nil
+	}
 	if err != nil {
 		return
 	}
@@ -229,19 +303,112 @@ func (d *databaseTransactionImpl) Commit(ctx context.Context) (err error) {
 	}
 
 	defer func() {
-		rerr := d.db.Close()
-		if err == nil {
-			err = rerr
-		}
-		d.db = nil
+		err = d.finish(err)
 	}()
 
 	err = d.doExecContext(ctx, "COMMIT;")
+	if d.keepOpen && isNoActiveTransactionError(err) {
+		err = nil
+	}
 	if err != nil {
 		return
 	}
 
 	return
+}
+
+// doltLiteHandle is a long-lived handle on an embedded DoltLite database
+// file. The pool is capped at a single connection so DoltLite's
+// per-connection session state survives across statements, and mu serializes
+// whole transactions on that connection.
+type doltLiteHandle struct {
+	db *sql.DB
+	mu sync.Mutex
+}
+
+var (
+	doltLiteHandlesMu sync.Mutex
+	doltLiteHandles   = map[string]*doltLiteHandle{}
+)
+
+// PrepareDatabase eagerly opens and verifies embedded databases. Networked
+// dialects retain their existing lazy connection behavior.
+func PrepareDatabase(config Config) error {
+	if config.DialectType != DialectDoltLite {
+		return nil
+	}
+	if err := config.Validate(); err != nil {
+		return err
+	}
+	_, err := getDoltLiteHandle(config)
+	return err
+}
+
+// CloseDatabase closes a shared embedded database handle. It is a no-op for
+// networked dialects, whose per-tool pools already close with transactions.
+func CloseDatabase(config Config) error {
+	if config.DialectType != DialectDoltLite {
+		return nil
+	}
+
+	dsn := NewDialect(config.DialectType).FormatDSN(config)
+	doltLiteHandlesMu.Lock()
+	handle, ok := doltLiteHandles[dsn]
+	if ok {
+		delete(doltLiteHandles, dsn)
+	}
+	doltLiteHandlesMu.Unlock()
+	if !ok {
+		return nil
+	}
+
+	handle.mu.Lock()
+	defer handle.mu.Unlock()
+	return handle.db.Close()
+}
+
+func getDoltLiteHandle(config Config) (*doltLiteHandle, error) {
+	dialect := NewDialect(config.DialectType)
+	dsn := dialect.FormatDSN(config)
+
+	doltLiteHandlesMu.Lock()
+	defer doltLiteHandlesMu.Unlock()
+
+	if handle, ok := doltLiteHandles[dsn]; ok {
+		return handle, nil
+	}
+
+	// Registers the cgo-backed driver; fails when the binary was built
+	// without the "doltlite" build tag.
+	if err := registerDoltLiteDriver(config); err != nil {
+		return nil, err
+	}
+
+	db, err := sql.Open(doltLiteDriverName, dsn)
+	if err != nil {
+		return nil, err
+	}
+	db.SetMaxOpenConns(1)
+
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to open DoltLite database %s (the file may have been written by an incompatible DoltLite version): %w", dsn, err)
+	}
+
+	// Verify the linked library is actually DoltLite and not stock SQLite.
+	var engine string
+	if err := db.QueryRow("SELECT doltlite_engine();").Scan(&engine); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to verify DoltLite engine (is the binary linked against libdoltlite?): %w", err)
+	}
+	if engine != "prolly" {
+		db.Close()
+		return nil, fmt.Errorf("unexpected DoltLite storage engine %q, expected \"prolly\"", engine)
+	}
+
+	handle := &doltLiteHandle{db: db}
+	doltLiteHandles[dsn] = handle
+	return handle, nil
 }
 
 func newDB(config Config) (*sql.DB, error) {
