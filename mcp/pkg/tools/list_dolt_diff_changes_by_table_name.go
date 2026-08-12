@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -125,14 +126,14 @@ func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
 
 		var fromValue string
 		if fromCommit != "" {
-			fromValue = fmt.Sprintf("'%s'", fromCommit)
+			fromValue = quoteSQLStringLiteral(fromCommit)
 		} else {
 			fromValue = dialect.HashOfFunction(hashOfFromCommit)
 		}
 
 		var toValue string
 		if toCommit != "" {
-			toValue = fmt.Sprintf("'%s'", toCommit)
+			toValue = quoteSQLStringLiteral(toCommit)
 		} else {
 			toValue = dialect.HashOfFunction(hashOfToCommit)
 		}
@@ -161,4 +162,8 @@ func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
 		result = mcp.NewToolResultText(formattedResult)
 		return
 	})
+}
+
+func quoteSQLStringLiteral(value string) string {
+	return fmt.Sprintf("'%s'", strings.ReplaceAll(value, "'", "''"))
 }

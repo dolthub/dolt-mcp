@@ -85,19 +85,19 @@ func (d *MySQLDialect) ConfigureTLS(c *Config) error {
 }
 
 func (d *MySQLDialect) QuoteIdentifier(name string) string {
-	return fmt.Sprintf("`%s`", name)
+	return fmt.Sprintf("`%s`", strings.ReplaceAll(name, "`", "``"))
 }
 
 func (d *MySQLDialect) CallProcedure(proc DoltProcedure, args ...string) string {
 	quotedArgs := make([]string, len(args))
 	for i, arg := range args {
-		quotedArgs[i] = fmt.Sprintf("'%s'", arg)
+		quotedArgs[i] = fmt.Sprintf("'%s'", escapeStringLiteral(arg))
 	}
 	return fmt.Sprintf("CALL %s(%s);", string(proc), strings.Join(quotedArgs, ", "))
 }
 
 func (d *MySQLDialect) UseDatabase(database string) string {
-	return fmt.Sprintf("USE `%s`;", database)
+	return fmt.Sprintf("USE %s;", d.QuoteIdentifier(database))
 }
 
 func (d *MySQLDialect) ShowTablesQuery() string {
@@ -113,11 +113,12 @@ func (d *MySQLDialect) DescribeTableQuery(table string) string {
 }
 
 func (d *MySQLDialect) HashOfFunction(ref string) string {
-	return fmt.Sprintf("HASHOF('%s')", ref)
+	return fmt.Sprintf("HASHOF('%s')", strings.ReplaceAll(ref, "'", "''"))
 }
 
 func (d *MySQLDialect) ListTableDiffChangesQuery(table, fromExpr, toExpr string) string {
-	return fmt.Sprintf("SELECT * FROM dolt_diff_%s WHERE from_commit = %s AND to_commit = %s;", table, fromExpr, toExpr)
+	diffTable := d.QuoteIdentifier("dolt_diff_" + table)
+	return fmt.Sprintf("SELECT * FROM %s WHERE from_commit = %s AND to_commit = %s;", diffTable, fromExpr, toExpr)
 }
 
 // SQL validation using the Vitess MySQL parser.

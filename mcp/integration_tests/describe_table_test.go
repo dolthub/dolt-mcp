@@ -141,6 +141,20 @@ func testDescribeTableToolInvalidArguments(s *testSuite, testBranchName string) 
 				},
 			},
 		},
+		{
+			description:   "Non-existent table argument",
+			errorExpected: true,
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: tools.DescribeTableToolName,
+					Arguments: map[string]any{
+						tools.TableCallToolArgumentName:           "doesnotexist",
+						tools.WorkingBranchCallToolArgumentName:   testBranchName,
+						tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
+					},
+				},
+			},
+		},
 	}
 
 	for _, request := range requests {

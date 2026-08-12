@@ -2,6 +2,8 @@ package tools
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -86,6 +88,13 @@ func RegisterDescribeTableTool(server pkg.Server) {
 		formattedResult, err = tx.QueryContext(ctx, dialect.DescribeTableQuery(tableToDescribe), db.ResultFormatMarkdown)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+		// SQLite's pragma_table_info returns zero rows for a missing table,
+		// unlike DESCRIBE in the server dialects. Preserve a consistent tool
+		// contract by treating a header-only result as not found.
+		if strings.Count(strings.TrimSpace(formattedResult), "\n") < 2 {
+			result = mcp.NewToolResultError(fmt.Sprintf("table not found: %s", tableToDescribe))
 			return
 		}
 

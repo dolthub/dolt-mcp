@@ -67,8 +67,8 @@ func (d *DoltLiteDialect) QuoteIdentifier(name string) string {
 	return fmt.Sprintf(`"%s"`, strings.ReplaceAll(name, `"`, `""`))
 }
 
-// escapeStringLiteral escapes a value for inclusion in a single-quoted
-// SQLite string literal.
+// escapeStringLiteral escapes a value for inclusion in a single-quoted SQL
+// string literal. Doubling apostrophes is supported by all three dialects.
 func escapeStringLiteral(s string) string {
 	return strings.ReplaceAll(s, "'", "''")
 }
@@ -150,7 +150,8 @@ func (d *DoltLiteDialect) ListTableDiffChangesQuery(table, fromExpr, toExpr stri
 	// DoltLite's per-table diff vtable takes the from/to refs as
 	// table-valued-function arguments; its from_commit/to_commit result
 	// columns hold resolved hashes, so Dolt's WHERE form matches nothing.
-	return fmt.Sprintf("SELECT * FROM dolt_diff_%s(%s, %s);", table, fromExpr, toExpr)
+	diffTable := d.QuoteIdentifier("dolt_diff_" + table)
+	return fmt.Sprintf("SELECT * FROM %s(%s, %s);", diffTable, fromExpr, toExpr)
 }
 
 // SQL validation.

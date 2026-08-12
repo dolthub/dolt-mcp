@@ -48,6 +48,30 @@ func TestDoltLiteDialectSQLGeneration(t *testing.T) {
 	require.Contains(t, d.ShowCreateTableQuery("it's"), "name = 'it''s'")
 }
 
+func TestDiffTableIdentifiersAndRefsAreEscaped(t *testing.T) {
+	fromExpr := "'from'"
+	toExpr := "'to'"
+
+	mysql := NewMySQLDialect()
+	require.Equal(t,
+		"SELECT * FROM `dolt_diff_odd``name` WHERE from_commit = 'from' AND to_commit = 'to';",
+		mysql.ListTableDiffChangesQuery("odd`name", fromExpr, toExpr))
+	require.Equal(t, "HASHOF('a''b')", mysql.HashOfFunction("a'b"))
+	require.Equal(t, "CALL DOLT_BRANCH('a''b');", mysql.CallProcedure(DoltBranch, "a'b"))
+
+	postgres := NewPostgresDialect()
+	require.Equal(t,
+		`SELECT * FROM "dolt_diff_odd""name" WHERE from_commit = 'from' AND to_commit = 'to';`,
+		postgres.ListTableDiffChangesQuery(`odd"name`, fromExpr, toExpr))
+	require.Equal(t, "HASHOF('a''b')", postgres.HashOfFunction("a'b"))
+	require.Equal(t, "SELECT dolt_branch('a''b');", postgres.CallProcedure(DoltBranch, "a'b"))
+
+	lite := NewDoltLiteDialect()
+	require.Equal(t,
+		`SELECT * FROM "dolt_diff_odd""name"('from', 'to');`,
+		lite.ListTableDiffChangesQuery(`odd"name`, fromExpr, toExpr))
+}
+
 func TestDoltLiteDialectSupportsTool(t *testing.T) {
 	d := NewDoltLiteDialect()
 

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 )
 
 type ResultFormat int
@@ -39,6 +40,9 @@ type databaseTransactionImpl struct {
 	keepOpen bool
 	// release is invoked exactly once when the transaction finishes.
 	release func()
+	// handle is set for shared DoltLite transactions so a connection which
+	// cannot be returned to a clean state can be evicted from the cache.
+	handle *doltLiteHandle
 }
 
 var _ DatabaseTransaction = &databaseTransactionImpl{}
@@ -69,12 +73,23 @@ func NewDatabaseTransaction(ctx context.Context, config Config) (DatabaseTransac
 // long-lived single-connection handle; a per-handle lock serializes
 // transactions since BEGIN/COMMIT are issued as plain statements.
 func newDoltLiteTransaction(ctx context.Context, config Config) (DatabaseTransaction, error) {
-	handle, err := getDoltLiteHandle(config)
-	if err != nil {
-		return nil, err
+	var handle *doltLiteHandle
+	var err error
+	for {
+		handle, err = getDoltLiteHandle(config)
+		if err != nil {
+			return nil, err
+		}
+
+		handle.mu.Lock()
+		// CloseDatabase or a failed transaction may have retired this handle
+		// after it was fetched from the map but before its lock was acquired.
+		if !handle.closed {
+			break
+		}
+		handle.mu.Unlock()
 	}
 
-	handle.mu.Lock()
 	if config.CommitName != "" {
 		if _, err = handle.db.ExecContext(ctx, "SELECT dolt_config('user.name', ?);", config.CommitName); err != nil {
 			handle.mu.Unlock()
@@ -89,14 +104,16 @@ func newDoltLiteTransaction(ctx context.Context, config Config) (DatabaseTransac
 	}
 	_, err = handle.db.ExecContext(ctx, "BEGIN;")
 	if err != nil {
+		closeErr := discardDoltLiteHandle(config, handle)
 		handle.mu.Unlock()
-		return nil, err
+		return nil, errors.Join(err, closeErr)
 	}
 	return &databaseTransactionImpl{
 		db:       handle.db,
 		config:   config,
 		keepOpen: true,
 		release:  handle.mu.Unlock,
+		handle:   handle,
 	}, nil
 }
 
@@ -258,6 +275,30 @@ func isNoActiveTransactionError(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "no transaction is active")
 }
 
+const doltLiteTransactionCleanupTimeout = 5 * time.Second
+
+// recoverSharedTransaction returns a shared DoltLite connection to a clean
+// state after COMMIT or ROLLBACK failed with the request context. Cleanup is
+// deliberately independent of that context because it is commonly already
+// canceled. If cleanup also fails, the handle is evicted and closed so the
+// next tool call opens a fresh connection instead of inheriting a transaction.
+func (d *databaseTransactionImpl) recoverSharedTransaction(originalErr error) error {
+	cleanupCtx, cancel := context.WithTimeout(context.Background(), doltLiteTransactionCleanupTimeout)
+	defer cancel()
+
+	_, cleanupErr := d.db.ExecContext(cleanupCtx, "ROLLBACK;")
+	if cleanupErr == nil || isNoActiveTransactionError(cleanupErr) {
+		return originalErr
+	}
+
+	discardErr := discardDoltLiteHandle(d.config, d.handle)
+	return errors.Join(
+		originalErr,
+		fmt.Errorf("failed to clean up DoltLite transaction: %w", cleanupErr),
+		discardErr,
+	)
+}
+
 // finish releases the transaction's resources: shared handles are unlocked
 // but kept open, per-transaction handles are closed.
 func (d *databaseTransactionImpl) finish(err error) error {
@@ -288,6 +329,8 @@ func (d *databaseTransactionImpl) Rollback(ctx context.Context) (err error) {
 	err = d.doExecContext(ctx, "ROLLBACK;")
 	if d.keepOpen && isNoActiveTransactionError(err) {
 		err = nil
+	} else if d.keepOpen && err != nil {
+		err = d.recoverSharedTransaction(err)
 	}
 	if err != nil {
 		return
@@ -309,6 +352,8 @@ func (d *databaseTransactionImpl) Commit(ctx context.Context) (err error) {
 	err = d.doExecContext(ctx, "COMMIT;")
 	if d.keepOpen && isNoActiveTransactionError(err) {
 		err = nil
+	} else if d.keepOpen && err != nil {
+		err = d.recoverSharedTransaction(err)
 	}
 	if err != nil {
 		return
@@ -322,8 +367,9 @@ func (d *databaseTransactionImpl) Commit(ctx context.Context) (err error) {
 // per-connection session state survives across statements, and mu serializes
 // whole transactions on that connection.
 type doltLiteHandle struct {
-	db *sql.DB
-	mu sync.Mutex
+	db     *sql.DB
+	mu     sync.Mutex
+	closed bool
 }
 
 var (
@@ -364,7 +410,30 @@ func CloseDatabase(config Config) error {
 
 	handle.mu.Lock()
 	defer handle.mu.Unlock()
+	handle.closed = true
 	return handle.db.Close()
+}
+
+// discardDoltLiteHandle removes and closes handle while its transaction lock
+// is held. A goroutine which fetched the old handle before removal observes
+// closed after acquiring that lock and retries with a fresh handle.
+func discardDoltLiteHandle(config Config, handle *doltLiteHandle) error {
+	if handle == nil || handle.closed {
+		return nil
+	}
+
+	dsn := NewDialect(config.DialectType).FormatDSN(config)
+	doltLiteHandlesMu.Lock()
+	if current, ok := doltLiteHandles[dsn]; ok && current == handle {
+		delete(doltLiteHandles, dsn)
+	}
+	doltLiteHandlesMu.Unlock()
+
+	handle.closed = true
+	if err := handle.db.Close(); err != nil {
+		return fmt.Errorf("failed to close unusable DoltLite connection: %w", err)
+	}
+	return nil
 }
 
 func getDoltLiteHandle(config Config) (*doltLiteHandle, error) {
