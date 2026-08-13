@@ -23,6 +23,9 @@ if [ "$MCP_DIALECT" = "doltlite" ]; then
     if [ -n "$DOLT_COMMIT_EMAIL" ]; then
         set -- "$@" --commit-email "$DOLT_COMMIT_EMAIL"
     fi
+    if [ -n "$DOLTLITE_BUSY_TIMEOUT" ]; then
+        set -- "$@" --doltlite-busy-timeout "$DOLTLITE_BUSY_TIMEOUT"
+    fi
 
     if [ "$MCP_MODE" = "http" ]; then
         set -- "$@" --http

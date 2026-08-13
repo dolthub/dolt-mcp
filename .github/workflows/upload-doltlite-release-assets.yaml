@@ -68,7 +68,10 @@ jobs:
       - name: Copy build script from main
         run: |
           cp .github/scripts/build_doltlite_binary.sh "$RUNNER_TEMP/build_doltlite_binary.sh"
+          cp .github/scripts/build_doltlite_binary_in_docker.sh "$RUNNER_TEMP/build_doltlite_binary_in_docker.sh"
+          cp .github/scripts/Dockerfile.doltlite-release "$RUNNER_TEMP/Dockerfile.doltlite-release"
           chmod +x "$RUNNER_TEMP/build_doltlite_binary.sh"
+          chmod +x "$RUNNER_TEMP/build_doltlite_binary_in_docker.sh"
 
       - name: Checkout code at tag
         uses: actions/checkout@v4
@@ -77,13 +80,10 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Go
+        if: runner.os != 'Linux'
         uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
-
-      - name: Install build dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y build-essential tcl zlib1g-dev
 
       - name: Set OUT_DIR
         run: echo "OUT_DIR=$RUNNER_TEMP/dolt-mcp-doltlite-assets" >> "$GITHUB_ENV"
@@ -91,7 +91,16 @@ jobs:
       - name: Prepare output directory
         run: mkdir -p "$OUT_DIR"
 
-      - name: Build DoltLite Binary
+      - name: Build DoltLite Binary in Docker
+        if: runner.os == 'Linux'
+        run: |
+          "$RUNNER_TEMP/build_doltlite_binary_in_docker.sh" \
+            "${{ matrix.doltlite_platform }}" \
+            "${{ matrix.archive_platform }}" \
+            "$OUT_DIR"
+
+      - name: Build DoltLite Binary Natively
+        if: runner.os != 'Linux'
         run: |
           "$RUNNER_TEMP/build_doltlite_binary.sh" \
             "${{ matrix.doltlite_platform }}" \

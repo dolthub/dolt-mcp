@@ -327,6 +327,7 @@ func createDoltLiteTestSuite(ctx context.Context) (*testSuite, error) {
 		Path:        dbPath,
 		CommitName:  mcpTestCommitterName,
 		CommitEmail: mcpTestCommitterEmail,
+		BusyTimeout: db.DefaultDoltLiteBusyTimeout,
 	}
 
 	tx, err := db.NewDatabaseTransaction(ctx, mcpConfig)

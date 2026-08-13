@@ -228,6 +228,7 @@ Download a `dolt-mcp-server-doltlite` archive from the [releases page](https://g
   --db-file /path/to/mydb.db \
   --commit-name "Your Name" \
   --commit-email you@example.com \
+  --doltlite-busy-timeout 30s \
   --http --mcp-port 8080
 # or --stdio in place of --http --mcp-port
 ```
@@ -239,6 +240,7 @@ No `--host`, `--port`, `--user`, `--password`, or TLS flags are needed — DoltL
 - `--doltlite`: Use the embedded DoltLite dialect. Mutually exclusive with `--dolt` and `--doltgres`.
 - `--db-file`: Path to the DoltLite database file (required with `--doltlite`). The file is created if it does not exist.
 - `--commit-name` / `--commit-email`: The author name and email used for Dolt commits. Recommended — commits are authored as "doltlite" when unset.
+- `--doltlite-busy-timeout`: How long DoltLite waits for a conflicting lock (default `5s`; `0` disables waiting).
 
 ### Claude Desktop Configuration (DoltLite)
 
@@ -292,7 +294,7 @@ Everything else (39 tools) works, including the `dolt_tests` tools, merge status
 - **One database per file**: the `working_database` tool argument is accepted but ignored; there is only ever one database.
 - **Commit author**: configure `--commit-name`/`--commit-email` or commits are authored as "doltlite".
 - **Branch switching**: dirty working sets are preserved independently per branch; switching away and back restores that branch's unstaged and staged state.
-- **Concurrency**: each tool call uses its own pinned DoltLite database handle so branch and transaction state cannot leak between concurrent MCP operations. DoltLite coordinates those handles—and other applications opening the same file—with concurrent readers, one durable writer at a time, and a five-second busy timeout for short lock contention.
+- **Concurrency**: each tool call uses its own pinned DoltLite database handle so branch and transaction state cannot leak between concurrent MCP operations. DoltLite coordinates those handles—and other applications opening the same file—with concurrent readers and one durable writer at a time. Configure lock waiting with `--doltlite-busy-timeout`.
 - **Remote compatibility**: remote storage must speak DoltLite's file or HTTP(S) protocol; a full Dolt repository and a DoltLite database use different storage formats.
 
 ## Configuration Options
@@ -322,6 +324,7 @@ Everything else (39 tools) works, including the `dolt_tests` tools, merge status
 - `--db-file`: Path to the DoltLite database file, created if missing (required with `--doltlite`)
 - `--commit-name`: Author name for Dolt commits (`--doltlite` only, recommended)
 - `--commit-email`: Author email for Dolt commits (`--doltlite` only, recommended)
+- `--doltlite-busy-timeout`: How long DoltLite waits for a conflicting lock (default `5s`; `0` disables waiting)
 
 ### Environment Variables
 
@@ -347,6 +350,7 @@ When using Docker, you can configure the server using environment variables:
 - `DOLT_DB_FILE`: Path to the DoltLite database file inside the container (default: `/data/doltlite.db`); mount a volume at `/data` to persist it
 - `DOLT_COMMIT_NAME`: Author name for Dolt commits (recommended)
 - `DOLT_COMMIT_EMAIL`: Author email for Dolt commits (recommended)
+- `DOLTLITE_BUSY_TIMEOUT`: How long DoltLite waits for a conflicting lock (default: `5s`; `0` disables waiting)
 - `DOLTLITE_CREDS_DIR`: Credential directory for authenticated HTTP(S) remotes (default: `/data/creds`)
 - `DOLTLITE_CREDS_KID`: Optional credential key ID when more than one key is present
 - `DOLTLITE_CA_FILE`: Optional CA bundle for a private HTTPS remote

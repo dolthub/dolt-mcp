@@ -15,6 +15,7 @@ func newPreparedDoltLiteTestConfig(t *testing.T) Config {
 	config := Config{
 		DialectType: DialectDoltLite,
 		Path:        t.TempDir() + "/database.db",
+		BusyTimeout: DefaultDoltLiteBusyTimeout,
 	}
 	require.NoError(t, PrepareDatabase(&config))
 	t.Cleanup(func() { require.NoError(t, CloseDatabase(config)) })
@@ -89,6 +90,18 @@ func TestDoltLiteTransactionsUseIndependentHandles(t *testing.T) {
 	first = nil
 }
 
+func TestDoltLiteBusyTimeout(t *testing.T) {
+	config := newPreparedDoltLiteTestConfig(t)
+	config.BusyTimeout = 1234 * time.Millisecond
+
+	tx, err := NewDatabaseTransaction(context.Background(), config)
+	require.NoError(t, err)
+	result, err := tx.QueryContext(context.Background(), "PRAGMA busy_timeout;", ResultFormatCSV)
+	require.NoError(t, err)
+	require.Equal(t, "timeout\n1234\n", result)
+	require.NoError(t, tx.Rollback(context.Background()))
+}
+
 func TestDoltLiteCoordinatesConcurrentWriters(t *testing.T) {
 	config := newPreparedDoltLiteTestConfig(t)
 	ctx := context.Background()
@@ -105,13 +118,31 @@ func TestDoltLiteCoordinatesConcurrentWriters(t *testing.T) {
 	second, err := NewDatabaseTransaction(ctx, config)
 	require.NoError(t, err)
 	secondWrite := make(chan error, 1)
+	secondStarted := make(chan struct{})
 	go func() {
+		close(secondStarted)
 		secondWrite <- second.ExecContext(ctx, "INSERT INTO concurrent_writes VALUES (2);")
 	}()
 
-	time.Sleep(100 * time.Millisecond)
+	require.Eventually(t, func() bool {
+		select {
+		case <-secondStarted:
+			return true
+		default:
+			return false
+		}
+	}, time.Second, 10*time.Millisecond)
 	require.NoError(t, first.Commit(ctx))
-	require.NoError(t, <-secondWrite)
+	var secondErr error
+	require.Eventually(t, func() bool {
+		select {
+		case secondErr = <-secondWrite:
+			return true
+		default:
+			return false
+		}
+	}, 2*time.Second, 10*time.Millisecond)
+	require.NoError(t, secondErr)
 	require.NoError(t, second.Commit(ctx))
 
 	verify, err := NewDatabaseTransaction(ctx, config)

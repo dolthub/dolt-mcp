@@ -74,6 +74,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 ENV MCP_DIALECT=doltlite
 ENV DOLT_DB_FILE=/data/doltlite.db
 ENV DOLTLITE_CREDS_DIR=/data/creds
+ENV DOLTLITE_BUSY_TIMEOUT=5s
 ENV MCP_MODE=stdio
 ENV MCP_PORT=8080
 

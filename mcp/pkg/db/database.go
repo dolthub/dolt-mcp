@@ -66,9 +66,10 @@ func NewDatabaseTransaction(ctx context.Context, config Config) (DatabaseTransac
 	}, nil
 }
 
-const doltLiteBusyTimeout = 5 * time.Second
-
 func newDoltLiteTransaction(ctx context.Context, config Config) (DatabaseTransaction, error) {
+	if err := config.Validate(); err != nil {
+		return nil, err
+	}
 	database := config.doltLiteDatabase
 	closeDatabase := false
 	if database == nil {
@@ -95,7 +96,7 @@ func newDoltLiteTransaction(ctx context.Context, config Config) (DatabaseTransac
 		closeDoltLiteDB:  closeDatabase,
 	}
 
-	if _, err = conn.ExecContext(ctx, fmt.Sprintf("PRAGMA busy_timeout = %d;", doltLiteBusyTimeout.Milliseconds())); err != nil {
+	if _, err = conn.ExecContext(ctx, fmt.Sprintf("PRAGMA busy_timeout = %d;", config.BusyTimeout.Milliseconds())); err != nil {
 		return nil, tx.finish(err)
 	}
 	if config.CommitName != "" {

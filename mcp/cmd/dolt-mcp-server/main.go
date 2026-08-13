@@ -35,6 +35,7 @@ const (
 	dbFileFlag      = "db-file"
 	commitNameFlag  = "commit-name"
 	commitEmailFlag = "commit-email"
+	busyTimeoutFlag = "doltlite-busy-timeout"
 
 	// Deprecated flag names (kept for backwards compatibility).
 	doltHostFlag     = "dolt-host"
@@ -83,6 +84,7 @@ var (
 	dbFile      = flag.String(dbFileFlag, "", "Path to the DoltLite database file. The file is created if it does not exist. Only used with --doltlite.")
 	commitName  = flag.String(commitNameFlag, "", "The author name used for Dolt commits. Only used with --doltlite.")
 	commitEmail = flag.String(commitEmailFlag, "", "The author email used for Dolt commits. Only used with --doltlite.")
+	busyTimeout = flag.Duration(busyTimeoutFlag, db.DefaultDoltLiteBusyTimeout, "How long DoltLite waits for a conflicting lock. Set to 0 to fail immediately.")
 )
 
 // Deprecated flags (kept for backwards compatibility).
@@ -292,6 +294,7 @@ func main() {
 		Path:         *dbFile,
 		CommitName:   *commitName,
 		CommitEmail:  *commitEmail,
+		BusyTimeout:  *busyTimeout,
 	}
 
 	tlsConfig, err := getTLSConfig(*httpCertFile, *httpKeyFile, *httpCAFile)

@@ -58,7 +58,7 @@ docker run -it --rm \
   dolthub/dolt-mcp:latest-doltlite
 ```
 
-The DoltLite image defaults to `MCP_DIALECT=doltlite`, `DOLT_DB_FILE=/data/doltlite.db`, and `DOLTLITE_CREDS_DIR=/data/creds` (the database and credential directory are created on first use). `DOLT_HOST`, `DOLT_USER`, `DOLT_PORT`, and `DOLT_PASSWORD` are not used. Setting `DOLT_COMMIT_NAME`/`DOLT_COMMIT_EMAIL` is recommended; otherwise Dolt commits are authored as "doltlite". Each tool call uses its own pinned DoltLite database handle; DoltLite coordinates concurrent readers and permits one durable writer at a time, with a five-second busy timeout for short lock contention. A handful of server-oriented tools (database management, process management, and Dolt test tools) are hidden in this mode. The DoltLite image is published for `linux/amd64` and `linux/arm64`.
+The DoltLite image defaults to `MCP_DIALECT=doltlite`, `DOLT_DB_FILE=/data/doltlite.db`, `DOLTLITE_CREDS_DIR=/data/creds`, and `DOLTLITE_BUSY_TIMEOUT=5s`. `DOLT_HOST`, `DOLT_USER`, `DOLT_PORT`, and `DOLT_PASSWORD` are not used. Setting `DOLT_COMMIT_NAME`/`DOLT_COMMIT_EMAIL` is recommended; otherwise Dolt commits are authored as "doltlite". Each tool call uses its own pinned DoltLite database handle; DoltLite coordinates concurrent readers and permits one durable writer at a time. The DoltLite image is published for `linux/amd64` and `linux/arm64`.
 
 ## Environment Variables
 
@@ -78,6 +78,7 @@ The DoltLite image defaults to `MCP_DIALECT=doltlite`, `DOLT_DB_FILE=/data/doltl
 - `DOLT_DB_FILE` - Path to the DoltLite database file inside the container (required with `doltlite`; default in the `-doltlite` images: `/data/doltlite.db`). The file is created if it does not exist.
 - `DOLT_COMMIT_NAME` - Author name for Dolt commits (recommended)
 - `DOLT_COMMIT_EMAIL` - Author email for Dolt commits (recommended)
+- `DOLTLITE_BUSY_TIMEOUT` - How long DoltLite waits for a conflicting lock (default: `5s`; `0` disables waiting)
 - `DOLTLITE_CREDS_DIR` - Credential directory used by authenticated HTTP(S) remotes (default in the DoltLite image: `/data/creds`)
 - `DOLTLITE_CREDS_KID` - Optional credential key ID when the directory contains more than one key
 - `DOLTLITE_CA_FILE` - Optional CA bundle for a private HTTPS remote
