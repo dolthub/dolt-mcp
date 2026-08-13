@@ -311,9 +311,9 @@ func (d *databaseTransactionImpl) recoverPinnedTransaction(originalErr error) er
 	)
 }
 
-// finish releases the transaction's resources. DoltLite handles return to
-// the pool (or are closed when MaxIdleConns is zero); network dialects retain
-// their existing per-transaction *sql.DB lifecycle.
+// finish releases the transaction's resources. The DoltLite pool retains no
+// idle handles, so releasing conn closes its sqlite3 handle; network dialects
+// retain their existing per-transaction *sql.DB lifecycle.
 func (d *databaseTransactionImpl) finish(err error) error {
 	if d.conn != nil {
 		cerr := d.conn.Close()

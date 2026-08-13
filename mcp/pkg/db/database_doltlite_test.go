@@ -21,9 +21,9 @@ func newPreparedDoltLiteTestConfig(t *testing.T) Config {
 	return config
 }
 
-// A canceled request must not leave its pinned handle in an open transaction.
-// Commit and Rollback use an independent cleanup context before releasing it.
-func TestDoltLiteCanceledTransactionDoesNotPoisonPinnedHandle(t *testing.T) {
+// A canceled request must clean up its pinned handle and release any file lock
+// before a later operation opens another handle.
+func TestDoltLiteCanceledTransactionDoesNotBlockNextOperation(t *testing.T) {
 	config := newPreparedDoltLiteTestConfig(t)
 
 	finishers := []struct {
@@ -52,8 +52,8 @@ func TestDoltLiteCanceledTransactionDoesNotPoisonPinnedHandle(t *testing.T) {
 				require.ErrorIs(t, finishErr, context.Canceled)
 			}
 
-			// Beginning and finishing another transaction proves the shared
-			// connection was returned to autocommit mode after cancellation.
+			// Beginning and finishing another transaction proves cancellation did
+			// not leave a file lock that blocks later operations.
 			next, err := NewDatabaseTransaction(context.Background(), config)
 			require.NoError(t, err)
 			require.NoError(t, next.Rollback(context.Background()))
