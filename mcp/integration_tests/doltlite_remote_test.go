@@ -12,9 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestDoltLiteFileRemoteOperations covers DoltLite's native file:// remote
-// implementation. The existing remote integration fixtures expose Dolt's
-// remotesapi protocol and therefore cannot be shared with DoltLite.
 func TestDoltLiteFileRemoteOperations(t *testing.T) {
 	if suite == nil || suite.dialectType != db.DialectDoltLite {
 		t.Skip("DoltLite-specific file remote test")
@@ -43,8 +40,6 @@ func TestDoltLiteFileRemoteOperations(t *testing.T) {
 			tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 		}
 
-		// Pin the MCP connection to this test's branch before invoking remote
-		// functions, which operate on connection-local branch state.
 		call(tools.QueryToolName, map[string]any{
 			tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
 			tools.WorkingBranchCallToolArgumentName:   branch,
@@ -75,8 +70,6 @@ func TestDoltLiteFileRemoteOperations(t *testing.T) {
 			tools.ForceCallToolArgumentName:           true,
 		})
 
-		// Advance the remote independently, then exercise both fetch forms and
-		// pull the new commit into the MCP connection's active branch.
 		remoteDB, err := sql.Open(s.dialect.DriverName(), remotePath)
 		require.NoError(t, err)
 		remoteDB.SetMaxOpenConns(1)

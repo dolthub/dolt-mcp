@@ -1,20 +1,9 @@
-# DoltLite variant of the Dolt MCP Server image. Downloads the pinned native
-# libdoltlite archive and links the server against it with cgo, producing an
-# image that runs against an embedded DoltLite database file instead of a
-# Dolt/DoltgreSQL server.
-
-# Use a Debian-based golang image as the build stage (cgo toolchain required)
 FROM golang:1.25-bookworm AS builder
 
-# Set build arguments
 ARG DOLT_MCP_VERSION=development
-# dolthub/doltlite release tag to build against
-ARG DOLTLITE_VERSION=v0.11.45
-
-# BuildKit supplies TARGETARCH for multi-platform builds.
+ARG DOLTLITE_VERSION=v0.11.46
 ARG TARGETARCH
 
-# Install cgo and archive dependencies.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -24,8 +13,6 @@ RUN apt-get update && \
         zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Download the matching static Linux library. Using native release archives
-# keeps multi-platform Docker builds practical under BuildKit/QEMU.
 WORKDIR /doltlite
 RUN set -eux; \
     case "${TARGETARCH}" in \
@@ -42,21 +29,12 @@ RUN set -eux; \
     cp build/doltlite.h build/sqlite3.h; \
     cp build/libdoltlite.a build/libsqlite3.a
 
-# Set the working directory
 WORKDIR /app
 
-# Copy go mod and sum files
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
-
-# Copy the source code
 COPY . .
 
-# Build the application with DoltLite support, statically linking libdoltlite.
-# mattn/go-sqlite3 (libsqlite3 tag) includes <sqlite3.h> and links -lsqlite3;
-# both resolve to the doltlite build directory.
 RUN CGO_ENABLED=1 \
     CGO_CFLAGS="-I/doltlite/build" \
     CGO_LDFLAGS="-L/doltlite/build -lz -lpthread -lm -ldl" \
@@ -66,42 +44,26 @@ RUN CGO_ENABLED=1 \
     -o dolt-mcp-server \
     ./mcp/cmd/dolt-mcp-server
 
-# Use a minimal glibc base image for the final stage
 FROM debian:bookworm-slim
 
-# Install runtime dependencies (curl and procps for the health check)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates tzdata curl procps && \
     rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user
 RUN groupadd -g 1001 doltmcp && \
     useradd -m -s /bin/sh -u 1001 -g doltmcp doltmcp
 
-# Set the working directory
 WORKDIR /app
 
-# Copy the binary from builder stage
 COPY --from=builder /app/dolt-mcp-server .
 
-# Create directories for the DoltLite database file and remote credentials.
 RUN mkdir -p /data/creds && chown -R doltmcp:doltmcp /data
-
-# Change ownership of the app directory
 RUN chown -R doltmcp:doltmcp /app
-
-# Switch to non-root user
 USER doltmcp
 
-# The DoltLite database file lives here; mount a volume to persist it
 VOLUME ["/data"]
-
-# Expose the default HTTP port
 EXPOSE 8080
 
-# Add health check. The MCP endpoint answers GETs with a long-lived SSE
-# stream, so treat receiving a 200 response header within --max-time as
-# healthy instead of waiting for the body to complete.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     CMD if [ "$MCP_MODE" = "http" ]; then \
         [ "$(curl -s -o /dev/null --max-time 2 -w '%{http_code}' http://localhost:${MCP_PORT:-8080}/health)" = "200" ] || exit 1; \
@@ -109,19 +71,14 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
         pgrep dolt-mcp-server > /dev/null || exit 1; \
     fi
 
-# Set default environment variables
 ENV MCP_DIALECT=doltlite
 ENV DOLT_DB_FILE=/data/doltlite.db
 ENV DOLTLITE_CREDS_DIR=/data/creds
 ENV MCP_MODE=stdio
 ENV MCP_PORT=8080
 
-# Create entrypoint script
 COPY --chown=doltmcp:doltmcp docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Use entrypoint script
 ENTRYPOINT ["/entrypoint.sh"]
-
-# Default command (can be overridden)
 CMD []

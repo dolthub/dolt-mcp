@@ -23,19 +23,10 @@ type Config struct {
 	TLSCAFile       string      `yaml:"tls_ca_file" json:"tls_ca_file"`
 	DialectType     DialectType `yaml:"dialect_type" json:"dialect_type"`
 
-	// DoltLite (embedded) configuration.
-	// Path is the filesystem path of the DoltLite database file.
-	Path string `yaml:"path" json:"path"`
-	// CommitName and CommitEmail set the Dolt commit author on every
-	// connection. DoltLite stores author config per connection and does not
-	// persist it.
+	Path        string `yaml:"path" json:"path"`
 	CommitName  string `yaml:"commit_name" json:"commit_name"`
 	CommitEmail string `yaml:"commit_email" json:"commit_email"`
 
-	// doltLiteDatabase is initialized by PrepareDatabase for a server-owned
-	// DoltLite pool. Config is passed by value throughout the tool layer, so
-	// copies retain the same pool without exposing runtime state in serialized
-	// configuration.
 	doltLiteDatabase *doltLiteDatabase
 }
 

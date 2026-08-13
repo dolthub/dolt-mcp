@@ -21,8 +21,6 @@ func newPreparedDoltLiteTestConfig(t *testing.T) Config {
 	return config
 }
 
-// A canceled request must clean up its pinned handle and release any file lock
-// before a later operation opens another handle.
 func TestDoltLiteCanceledTransactionDoesNotBlockNextOperation(t *testing.T) {
 	config := newPreparedDoltLiteTestConfig(t)
 
@@ -45,15 +43,11 @@ func TestDoltLiteCanceledTransactionDoesNotBlockNextOperation(t *testing.T) {
 
 			canceledCtx, cancel := context.WithCancel(context.Background())
 			cancel()
-			// Some SQLite operations can complete before cancellation is observed;
-			// either outcome is valid as long as the handle is left clean.
 			finishErr := test.finish(tx, canceledCtx)
 			if finishErr != nil {
 				require.ErrorIs(t, finishErr, context.Canceled)
 			}
 
-			// Beginning and finishing another transaction proves cancellation did
-			// not leave a file lock that blocks later operations.
 			next, err := NewDatabaseTransaction(context.Background(), config)
 			require.NoError(t, err)
 			require.NoError(t, next.Rollback(context.Background()))
@@ -72,8 +66,6 @@ func TestDoltLiteTransactionsUseIndependentHandles(t *testing.T) {
 		}
 	})
 
-	// A second transaction can begin while the first remains open. This would
-	// block forever under the old process-wide mutex around one shared handle.
 	type transactionResult struct {
 		tx  DatabaseTransaction
 		err error
@@ -117,8 +109,6 @@ func TestDoltLiteCoordinatesConcurrentWriters(t *testing.T) {
 		secondWrite <- second.ExecContext(ctx, "INSERT INTO concurrent_writes VALUES (2);")
 	}()
 
-	// The second handle waits in DoltLite's busy handler while the first owns
-	// the writer lock, then proceeds after the first commits.
 	time.Sleep(100 * time.Millisecond)
 	require.NoError(t, first.Commit(ctx))
 	require.NoError(t, <-secondWrite)

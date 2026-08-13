@@ -43,7 +43,7 @@ jobs:
       run:
         shell: bash
     env:
-      DOLTLITE_VERSION: v0.11.45
+      DOLTLITE_VERSION: v0.11.46
     steps:
     - uses: actions/checkout@v4
     - name: Set up Go 1.x
@@ -67,17 +67,12 @@ jobs:
         cd build
         ../configure
         make doltlite-lib -j$(nproc)
-        # mattn/go-sqlite3's libsqlite3 tag links -lsqlite3. Make that name
-        # resolve to DoltLite rather than any stock SQLite installed on the
-        # runner, matching the release and Docker builds.
         cp libdoltlite.a libsqlite3.a
     - name: Test All
       working-directory: ./mcp/integration_tests/
       env:
         DOLT_DIALECT: doltlite
         CGO_CFLAGS: -I${{ github.workspace }}/doltlite/build
-        # DoltLite's math functions and vec1 extension require libm on Linux;
-        # libdl is included for parity with the Linux release build.
         CGO_LDFLAGS: -L${{ github.workspace }}/doltlite/build -lz -lpthread -lm -ldl
       run: |
          go test -tags "doltlite libsqlite3" -timeout 30m ./...

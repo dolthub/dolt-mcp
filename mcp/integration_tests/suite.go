@@ -61,8 +61,6 @@ type serverProcess interface {
 	Stop() error
 }
 
-// noopServerProcess satisfies serverProcess for embedded engines (DoltLite)
-// that run inside the test binary itself and have no external process.
 type noopServerProcess struct{}
 
 func (noopServerProcess) Start() error { return nil }
@@ -153,10 +151,6 @@ func (s *testSuite) exec(sql string) error {
 	return err
 }
 
-// refreshDoltLiteSession reloads the active branch into the suite's
-// connection. DoltLite intentionally keeps branch, staging, and merge state
-// per SQLite connection; MCP tool calls use a different long-lived
-// connection, so assertions must refresh before inspecting their effects.
 func (s *testSuite) refreshDoltLiteSession() error {
 	if s.dialectType != db.DialectDoltLite {
 		return nil
@@ -181,7 +175,6 @@ func (s *testSuite) Setup(newBranchName string, setupSQL DialectSQL, skipDoltCom
 		s.t.Fatalf("no new branch name provided")
 	}
 
-	// Single-database dialects (DoltLite) have no USE statement.
 	if useStmt := s.dialect.UseDatabase(mcpTestDatabaseName); useStmt != "" {
 		err := s.exec(useStmt)
 		if err != nil {
@@ -318,10 +311,6 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string, diale
 	}
 }
 
-// createDoltLiteTestSuite builds a test suite backed by an embedded DoltLite
-// database file. There is no server process: the engine is linked into this
-// test binary (build with -tags "doltlite libsqlite3" and CGO flags pointing
-// at libdoltlite), and the MCP server opens the file directly.
 func createDoltLiteTestSuite(ctx context.Context) (*testSuite, error) {
 	dialectType := db.DialectDoltLite
 	dialect := db.NewDialect(dialectType)
@@ -340,10 +329,6 @@ func createDoltLiteTestSuite(ctx context.Context) (*testSuite, error) {
 		CommitEmail: mcpTestCommitterEmail,
 	}
 
-	// Open (and thereby create) the database file through the db package
-	// once. This registers the "doltlite" database/sql driver and verifies
-	// the linked engine, failing fast when the binary was built without the
-	// doltlite build tag.
 	tx, err := db.NewDatabaseTransaction(ctx, mcpConfig)
 	if err != nil {
 		os.RemoveAll(databaseParentDir)
@@ -360,8 +345,6 @@ func createDoltLiteTestSuite(ctx context.Context) (*testSuite, error) {
 		os.RemoveAll(databaseParentDir)
 		return nil, err
 	}
-	// DoltLite session state (active branch, working set) lives on the
-	// connection, so the suite must reuse one connection for all statements.
 	testDb.SetMaxOpenConns(1)
 
 	if err = testDb.PingContext(ctx); err != nil {
@@ -869,7 +852,6 @@ func readSeedSQLFile(dialectType db.DialectType) ([]byte, error) {
 		return nil, errors.New("could not determine caller path")
 	}
 
-	// DoltLite speaks the SQLite dialect and needs its own seed file.
 	seedFileName := "seed.sql"
 	if dialectType == db.DialectDoltLite {
 		seedFileName = "seed_doltlite.sql"

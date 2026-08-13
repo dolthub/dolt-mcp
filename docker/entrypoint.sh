@@ -7,11 +7,8 @@ if [ $# -gt 0 ]; then
     exec ./dolt-mcp-server "$@"
 fi
 
-# Determine SQL dialect (default: dolt)
 MCP_DIALECT="${MCP_DIALECT:-dolt}"
 
-# DoltLite runs against an embedded database file: no host, port, user, or
-# password is needed, so it is handled separately from the server dialects.
 if [ "$MCP_DIALECT" = "doltlite" ]; then
     if [ -z "$DOLT_DB_FILE" ]; then
         echo "Error: DOLT_DB_FILE environment variable is required when MCP_DIALECT=doltlite" >&2
@@ -20,7 +17,6 @@ if [ "$MCP_DIALECT" = "doltlite" ]; then
 
     set -- --doltlite --db-file "$DOLT_DB_FILE"
 
-    # Commit author (recommended: commits are authored as "doltlite" otherwise)
     if [ -n "$DOLT_COMMIT_NAME" ]; then
         set -- "$@" --commit-name "$DOLT_COMMIT_NAME"
     fi
@@ -50,7 +46,6 @@ fi
 # Build command based on environment variables
 CMD_ARGS=""
 
-# Required parameters (server dialects only)
 if [ -z "$DOLT_HOST" ]; then
     echo "Error: DOLT_HOST environment variable is required"
     exit 1

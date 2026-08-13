@@ -1,31 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Builds a DoltLite-enabled dolt-mcp-server binary for the *native* platform
-# and packages it into a tar.gz archive. DoltLite builds require cgo, so
-# unlike build_binaries.sh this script cannot cross-compile: run it on a
-# runner that matches the target platform.
-#
-# DoltLite is built from its pinned source tag on the native
-# runner. This preserves the runner's deployment target (especially on
-# macOS) instead of inheriting the minimum OS version of a prebuilt archive.
-#
 # Usage:
 #   build_doltlite_binary.sh <doltlite_platform> <archive_platform> <output_directory>
-#
-#   doltlite_platform: platform component of the doltlite release asset name
-#                      (e.g. linux-x64, osx-arm64)
-#   archive_platform:  platform suffix for the output archive
-#                      (e.g. linux-amd64, darwin-arm64)
-#
-# Required environment:
-#   DOLTLITE_VERSION: doltlite release tag to build against (e.g. v0.11.45)
-#
-# Output:
-#   <output_directory>/dolt-mcp-server-doltlite-<archive_platform>.tar.gz
+# DOLTLITE_VERSION must be a release tag such as v0.11.46.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Resolve repo root: prefer GITHUB_WORKSPACE, then git root, then relative to script
 if [[ -n "${GITHUB_WORKSPACE:-}" && -d "${GITHUB_WORKSPACE}" ]]; then
   REPO_ROOT="${GITHUB_WORKSPACE}"
 elif git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
@@ -44,13 +24,12 @@ DOLTLITE_PLATFORM="$1"
 ARCHIVE_PLATFORM="$2"
 OUT_DIR="$3"
 
-: "${DOLTLITE_VERSION:?DOLTLITE_VERSION environment variable is required (e.g. v0.11.45)}"
+: "${DOLTLITE_VERSION:?DOLTLITE_VERSION environment variable is required (e.g. v0.11.46)}"
 DOLTLITE_VERSION_NUM="${DOLTLITE_VERSION#v}"
 
 mkdir -p "$OUT_DIR" staging
 OUT_DIR_ABS="$(cd "$OUT_DIR" && pwd)"
 
-# Download and build the pinned DoltLite autoconf source release.
 SOURCE_PARENT="$(mktemp -d)"
 SOURCE_NAME="doltlite-${DOLTLITE_VERSION_NUM}"
 SOURCE_URL="https://github.com/dolthub/doltlite/archive/refs/tags/${DOLTLITE_VERSION}.tar.gz"
@@ -78,8 +57,6 @@ if [[ ! -f "${LIB_DIR}/libdoltlite.a" || ! -f "${LIB_DIR}/sqlite3.h" ]]; then
   exit 1
 fi
 
-# mattn/go-sqlite3 adds -lsqlite3 when built with the libsqlite3 tag. Point
-# that name at the same static DoltLite archive.
 cp "${LIB_DIR}/libdoltlite.a" "${LIB_DIR}/libsqlite3.a"
 
 EXTRA_LIBS="-lz -lpthread"

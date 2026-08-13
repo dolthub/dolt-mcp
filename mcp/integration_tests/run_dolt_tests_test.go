@@ -14,6 +14,10 @@ var testRunDoltTestsSetupSQL = DialectSQL{
 INSERT INTO dolt_tests VALUES ('test_people_count', 'people', 'SELECT COUNT(*) FROM people', 'expected_single_value', '>=', '1');
 INSERT INTO dolt_tests VALUES ('test_people_columns', 'people', 'SELECT * FROM people LIMIT 1', 'expected_columns', '==', '3');
 `,
+	db.DialectDoltLite: `
+INSERT INTO dolt_tests VALUES ('test_people_count', 'people', 'SELECT COUNT(*) FROM people', 'expected_single_value', '>=', '1');
+INSERT INTO dolt_tests VALUES ('test_people_columns', 'people', 'SELECT * FROM people LIMIT 1', 'expected_columns', '==', '3');
+`,
 	db.DialectPostgres: "",
 }
 

@@ -87,8 +87,6 @@ jobs:
             "$OUT_DIR/dolt-mcp-server-windows-amd64.zip" \
             --clobber
 
-  # DoltLite binaries require cgo and native runners, so they are built by a
-  # separate reusable workflow and attached to the release created above.
   doltlite-release-assets:
     needs: [format-version, create_release]
     permissions:

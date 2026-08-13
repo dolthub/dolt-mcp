@@ -90,8 +90,6 @@ func RegisterShowCreateTableTool(server pkg.Server) {
 			result = mcp.NewToolResultError(err.Error())
 			return
 		}
-		// SQLite schema queries return zero rows rather than an error for a
-		// missing table. Preserve this tool's existing cross-dialect contract.
 		if strings.Count(strings.TrimSpace(formattedResult), "\n") < 2 {
 			result = mcp.NewToolResultError(fmt.Sprintf("table not found: %s", table))
 			return

@@ -37,15 +37,9 @@ type sqlExecutor interface {
 }
 
 type databaseTransactionImpl struct {
-	executor sqlExecutor
-	// db is set for the existing network-dialect implementation, which owns a
-	// per-transaction *sql.DB and closes it when the transaction finishes.
-	db *sql.DB
-	// conn is a DoltLite handle pinned to this MCP operation. Every statement
-	// from BEGIN through COMMIT / ROLLBACK runs on this exact sqlite3 handle.
-	conn *sql.Conn
-	// doltLiteDatabase is the pool that supplied conn. An unprepared Config
-	// creates a temporary pool so direct callers retain the old API behavior.
+	executor         sqlExecutor
+	db               *sql.DB
+	conn             *sql.Conn
 	doltLiteDatabase *doltLiteDatabase
 	closeDoltLiteDB  bool
 }
@@ -74,12 +68,6 @@ func NewDatabaseTransaction(ctx context.Context, config Config) (DatabaseTransac
 
 const doltLiteBusyTimeout = 5 * time.Second
 
-// newDoltLiteTransaction pins a dedicated DoltLite handle for one MCP tool
-// operation. Concurrent operations use independent sqlite3 handles and rely
-// on DoltLite's own reader/writer and snapshot locking for the shared file.
-// Pinning is still required: branch selection and SQL transaction state live
-// on a handle, so BEGIN, checkout, the tool SQL, and COMMIT must not move
-// between database/sql pooled connections.
 func newDoltLiteTransaction(ctx context.Context, config Config) (DatabaseTransaction, error) {
 	database := config.doltLiteDatabase
 	closeDatabase := false
@@ -107,9 +95,6 @@ func newDoltLiteTransaction(ctx context.Context, config Config) (DatabaseTransac
 		closeDoltLiteDB:  closeDatabase,
 	}
 
-	// DoltLite uses its busy handler while another process or handle owns the
-	// file's writer lock. This lets short Workbench/MCP overlaps resolve without
-	// serializing all MCP operations in Go.
 	if _, err = conn.ExecContext(ctx, fmt.Sprintf("PRAGMA busy_timeout = %d;", doltLiteBusyTimeout.Milliseconds())); err != nil {
 		return nil, tx.finish(err)
 	}
@@ -279,23 +264,12 @@ func (d *databaseTransactionImpl) ExecContext(ctx context.Context, query string)
 	return d.doExecContext(ctx, query)
 }
 
-// isNoActiveTransactionError reports whether err is SQLite's "cannot commit
-// - no transaction is active" (or the rollback equivalent). DoltLite
-// version-control functions (dolt_commit, dolt_merge, ...) seal the
-// enclosing SQL transaction as a side effect, so the transaction this type
-// opened may already be gone by the time Commit or Rollback runs; that is
-// expected, not an error.
 func isNoActiveTransactionError(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "no transaction is active")
 }
 
 const doltLiteTransactionCleanupTimeout = 5 * time.Second
 
-// recoverPinnedTransaction returns a DoltLite handle to a clean state after
-// BEGIN, COMMIT, or ROLLBACK failed with the request context. Cleanup uses an
-// independent context because the request is commonly already canceled. If
-// rollback also fails, finish still closes this operation's physical handle;
-// the pool retains no idle DoltLite handles, so it cannot poison a later call.
 func (d *databaseTransactionImpl) recoverPinnedTransaction(originalErr error) error {
 	cleanupCtx, cancel := context.WithTimeout(context.Background(), doltLiteTransactionCleanupTimeout)
 	defer cancel()
@@ -311,9 +285,6 @@ func (d *databaseTransactionImpl) recoverPinnedTransaction(originalErr error) er
 	)
 }
 
-// finish releases the transaction's resources. The DoltLite pool retains no
-// idle handles, so releasing conn closes its sqlite3 handle; network dialects
-// retain their existing per-transaction *sql.DB lifecycle.
 func (d *databaseTransactionImpl) finish(err error) error {
 	if d.conn != nil {
 		cerr := d.conn.Close()
@@ -386,14 +357,11 @@ func (d *databaseTransactionImpl) Commit(ctx context.Context) (err error) {
 	return
 }
 
-// doltLiteDatabase owns the database/sql pool for one MCP server. Each tool
-// operation pins one independent sqlite3 handle from this pool.
 type doltLiteDatabase struct {
 	db *sql.DB
 }
 
-// PrepareDatabase eagerly opens and verifies embedded databases. Networked
-// dialects retain their existing lazy connection behavior.
+// PrepareDatabase opens an embedded database when configured.
 func PrepareDatabase(config *Config) error {
 	if config == nil {
 		return errors.New("database config is nil")
@@ -415,8 +383,7 @@ func PrepareDatabase(config *Config) error {
 	return nil
 }
 
-// CloseDatabase closes the server-owned embedded database pool. It is a no-op
-// for networked dialects, whose per-tool pools already close with transactions.
+// CloseDatabase closes an embedded database when configured.
 func CloseDatabase(config Config) error {
 	if config.DialectType != DialectDoltLite || config.doltLiteDatabase == nil {
 		return nil
@@ -428,8 +395,6 @@ func openDoltLiteDatabase(config Config) (*doltLiteDatabase, error) {
 	dialect := NewDialect(config.DialectType)
 	dsn := dialect.FormatDSN(config)
 
-	// Registers the cgo-backed driver; fails when the binary was built
-	// without the "doltlite" build tag.
 	if err := registerDoltLiteDriver(config); err != nil {
 		return nil, err
 	}
@@ -438,10 +403,6 @@ func openDoltLiteDatabase(config Config) (*doltLiteDatabase, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Do not retain idle handles. A fresh sqlite3 handle per MCP operation
-	// avoids carrying connection-local branch/configuration or dynamically
-	// registered DoltLite virtual-table state into a later operation. Handles
-	// used concurrently remain independent and DoltLite coordinates the file.
 	db.SetMaxIdleConns(0)
 
 	if err := db.Ping(); err != nil {
@@ -449,7 +410,6 @@ func openDoltLiteDatabase(config Config) (*doltLiteDatabase, error) {
 		return nil, fmt.Errorf("failed to open DoltLite database %s (the file may have been written by an incompatible DoltLite version): %w", dsn, err)
 	}
 
-	// Verify the linked library is actually DoltLite and not stock SQLite.
 	var engine string
 	if err := db.QueryRow("SELECT doltlite_engine();").Scan(&engine); err != nil {
 		db.Close()

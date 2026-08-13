@@ -17,13 +17,10 @@ func TestDoltLiteDialectCallProcedure(t *testing.T) {
 		"SELECT dolt_branch('feature');",
 		d.CallProcedure(DoltBranch, "feature"))
 
-	// Single-argument checkout is guarded so it is a no-op when the session
-	// is already on the target branch.
 	require.Equal(t,
 		"SELECT CASE WHEN active_branch() = 'feature' THEN 0 ELSE dolt_checkout('feature') END;",
 		d.CallProcedure(DoltCheckout, "feature"))
 
-	// String literals are escaped.
 	require.Equal(t,
 		"SELECT dolt_commit('-m', 'it''s a message');",
 		d.CallProcedure(DoltCommit, "-m", "it's a message"))
@@ -82,10 +79,6 @@ func TestDoltLiteDialectSupportsTool(t *testing.T) {
 		"clone_database",
 		"show_processlist",
 		"kill_process",
-		"get_dolt_merge_status",
-		"run_dolt_tests",
-		"add_dolt_test",
-		"remove_dolt_test",
 	}
 	for _, name := range unsupported {
 		require.False(t, d.SupportsTool(name), "expected %s to be unsupported", name)
@@ -101,6 +94,10 @@ func TestDoltLiteDialectSupportsTool(t *testing.T) {
 		"dolt_push_branch",
 		"dolt_pull_branch",
 		"add_dolt_remote",
+		"run_dolt_tests",
+		"add_dolt_test",
+		"remove_dolt_test",
+		"get_dolt_merge_status",
 	}
 	for _, name := range supported {
 		require.True(t, d.SupportsTool(name), "expected %s to be supported", name)
@@ -133,7 +130,6 @@ func TestDoltLiteDialectValidateReadQuery(t *testing.T) {
 		"DELETE FROM people;",
 		"DROP TABLE people;",
 		"",
-		// Version-control mutations spelled as SELECTs.
 		"SELECT dolt_commit('-m', 'sneaky');",
 		"SELECT dolt_checkout('main');",
 		"SELECT dolt_reset('--hard');",

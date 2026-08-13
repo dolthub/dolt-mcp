@@ -265,7 +265,7 @@ DoltLite support requires cgo, the `doltlite` and `libsqlite3` build tags, and l
 
 Get libdoltlite either way:
 
-1. **GitHub release zips**: download the `doltlite-lib-<platform>-<version>.zip` asset (e.g. `doltlite-lib-linux-x64-0.11.45.zip`) from a [dolthub/doltlite release](https://github.com/dolthub/doltlite/releases). It contains `doltlite.h` and `libdoltlite.a`. `mattn/go-sqlite3` built with the `libsqlite3` tag includes `<sqlite3.h>`, so copy the header: `cp doltlite.h sqlite3.h` inside the unpacked directory.
+1. **GitHub release zips**: download the `doltlite-lib-<platform>-<version>.zip` asset (e.g. `doltlite-lib-linux-x64-0.11.46.zip`) from a [dolthub/doltlite release](https://github.com/dolthub/doltlite/releases). It contains `doltlite.h` and `libdoltlite.a`. `mattn/go-sqlite3` built with the `libsqlite3` tag includes `<sqlite3.h>`, so copy the header: `cp doltlite.h sqlite3.h` inside the unpacked directory.
 2. **Build from source**: clone [dolthub/doltlite](https://github.com/dolthub/doltlite) at the pinned tag, then `mkdir build && cd build && ../configure && make doltlite-lib` (requires a C toolchain, `tcl`, and zlib headers, e.g. `apt-get install build-essential tcl zlib1g-dev`). The build directory generates `sqlite3.h` natively.
 
 Then build the server, pointing cgo at the directory containing the header and static library:
@@ -284,10 +284,8 @@ DoltLite embeds a single database in a single file, so server- and multi-databas
 
 - `list_databases`, `create_database`, `drop_database`, `clone_database`
 - `show_processlist`, `kill_process`
-- `get_dolt_merge_status`
-- `run_dolt_tests`, `add_dolt_test`, `remove_dolt_test`
 
-Everything else (35 tools) works, including remote operations against `file://` URLs and DoltLite-compatible HTTP(S) remotes. Authenticated remotes use DoltLite credentials; create one through the `exec` tool with `SELECT dolt_creds_new();`, then configure the returned key with the remote service. The engine reads credentials from `~/.doltlite/creds` by default or `DOLTLITE_CREDS_DIR` when set.
+Everything else (39 tools) works, including the `dolt_tests` tools, merge status, and remote operations against `file://` URLs and DoltLite-compatible HTTP(S) remotes. Authenticated remotes use DoltLite credentials; create one through the `exec` tool with `SELECT dolt_creds_new();`, then configure the returned key with the remote service. The engine reads credentials from `~/.doltlite/creds` by default or `DOLTLITE_CREDS_DIR` when set.
 
 ### Behavioral Notes
 

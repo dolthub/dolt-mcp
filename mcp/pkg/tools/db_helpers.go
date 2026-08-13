@@ -35,7 +35,6 @@ func NewDatabaseTransactionUsingDatabase(ctx context.Context, config db.Config, 
 		return nil, err
 	}
 
-	// Single-database dialects have no USE statement.
 	if useStmt := dialect.UseDatabase(database); useStmt != "" {
 		err = tx.ExecContext(ctx, useStmt)
 		if err != nil {

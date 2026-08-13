@@ -1,10 +1,5 @@
 name: Upload Dolt MCP Server DoltLite Assets
 
-# Builds DoltLite-enabled (cgo) dolt-mcp-server binaries on native runners
-# for the platforms dolthub/doltlite ships static libraries for, and uploads
-# them to an existing GitHub release. Called automatically by release.yaml
-# and can also be dispatched manually to (re)build assets for a release.
-
 on:
   workflow_dispatch:
     inputs:
@@ -22,8 +17,7 @@ permissions:
   contents: write
 
 env:
-  # Single pin for the dolthub/doltlite release the binaries link against.
-  DOLTLITE_VERSION: v0.11.45
+  DOLTLITE_VERSION: v0.11.46
 
 jobs:
   format-version:
@@ -97,7 +91,6 @@ jobs:
       - name: Prepare output directory
         run: mkdir -p "$OUT_DIR"
 
-        # cgo build against the pinned doltlite static library (native only)
       - name: Build DoltLite Binary
         run: |
           "$RUNNER_TEMP/build_doltlite_binary.sh" \
@@ -112,10 +105,6 @@ jobs:
             "$OUT_DIR/dolt-mcp-server-doltlite-${{ matrix.archive_platform }}.tar.gz" \
             --clobber
 
-  # The doltlite win-x64 release ships only libdoltlite.dll (no static or
-  # import library), so this job generates an import library with
-  # gendef/dlltool, links against the DLL, and ships the DLL inside the zip
-  # next to the executable.
   build-and-upload-windows:
     needs: format-version
     runs-on: windows-latest
@@ -162,10 +151,6 @@ jobs:
           unzip -q doltlite-lib/doltlite-lib.zip -d doltlite-lib
           lib_dir="$(pwd)/doltlite-lib/${lib_zip_name}"
 
-          # mattn/go-sqlite3 (libsqlite3 tag) includes <sqlite3.h> and links
-          # -lsqlite3. The win-x64 release only ships libdoltlite.dll, so
-          # generate an import library named libsqlite3.dll.a whose internal
-          # DLL name stays libdoltlite.dll.
           cp "${lib_dir}/doltlite.h" "${lib_dir}/sqlite3.h"
           (
             cd "$lib_dir"
@@ -179,7 +164,6 @@ jobs:
           go build -trimpath -tags "doltlite libsqlite3" -ldflags "-s -w" \
             -o staging/dolt-mcp-server-doltlite.exe ./mcp/cmd/dolt-mcp-server
 
-          # Ship the DLL next to the executable: the binary loads it at runtime.
           cp "${lib_dir}/libdoltlite.dll" staging/
           out_abs="$(pwd)/out"
           (cd staging && zip -q "${out_abs}/dolt-mcp-server-doltlite-windows-amd64.zip" \

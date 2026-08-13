@@ -31,7 +31,6 @@ const (
 	doltFlag     = "dolt"
 	doltgresFlag = "doltgres"
 
-	// DoltLite (embedded) flags.
 	doltliteFlag    = "doltlite"
 	dbFileFlag      = "db-file"
 	commitNameFlag  = "commit-name"
@@ -79,7 +78,6 @@ var (
 	doltgres = flag.Bool(doltgresFlag, false, "Use the DoltgreSQL (PostgreSQL-compatible) dialect.")
 )
 
-// DoltLite (embedded) flags.
 var (
 	doltlite    = flag.Bool(doltliteFlag, false, "Use the DoltLite (embedded, SQLite-compatible) dialect. Requires --db-file. Only available in binaries built with DoltLite support.")
 	dbFile      = flag.String(dbFileFlag, "", "Path to the DoltLite database file. The file is created if it does not exist. Only used with --doltlite.")
@@ -145,8 +143,6 @@ func coalesceIntFlag(set map[string]bool, newName string, newVal int, oldName st
 	return newVal
 }
 
-// resolveDialect determines the dialect from the --dolt/--doltgres/--doltlite
-// flags. Defaults to Dolt (MySQL) if none is set.
 func resolveDialect(set map[string]bool) (db.DialectType, error) {
 	dialectFlagsSet := 0
 	for _, f := range []string{doltFlag, doltgresFlag, doltliteFlag} {
@@ -266,7 +262,6 @@ func main() {
 	}
 
 	// Apply the dialect-appropriate default port if no port was explicitly set.
-	// DoltLite is embedded and has no port.
 	if portVal == 0 && dialectType != db.DialectDoltLite {
 		switch dialectType {
 		case db.DialectPostgres:

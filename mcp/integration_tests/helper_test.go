@@ -50,10 +50,6 @@ type TableStatus struct {
 	TableName string
 }
 
-// shouldSkipCallToolCase reports whether a table-driven CallTool case does
-// not apply to the current dialect. DoltLite is a single-database embedded
-// engine that ignores working_database, so passing a non-existent database
-// name is not an error there.
 func shouldSkipCallToolCase(s *testSuite, description string) bool {
 	return s.dialectType == db.DialectDoltLite &&
 		strings.Contains(description, "Non-existent working_database")

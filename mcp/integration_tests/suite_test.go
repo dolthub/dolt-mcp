@@ -25,8 +25,6 @@ func TestMain(m *testing.M) {
 			dialectType = db.DialectPostgres
 			binName = "doltgres"
 		case "doltlite":
-			// DoltLite is embedded in the test binary itself; there is no
-			// external server binary and no dolt global config to isolate.
 			dialectType = db.DialectDoltLite
 			binName = ""
 		}
@@ -73,10 +71,6 @@ func generateTestBranchName() string {
 	return uuid.NewString()
 }
 
-// skipUnlessDialectSQLDefined skips the test when any provided non-nil
-// DialectSQL map has no entry for the suite's dialect. This lets tests whose
-// SQL or semantics don't translate to a dialect (e.g. DoltLite) opt out by
-// simply omitting that dialect's entry.
 func skipUnlessDialectSQLDefined(t *testing.T, sqls ...DialectSQL) {
 	t.Helper()
 	if suite == nil {
