@@ -27,7 +27,7 @@ type StdioServer interface {
 var _ StdioServer = &stdioServerImpl{}
 
 func NewMCPStdioServer(logger *zap.Logger, config db.Config, opts ...Option) (StdioServer, error) {
-	if err := db.PrepareDatabase(config); err != nil {
+	if err := db.PrepareDatabase(&config); err != nil {
 		return nil, fmt.Errorf("failed to prepare database: %w", err)
 	}
 

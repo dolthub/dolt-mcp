@@ -80,12 +80,11 @@ func (d *DoltLiteDialect) CallProcedure(proc DoltProcedure, args ...string) stri
 		quotedArgs[i] = fmt.Sprintf("'%s'", escapeStringLiteral(arg))
 	}
 
-	// DoltLite refuses to switch branches when the working set is dirty,
-	// including a checkout of the branch the session is already on in some
-	// merge states. Since tools check out their working branch on every
-	// call, skip the checkout when the session is already on the target
-	// branch. CASE evaluates lazily in SQLite, so dolt_checkout only runs
-	// when the branch actually differs.
+	// Tools select their working branch on every call. Skip a redundant
+	// checkout when a freshly pinned handle is already on the target branch;
+	// CASE evaluates lazily in SQLite, so dolt_checkout runs only when needed.
+	// Dirty working sets do not prevent DoltLite branch switching: they are
+	// preserved independently on their branches.
 	if proc == DoltCheckout && len(args) == 1 {
 		return fmt.Sprintf(
 			"SELECT CASE WHEN active_branch() = %s THEN 0 ELSE dolt_checkout(%s) END;",

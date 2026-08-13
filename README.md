@@ -293,8 +293,8 @@ Everything else (35 tools) works, including remote operations against `file://` 
 
 - **One database per file**: the `working_database` tool argument is accepted but ignored; there is only ever one database.
 - **Commit author**: configure `--commit-name`/`--commit-email` or commits are authored as "doltlite".
-- **Branch switching**: requires a clean working set — commit or reset changes first.
-- **Concurrency**: the MCP server serializes its tool calls through one connection to preserve session state. Other DoltLite processes may read concurrently; file locking still permits only one writer at a time.
+- **Branch switching**: dirty working sets are preserved independently per branch; switching away and back restores that branch's unstaged and staged state.
+- **Concurrency**: each tool call uses its own pinned DoltLite database handle so branch and transaction state cannot leak between concurrent MCP operations. DoltLite coordinates those handles—and other applications opening the same file—with concurrent readers, one durable writer at a time, and a five-second busy timeout for short lock contention.
 - **Remote compatibility**: remote storage must speak DoltLite's file or HTTP(S) protocol; a full Dolt repository and a DoltLite database use different storage formats.
 
 ## Configuration Options

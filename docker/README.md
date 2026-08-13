@@ -58,7 +58,7 @@ docker run -it --rm \
   dolthub/dolt-mcp:latest-doltlite
 ```
 
-The DoltLite image defaults to `MCP_DIALECT=doltlite`, `DOLT_DB_FILE=/data/doltlite.db`, and `DOLTLITE_CREDS_DIR=/data/creds` (the database and credential directory are created on first use). `DOLT_HOST`, `DOLT_USER`, `DOLT_PORT`, and `DOLT_PASSWORD` are not used. Setting `DOLT_COMMIT_NAME`/`DOLT_COMMIT_EMAIL` is recommended; otherwise Dolt commits are authored as "doltlite". The server serializes tool calls through one connection to preserve session state; other DoltLite readers can still open the file, while file locking permits one writer at a time. A handful of server-oriented tools (database management, process management, and Dolt test tools) are hidden in this mode. The DoltLite image is published for `linux/amd64` and `linux/arm64`.
+The DoltLite image defaults to `MCP_DIALECT=doltlite`, `DOLT_DB_FILE=/data/doltlite.db`, and `DOLTLITE_CREDS_DIR=/data/creds` (the database and credential directory are created on first use). `DOLT_HOST`, `DOLT_USER`, `DOLT_PORT`, and `DOLT_PASSWORD` are not used. Setting `DOLT_COMMIT_NAME`/`DOLT_COMMIT_EMAIL` is recommended; otherwise Dolt commits are authored as "doltlite". Each tool call uses its own pinned DoltLite database handle; DoltLite coordinates concurrent readers and permits one durable writer at a time, with a five-second busy timeout for short lock contention. A handful of server-oriented tools (database management, process management, and Dolt test tools) are hidden in this mode. The DoltLite image is published for `linux/amd64` and `linux/arm64`.
 
 ## Environment Variables
 

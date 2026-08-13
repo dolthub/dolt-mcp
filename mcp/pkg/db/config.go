@@ -31,6 +31,12 @@ type Config struct {
 	// persist it.
 	CommitName  string `yaml:"commit_name" json:"commit_name"`
 	CommitEmail string `yaml:"commit_email" json:"commit_email"`
+
+	// doltLiteDatabase is initialized by PrepareDatabase for a server-owned
+	// DoltLite pool. Config is passed by value throughout the tool layer, so
+	// copies retain the same pool without exposing runtime state in serialized
+	// configuration.
+	doltLiteDatabase *doltLiteDatabase
 }
 
 func (c *Config) Validate() error {

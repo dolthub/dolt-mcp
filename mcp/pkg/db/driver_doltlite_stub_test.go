@@ -8,7 +8,8 @@ import (
 )
 
 func TestPrepareDatabaseReportsMissingDoltLiteBuild(t *testing.T) {
-	err := PrepareDatabase(Config{DialectType: DialectDoltLite, Path: ":memory:"})
+	config := Config{DialectType: DialectDoltLite, Path: ":memory:"}
+	err := PrepareDatabase(&config)
 	if !errors.Is(err, ErrDoltLiteNotSupported) {
 		t.Fatalf("expected ErrDoltLiteNotSupported, got %v", err)
 	}

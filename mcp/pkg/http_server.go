@@ -63,7 +63,7 @@ func NewMCPHTTPServer(logger *zap.Logger, config db.Config, port int, jwkClaimsM
 		}
 	}
 
-	if err := db.PrepareDatabase(config); err != nil {
+	if err := db.PrepareDatabase(&config); err != nil {
 		return nil, fmt.Errorf("failed to prepare database: %w", err)
 	}
 
