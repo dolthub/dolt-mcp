@@ -2,32 +2,29 @@ FROM golang:1.25-bookworm AS builder
 
 ARG DOLT_MCP_VERSION=development
 ARG DOLTLITE_VERSION=v0.11.51
-ARG TARGETARCH
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        build-essential \
         ca-certificates \
         curl \
+        tcl \
         tzdata \
-        unzip \
         zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /doltlite
 RUN set -eux; \
-    case "${TARGETARCH}" in \
-      amd64) doltlite_arch=x64 ;; \
-      arm64) doltlite_arch=arm64 ;; \
-      *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
-    esac; \
     version_num="${DOLTLITE_VERSION#v}"; \
-    asset="doltlite-lib-linux-${doltlite_arch}-${version_num}"; \
-    curl -fsSL -o doltlite.zip \
-      "https://github.com/dolthub/doltlite/releases/download/${DOLTLITE_VERSION}/${asset}.zip"; \
-    unzip -q doltlite.zip; \
-    mv "${asset}" build; \
-    cp build/doltlite.h build/sqlite3.h; \
-    cp build/libdoltlite.a build/libsqlite3.a
+    source_dir="doltlite-${version_num}"; \
+    curl -fsSL -o doltlite.tar.gz \
+      "https://github.com/dolthub/doltlite/archive/refs/tags/${DOLTLITE_VERSION}.tar.gz"; \
+    tar -xzf doltlite.tar.gz; \
+    mkdir build; \
+    cd build; \
+    "../${source_dir}/configure"; \
+    make -j"$(nproc)" doltlite-lib; \
+    cp libdoltlite.a libsqlite3.a
 
 WORKDIR /app
 
