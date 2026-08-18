@@ -17,7 +17,7 @@ permissions:
   contents: write
 
 env:
-  DOLTLITE_VERSION: v0.11.46
+  DOLTLITE_VERSION: v0.11.51
 
 jobs:
   format-version:
