@@ -17,7 +17,7 @@ permissions:
   contents: write
 
 env:
-  DOLTLITE_VERSION: v0.11.46
+  DOLTLITE_VERSION: v0.11.51
 
 jobs:
   format-version:
@@ -137,10 +137,11 @@ jobs:
           path-type: inherit
           install: >-
             curl
-            unzip
+            make
+            tcl
             zip
             mingw-w64-x86_64-toolchain
-            mingw-w64-x86_64-tools-git
+            mingw-w64-x86_64-zlib
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -151,32 +152,31 @@ jobs:
         run: |
           set -euo pipefail
           version_num="${DOLTLITE_VERSION#v}"
-          lib_zip_name="doltlite-lib-win-x64-${version_num}"
-          lib_url="https://github.com/dolthub/doltlite/releases/download/${DOLTLITE_VERSION}/${lib_zip_name}.zip"
+          source_name="doltlite-${version_num}"
+          source_url="https://github.com/dolthub/doltlite/archive/refs/tags/${DOLTLITE_VERSION}.tar.gz"
+          source_parent="$(mktemp -d)"
+          lib_dir="${source_parent}/build"
 
-          mkdir -p doltlite-lib staging out
-          echo "Downloading ${lib_url}"
-          curl -fsSL -o doltlite-lib/doltlite-lib.zip "$lib_url"
-          unzip -q doltlite-lib/doltlite-lib.zip -d doltlite-lib
-          lib_dir="$(pwd)/doltlite-lib/${lib_zip_name}"
-
-          cp "${lib_dir}/doltlite.h" "${lib_dir}/sqlite3.h"
+          curl -fsSL -o "${source_parent}/doltlite.tar.gz" "$source_url"
+          tar -xzf "${source_parent}/doltlite.tar.gz" -C "$source_parent"
+          mkdir -p "$lib_dir" staging out
           (
             cd "$lib_dir"
-            gendef libdoltlite.dll
-            dlltool -d libdoltlite.def -D libdoltlite.dll -l libsqlite3.dll.a
+            "${source_parent}/${source_name}/configure"
+            make -j"$(nproc)" doltlite-lib
           )
+          cp "${lib_dir}/libdoltlite.a" "${lib_dir}/libsqlite3.a"
 
           export CGO_ENABLED=1
           export CGO_CFLAGS="-I${lib_dir}"
-          export CGO_LDFLAGS="-L${lib_dir}"
-          go build -trimpath -tags "doltlite libsqlite3" -ldflags "-s -w" \
+          export CGO_LDFLAGS="-L${lib_dir} -static -lz -lpthread -lm -lws2_32 -lbcrypt -lcrypt32"
+          go build -buildvcs=false -trimpath -tags "doltlite libsqlite3" -ldflags "-s -w" \
             -o staging/dolt-mcp-server-doltlite.exe ./mcp/cmd/dolt-mcp-server
+          ./staging/dolt-mcp-server-doltlite.exe --version
 
-          cp "${lib_dir}/libdoltlite.dll" staging/
           out_abs="$(pwd)/out"
           (cd staging && zip -q "${out_abs}/dolt-mcp-server-doltlite-windows-amd64.zip" \
-            dolt-mcp-server-doltlite.exe libdoltlite.dll)
+            dolt-mcp-server-doltlite.exe)
 
       - name: Upload asset to existing release (clobber)
         shell: pwsh

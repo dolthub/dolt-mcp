@@ -1,7 +1,7 @@
 FROM golang:1.25-bookworm AS builder
 
 ARG DOLT_MCP_VERSION=development
-ARG DOLTLITE_VERSION=v0.11.46
+ARG DOLTLITE_VERSION=v0.11.51
 ARG TARGETARCH
 
 RUN apt-get update && \

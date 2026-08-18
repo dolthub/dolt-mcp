@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Usage:
 #   build_doltlite_binary.sh <doltlite_platform> <archive_platform> <output_directory>
-# DOLTLITE_VERSION must be a release tag such as v0.11.46.
+# DOLTLITE_VERSION must be a release tag such as v0.11.51.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ -n "${GITHUB_WORKSPACE:-}" && -d "${GITHUB_WORKSPACE}" ]]; then
@@ -24,7 +24,7 @@ DOLTLITE_PLATFORM="$1"
 ARCHIVE_PLATFORM="$2"
 OUT_DIR="$3"
 
-: "${DOLTLITE_VERSION:?DOLTLITE_VERSION environment variable is required (e.g. v0.11.46)}"
+: "${DOLTLITE_VERSION:?DOLTLITE_VERSION environment variable is required (e.g. v0.11.51)}"
 DOLTLITE_VERSION_NUM="${DOLTLITE_VERSION#v}"
 
 mkdir -p "$OUT_DIR" staging
@@ -70,7 +70,7 @@ rm -f staging/dolt-mcp-server-doltlite
 CGO_ENABLED=1 \
   CGO_CFLAGS="-I${LIB_DIR}" \
   CGO_LDFLAGS="-L${LIB_DIR} ${EXTRA_LIBS}" \
-  go build -trimpath -tags "doltlite libsqlite3" -ldflags "-s -w" \
+  go build -buildvcs=false -trimpath -tags "doltlite libsqlite3" -ldflags "-s -w" \
   -o staging/dolt-mcp-server-doltlite ./mcp/cmd/dolt-mcp-server
 tar -C staging -czf "${OUT_DIR_ABS}/${name}" dolt-mcp-server-doltlite
 rm -f staging/dolt-mcp-server-doltlite
