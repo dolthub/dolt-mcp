@@ -24,6 +24,13 @@ SELECT dolt_commit('-Am', 'insert 1');
 INSERT INTO t1 VALUES (2);
 SELECT dolt_commit('-Am', 'insert 2');
 `,
+	db.DialectDoltLite: `CREATE TABLE t1 (pk int primary key);
+SELECT dolt_commit('-Am', 'add t1');
+INSERT INTO t1 VALUES (1);
+SELECT dolt_commit('-Am', 'insert 1');
+INSERT INTO t1 VALUES (2);
+SELECT dolt_commit('-Am', 'insert 2');
+`,
 }
 
 func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -123,6 +130,9 @@ func testListDoltCommitsToolInvalidArguments(s *testSuite, testBranchName string
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		listDoltCommitsCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

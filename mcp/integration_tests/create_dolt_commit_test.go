@@ -16,6 +16,9 @@ CALL DOLT_ADD('commitme');
 	db.DialectPostgres: `CREATE TABLE commitme (pk int primary key);
 SELECT dolt_add('commitme');
 `,
+	db.DialectDoltLite: `CREATE TABLE commitme (pk int primary key);
+SELECT dolt_add('commitme');
+`,
 }
 
 func testCreateDoltCommitToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -148,6 +151,9 @@ func testCreateDoltCommitToolInvalidArguments(s *testSuite, testBranchName strin
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		createDoltCommitCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

@@ -20,6 +20,11 @@ CREATE TABLE stagemetwo (pk int primary key);
 SELECT dolt_add('stagemeone');
 SELECT dolt_add('stagemetwo');
 `,
+	db.DialectDoltLite: `CREATE TABLE stagemeone (pk int primary key);
+CREATE TABLE stagemetwo (pk int primary key);
+SELECT dolt_add('stagemeone');
+SELECT dolt_add('stagemetwo');
+`,
 }
 
 func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -119,6 +124,9 @@ func testUnstageAllTablesToolInvalidArguments(s *testSuite, testBranchName strin
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		unstageAllTablesCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

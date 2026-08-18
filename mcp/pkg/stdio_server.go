@@ -27,6 +27,10 @@ type StdioServer interface {
 var _ StdioServer = &stdioServerImpl{}
 
 func NewMCPStdioServer(logger *zap.Logger, config db.Config, opts ...Option) (StdioServer, error) {
+	if err := db.PrepareDatabase(&config); err != nil {
+		return nil, fmt.Errorf("failed to prepare database: %w", err)
+	}
+
 	errorWriter := NewZapErrorWriter(logger)
 	errorLogger := log.New(errorWriter, "Dolt MCP server error:", 0)
 
@@ -67,6 +71,12 @@ func (s *stdioServerImpl) MCP() *server.MCPServer {
 }
 
 func (s *stdioServerImpl) ServeStdio(ctx context.Context) {
+	defer func() {
+		if err := db.CloseDatabase(s.dbConfig); err != nil {
+			// The protocol is already stopping, so report cleanup through stderr.
+			fmt.Fprintln(os.Stderr, "failed to close database:", err)
+		}
+	}()
 	serveStdio(ctx, s.stdioServer)
 }
 

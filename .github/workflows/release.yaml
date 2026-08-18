@@ -87,8 +87,18 @@ jobs:
             "$OUT_DIR/dolt-mcp-server-windows-amd64.zip" \
             --clobber
 
-  docker-image-push:
+  doltlite-release-assets:
     needs: [format-version, create_release]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/upload-doltlite-release-assets.yaml
+    with:
+      version: ${{ needs.format-version.outputs.version }}
+
+  docker-image-push:
+    # Do not mark the release final until every native DoltLite asset has
+    # uploaded successfully.
+    needs: [format-version, create_release, doltlite-release-assets]
     runs-on: ubuntu-22.04
     steps:
       - name: Trigger Push Docker Image
@@ -99,4 +109,3 @@ jobs:
           client-payload: >-
             {"version":"${{ needs.format-version.outputs.version }}",
              "release_id":"${{ needs.create_release.outputs.release_id }}"}
-

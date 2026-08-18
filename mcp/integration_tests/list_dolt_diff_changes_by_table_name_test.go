@@ -22,6 +22,12 @@ INSERT INTO t1 VALUES (1);
 INSERT INTO t1 VALUES (2);
 SELECT dolt_add('t1');
 `,
+	db.DialectDoltLite: `CREATE TABLE t1 (pk int primary key);
+SELECT dolt_commit('-Am', 'add t1');
+INSERT INTO t1 VALUES (1);
+INSERT INTO t1 VALUES (2);
+SELECT dolt_add('t1');
+`,
 }
 
 func testListDoltDiffChangesByTableNameToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -250,6 +256,9 @@ func testListDoltDiffChangesByTableNameToolInvalidArguments(s *testSuite, testBr
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		listDoltDiffChangesByTableNameCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

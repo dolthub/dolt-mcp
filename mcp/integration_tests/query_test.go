@@ -12,6 +12,7 @@ import (
 var testQueryToolQuery = DialectSQL{
 	db.DialectMySQL:    "SELECT * FROM `people`;",
 	db.DialectPostgres: `SELECT * FROM "people";`,
+	db.DialectDoltLite: `SELECT * FROM "people";`,
 }
 
 func testQueryToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -158,6 +159,9 @@ func testQueryToolInvalidArguments(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		queryCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

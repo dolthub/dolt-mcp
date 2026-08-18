@@ -101,6 +101,9 @@ func testSelectActiveBranchToolInvalidArguments(s *testSuite, testBranchName str
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		selectActiveBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

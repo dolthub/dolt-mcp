@@ -15,7 +15,7 @@ const (
 	MoveDoltBranchToolNewNameArgumentDescription = "The new name of the branch."
 	MoveDoltBranchToolForceArgumentDescription   = "If true, will force the original branch to be moved to its new name even if a branch of that name already exists."
 	MoveDoltBranchToolDescription                = "Moves/renames a branch from the specified original branch to the provided new name."
-	MoveDoltBranchToolCallSuccessFormatString = "successfully moved branch: %s"
+	MoveDoltBranchToolCallSuccessFormatString    = "successfully moved branch: %s"
 )
 
 func NewMoveDoltBranchTool() mcp.Tool {
@@ -30,6 +30,11 @@ func NewMoveDoltBranchTool() mcp.Tool {
 			WorkingDatabaseCallToolArgumentName,
 			mcp.Required(),
 			mcp.Description(WorkingDatabaseCallToolArgumentDescription),
+		),
+		mcp.WithString(
+			WorkingBranchCallToolArgumentName,
+			mcp.Required(),
+			mcp.Description(WorkingBranchCallToolArgumentDescription),
 		),
 		mcp.WithString(
 			OldNameCallToolArgumentName,
@@ -62,6 +67,13 @@ func RegisterMoveDoltBranchTool(server pkg.Server) {
 			return
 		}
 
+		var workingBranch string
+		workingBranch, err = GetRequiredStringArgumentFromCallToolRequest(request, WorkingBranchCallToolArgumentName)
+		if err != nil {
+			result = mcp.NewToolResultError(err.Error())
+			return
+		}
+
 		var oldName string
 		oldName, err = GetRequiredStringArgumentFromCallToolRequest(request, OldNameCallToolArgumentName)
 		if err != nil {
@@ -82,7 +94,7 @@ func RegisterMoveDoltBranchTool(server pkg.Server) {
 		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
-		tx, err = NewDatabaseTransactionUsingDatabase(ctx, config, dialect, workingDatabase)
+		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return

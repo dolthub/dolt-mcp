@@ -3,6 +3,9 @@ FROM golang:1.25-alpine3.21 AS builder
 
 # Set build arguments
 ARG DOLT_MCP_VERSION=development
+# BuildKit supplies these for each requested target platform.
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
@@ -20,7 +23,7 @@ RUN go mod download
 COPY . .
 
 # Build the application with optimizations
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
     -ldflags="-w -s -X github.com/dolthub/dolt-mcp/mcp/pkg.DoltMCPServerVersion=${DOLT_MCP_VERSION}" \
     -a -installsuffix cgo \
     -o dolt-mcp-server \

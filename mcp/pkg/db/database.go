@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 )
 
 type ResultFormat int
@@ -30,26 +31,90 @@ type DatabaseTransaction interface {
 	Commit(ctx context.Context) error
 }
 
+type sqlExecutor interface {
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
 type databaseTransactionImpl struct {
-	db     *sql.DB
-	config Config
+	executor         sqlExecutor
+	db               *sql.DB
+	conn             *sql.Conn
+	doltLiteDatabase *doltLiteDatabase
+	closeDoltLiteDB  bool
 }
 
 var _ DatabaseTransaction = &databaseTransactionImpl{}
 
 func NewDatabaseTransaction(ctx context.Context, config Config) (DatabaseTransaction, error) {
+	if config.DialectType == DialectDoltLite {
+		return newDoltLiteTransaction(ctx, config)
+	}
+
 	db, err := newDB(config)
 	if err != nil {
 		return nil, err
 	}
 	_, err = db.ExecContext(ctx, "BEGIN;")
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 	return &databaseTransactionImpl{
-		db:     db,
-		config: config,
+		executor: db,
+		db:       db,
 	}, nil
+}
+
+func newDoltLiteTransaction(ctx context.Context, config Config) (DatabaseTransaction, error) {
+	if err := config.Validate(); err != nil {
+		return nil, err
+	}
+	database := config.doltLiteDatabase
+	closeDatabase := false
+	if database == nil {
+		var err error
+		database, err = openDoltLiteDatabase(config)
+		if err != nil {
+			return nil, err
+		}
+		closeDatabase = true
+	}
+
+	conn, err := database.db.Conn(ctx)
+	if err != nil {
+		if closeDatabase {
+			_ = database.db.Close()
+		}
+		return nil, err
+	}
+
+	tx := &databaseTransactionImpl{
+		executor:         conn,
+		conn:             conn,
+		doltLiteDatabase: database,
+		closeDoltLiteDB:  closeDatabase,
+	}
+
+	if _, err = conn.ExecContext(ctx, fmt.Sprintf("PRAGMA busy_timeout = %d;", config.BusyTimeout.Milliseconds())); err != nil {
+		return nil, tx.finish(err)
+	}
+	if config.CommitName != "" {
+		if _, err = conn.ExecContext(ctx, "SELECT dolt_config('user.name', ?);", config.CommitName); err != nil {
+			return nil, tx.finish(fmt.Errorf("failed to configure DoltLite commit author name: %w", err))
+		}
+	}
+	if config.CommitEmail != "" {
+		if _, err = conn.ExecContext(ctx, "SELECT dolt_config('user.email', ?);", config.CommitEmail); err != nil {
+			return nil, tx.finish(fmt.Errorf("failed to configure DoltLite commit author email: %w", err))
+		}
+	}
+	_, err = conn.ExecContext(ctx, "BEGIN;")
+	if err != nil {
+		err = tx.recoverPinnedTransaction(err)
+		return nil, tx.finish(err)
+	}
+	return tx, nil
 }
 
 func (d *databaseTransactionImpl) QueryContext(ctx context.Context, query string, resultFormat ResultFormat) (string, error) {
@@ -137,11 +202,11 @@ func (d *databaseTransactionImpl) rowMapToCSV(rowMaps []RowMap, headers []string
 }
 
 func (d *databaseTransactionImpl) doQueryContext(ctx context.Context, query string) ([]RowMap, Columns, error) {
-	if d.db == nil {
+	if d.executor == nil {
 		return nil, nil, ErrTransactionHasBeenCommittedOrRolledBack
 	}
 
-	rows, err := d.db.QueryContext(ctx, query)
+	rows, err := d.executor.QueryContext(ctx, query)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -189,10 +254,10 @@ func (d *databaseTransactionImpl) doQueryContext(ctx context.Context, query stri
 }
 
 func (d *databaseTransactionImpl) doExecContext(ctx context.Context, query string) error {
-	if d.db == nil {
+	if d.executor == nil {
 		return ErrTransactionHasBeenCommittedOrRolledBack
 	}
-	_, err := d.db.ExecContext(ctx, query)
+	_, err := d.executor.ExecContext(ctx, query)
 	return err
 }
 
@@ -200,21 +265,69 @@ func (d *databaseTransactionImpl) ExecContext(ctx context.Context, query string)
 	return d.doExecContext(ctx, query)
 }
 
+func isNoActiveTransactionError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "no transaction is active")
+}
+
+const doltLiteTransactionCleanupTimeout = 5 * time.Second
+
+func (d *databaseTransactionImpl) recoverPinnedTransaction(originalErr error) error {
+	cleanupCtx, cancel := context.WithTimeout(context.Background(), doltLiteTransactionCleanupTimeout)
+	defer cancel()
+
+	_, cleanupErr := d.conn.ExecContext(cleanupCtx, "ROLLBACK;")
+	if cleanupErr == nil || isNoActiveTransactionError(cleanupErr) {
+		return originalErr
+	}
+
+	return errors.Join(
+		originalErr,
+		fmt.Errorf("failed to clean up DoltLite transaction: %w", cleanupErr),
+	)
+}
+
+func (d *databaseTransactionImpl) finish(err error) error {
+	if d.conn != nil {
+		cerr := d.conn.Close()
+		if err == nil {
+			err = cerr
+		}
+	}
+	if d.db != nil {
+		cerr := d.db.Close()
+		if err == nil {
+			err = cerr
+		}
+	}
+	if d.closeDoltLiteDB && d.doltLiteDatabase != nil {
+		cerr := d.doltLiteDatabase.db.Close()
+		if err == nil {
+			err = cerr
+		}
+	}
+	d.executor = nil
+	d.conn = nil
+	d.db = nil
+	d.doltLiteDatabase = nil
+	return err
+}
+
 func (d *databaseTransactionImpl) Rollback(ctx context.Context) (err error) {
-	if d.db == nil {
+	if d.executor == nil {
 		err = ErrTransactionHasBeenCommittedOrRolledBack
 		return
 	}
 
 	defer func() {
-		rerr := d.db.Close()
-		if err == nil {
-			err = rerr
-		}
-		d.db = nil
+		err = d.finish(err)
 	}()
 
 	err = d.doExecContext(ctx, "ROLLBACK;")
+	if d.conn != nil && isNoActiveTransactionError(err) {
+		err = nil
+	} else if d.conn != nil && err != nil {
+		err = d.recoverPinnedTransaction(err)
+	}
 	if err != nil {
 		return
 	}
@@ -223,25 +336,92 @@ func (d *databaseTransactionImpl) Rollback(ctx context.Context) (err error) {
 }
 
 func (d *databaseTransactionImpl) Commit(ctx context.Context) (err error) {
-	if d.db == nil {
+	if d.executor == nil {
 		err = ErrTransactionHasBeenCommittedOrRolledBack
 		return
 	}
 
 	defer func() {
-		rerr := d.db.Close()
-		if err == nil {
-			err = rerr
-		}
-		d.db = nil
+		err = d.finish(err)
 	}()
 
 	err = d.doExecContext(ctx, "COMMIT;")
+	if d.conn != nil && isNoActiveTransactionError(err) {
+		err = nil
+	} else if d.conn != nil && err != nil {
+		err = d.recoverPinnedTransaction(err)
+	}
 	if err != nil {
 		return
 	}
 
 	return
+}
+
+type doltLiteDatabase struct {
+	db *sql.DB
+}
+
+// PrepareDatabase opens an embedded database when configured.
+func PrepareDatabase(config *Config) error {
+	if config == nil {
+		return errors.New("database config is nil")
+	}
+	if config.DialectType != DialectDoltLite {
+		return nil
+	}
+	if err := config.Validate(); err != nil {
+		return err
+	}
+	if config.doltLiteDatabase != nil {
+		return nil
+	}
+	database, err := openDoltLiteDatabase(*config)
+	if err != nil {
+		return err
+	}
+	config.doltLiteDatabase = database
+	return nil
+}
+
+// CloseDatabase closes an embedded database when configured.
+func CloseDatabase(config Config) error {
+	if config.DialectType != DialectDoltLite || config.doltLiteDatabase == nil {
+		return nil
+	}
+	return config.doltLiteDatabase.db.Close()
+}
+
+func openDoltLiteDatabase(config Config) (*doltLiteDatabase, error) {
+	dialect := NewDialect(config.DialectType)
+	dsn := dialect.FormatDSN(config)
+
+	if err := registerDoltLiteDriver(config); err != nil {
+		return nil, err
+	}
+
+	db, err := sql.Open(doltLiteDriverName, dsn)
+	if err != nil {
+		return nil, err
+	}
+	db.SetMaxIdleConns(0)
+
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to open DoltLite database %s (the file may have been written by an incompatible DoltLite version): %w", dsn, err)
+	}
+
+	var engine string
+	if err := db.QueryRow("SELECT doltlite_engine();").Scan(&engine); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to verify DoltLite engine (is the binary linked against libdoltlite?): %w", err)
+	}
+	if engine != "prolly" {
+		db.Close()
+		return nil, fmt.Errorf("unexpected DoltLite storage engine %q, expected \"prolly\"", engine)
+	}
+
+	return &doltLiteDatabase{db: db}, nil
 }
 
 func newDB(config Config) (*sql.DB, error) {

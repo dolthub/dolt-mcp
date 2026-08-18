@@ -1,0 +1,85 @@
+FROM golang:1.25-bookworm AS builder
+
+ARG DOLT_MCP_VERSION=development
+ARG DOLTLITE_VERSION=v0.11.46
+ARG TARGETARCH
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        tzdata \
+        unzip \
+        zlib1g-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /doltlite
+RUN set -eux; \
+    case "${TARGETARCH}" in \
+      amd64) doltlite_arch=x64 ;; \
+      arm64) doltlite_arch=arm64 ;; \
+      *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac; \
+    version_num="${DOLTLITE_VERSION#v}"; \
+    asset="doltlite-lib-linux-${doltlite_arch}-${version_num}"; \
+    curl -fsSL -o doltlite.zip \
+      "https://github.com/dolthub/doltlite/releases/download/${DOLTLITE_VERSION}/${asset}.zip"; \
+    unzip -q doltlite.zip; \
+    mv "${asset}" build; \
+    cp build/doltlite.h build/sqlite3.h; \
+    cp build/libdoltlite.a build/libsqlite3.a
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+
+RUN CGO_ENABLED=1 \
+    CGO_CFLAGS="-I/doltlite/build" \
+    CGO_LDFLAGS="-L/doltlite/build -lz -lpthread -lm -ldl" \
+    go build \
+    -tags "doltlite libsqlite3" \
+    -ldflags="-w -s -X github.com/dolthub/dolt-mcp/mcp/pkg.DoltMCPServerVersion=${DOLT_MCP_VERSION}" \
+    -o dolt-mcp-server \
+    ./mcp/cmd/dolt-mcp-server
+
+FROM debian:bookworm-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates tzdata curl procps && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -g 1001 doltmcp && \
+    useradd -m -s /bin/sh -u 1001 -g doltmcp doltmcp
+
+WORKDIR /app
+
+COPY --from=builder /app/dolt-mcp-server .
+
+RUN mkdir -p /data/creds && chown -R doltmcp:doltmcp /data
+RUN chown -R doltmcp:doltmcp /app
+USER doltmcp
+
+VOLUME ["/data"]
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD if [ "$MCP_MODE" = "http" ]; then \
+        [ "$(curl -s -o /dev/null --max-time 2 -w '%{http_code}' http://localhost:${MCP_PORT:-8080}/health)" = "200" ] || exit 1; \
+    else \
+        pgrep dolt-mcp-server > /dev/null || exit 1; \
+    fi
+
+ENV MCP_DIALECT=doltlite
+ENV DOLT_DB_FILE=/data/doltlite.db
+ENV DOLTLITE_CREDS_DIR=/data/creds
+ENV DOLTLITE_BUSY_TIMEOUT=5s
+ENV MCP_MODE=stdio
+ENV MCP_PORT=8080
+
+COPY --chown=doltmcp:doltmcp docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD []

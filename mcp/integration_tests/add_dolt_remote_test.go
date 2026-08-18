@@ -12,6 +12,7 @@ import (
 var testAddDoltRemoteTeardownSQL = DialectSQL{
 	db.DialectMySQL:    `CALL DOLT_REMOTE('remove', 'origin');`,
 	db.DialectPostgres: `SELECT dolt_remote('remove', 'origin');`,
+	db.DialectDoltLite: `SELECT dolt_remote('remove', 'origin');`,
 }
 
 func testAddDoltRemoteToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -126,6 +127,9 @@ func testAddDoltRemoteToolInvalidArguments(s *testSuite, testBranchName string) 
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		addDoltRemoteCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

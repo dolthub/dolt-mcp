@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/dolthub/dolt-mcp/mcp/pkg"
 	"github.com/dolthub/dolt-mcp/mcp/pkg/db"
@@ -120,22 +121,22 @@ func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
 			return
 		}
 
+		dialect := server.Dialect()
+		config := server.DBConfig()
+
 		var fromValue string
 		if fromCommit != "" {
-			fromValue = fmt.Sprintf("'%s'", fromCommit)
+			fromValue = quoteSQLStringLiteral(fromCommit)
 		} else {
-			fromValue = fmt.Sprintf("HASHOF('%s')", hashOfFromCommit)
+			fromValue = dialect.HashOfFunction(hashOfFromCommit)
 		}
 
 		var toValue string
 		if toCommit != "" {
-			toValue = fmt.Sprintf("'%s'", toCommit)
+			toValue = quoteSQLStringLiteral(toCommit)
 		} else {
-			toValue = fmt.Sprintf("HASHOF('%s')", hashOfToCommit)
+			toValue = dialect.HashOfFunction(hashOfToCommit)
 		}
-
-		dialect := server.Dialect()
-		config := server.DBConfig()
 
 		var tx db.DatabaseTransaction
 		tx, err = NewDatabaseTransactionUsingDatabaseOnBranch(ctx, config, dialect, workingDatabase, workingBranch)
@@ -152,7 +153,7 @@ func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
 		}()
 
 		var formattedResult string
-		formattedResult, err = tx.QueryContext(ctx, fmt.Sprintf(ListDoltDiffChangesByTableNameToolSQLQueryFormatString, table, fromValue, toValue), db.ResultFormatMarkdown)
+		formattedResult, err = tx.QueryContext(ctx, dialect.ListTableDiffChangesQuery(table, fromValue, toValue), db.ResultFormatMarkdown)
 		if err != nil {
 			result = mcp.NewToolResultError(err.Error())
 			return
@@ -161,4 +162,8 @@ func RegisterListDoltDiffChangesByTableNameTool(server pkg.Server) {
 		result = mcp.NewToolResultText(formattedResult)
 		return
 	})
+}
+
+func quoteSQLStringLiteral(value string) string {
+	return fmt.Sprintf("'%s'", strings.ReplaceAll(value, "'", "''"))
 }

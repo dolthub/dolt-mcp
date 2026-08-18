@@ -68,6 +68,9 @@ func testCreateDatabaseToolInvalidArguments(s *testSuite, _ string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		createDatabaseCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -126,6 +129,9 @@ func testCreateDatabaseToolSuccess(s *testSuite, _ string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		createDatabaseCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 		require.False(s.t, createDatabaseCallToolResult.IsError)

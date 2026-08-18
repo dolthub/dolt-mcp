@@ -62,6 +62,9 @@ func testListDoltBranchesToolInvalidArguments(s *testSuite, testBranchName strin
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		listDoltBranchesCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

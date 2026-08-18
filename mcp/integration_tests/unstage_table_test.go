@@ -16,6 +16,9 @@ CALL DOLT_ADD('stageme');
 	db.DialectPostgres: `CREATE TABLE stageme (pk int primary key);
 SELECT dolt_add('stageme');
 `,
+	db.DialectDoltLite: `CREATE TABLE stageme (pk int primary key);
+SELECT dolt_add('stageme');
+`,
 }
 
 func testUnstageTableToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -162,6 +165,9 @@ func testUnstageTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		unstageTableCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

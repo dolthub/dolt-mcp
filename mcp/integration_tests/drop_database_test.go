@@ -68,6 +68,9 @@ func testDropDatabaseToolInvalidArguments(s *testSuite, _ string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		dropDatabaseCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -126,6 +129,9 @@ func testDropDatabaseToolSuccess(s *testSuite, _ string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		dropDatabaseCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 		require.False(s.t, dropDatabaseCallToolResult.IsError)

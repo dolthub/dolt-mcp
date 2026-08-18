@@ -153,6 +153,9 @@ func testDoltPullBranchToolInvalidArguments(s *testSuite, testBranchName string)
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		doltPullBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -249,6 +252,9 @@ CALL DOLT_CHECKOUT(@current_branch);
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		doltPullBranchCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 		require.False(s.t, doltPullBranchCallToolResult.IsError)

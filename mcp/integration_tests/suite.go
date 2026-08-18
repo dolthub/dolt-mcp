@@ -61,6 +61,11 @@ type serverProcess interface {
 	Stop() error
 }
 
+type noopServerProcess struct{}
+
+func (noopServerProcess) Start() error { return nil }
+func (noopServerProcess) Stop() error  { return nil }
+
 type testSuite struct {
 	t                     *testing.T
 	dialect               db.Dialect
@@ -146,17 +151,38 @@ func (s *testSuite) exec(sql string) error {
 	return err
 }
 
+func (s *testSuite) refreshDoltLiteSession() error {
+	if s.dialectType != db.DialectDoltLite {
+		return nil
+	}
+	var branch string
+	if err := s.testDb.QueryRow("SELECT active_branch();").Scan(&branch); err != nil {
+		return err
+	}
+	if branch == "main" {
+		_, err := s.testDb.Exec("SELECT dolt_connect_branch('main');")
+		return err
+	}
+	if _, err := s.testDb.Exec("SELECT dolt_connect_branch('main');"); err != nil {
+		return err
+	}
+	_, err := s.testDb.Exec("SELECT dolt_connect_branch(?);", branch)
+	return err
+}
+
 func (s *testSuite) Setup(newBranchName string, setupSQL DialectSQL, skipDoltCommit bool) {
 	if newBranchName == "" {
 		s.t.Fatalf("no new branch name provided")
 	}
 
-	err := s.exec(s.dialect.UseDatabase(mcpTestDatabaseName))
-	if err != nil {
-		s.t.Fatalf("failed to use database during test setup: %s", err.Error())
+	if useStmt := s.dialect.UseDatabase(mcpTestDatabaseName); useStmt != "" {
+		err := s.exec(useStmt)
+		if err != nil {
+			s.t.Fatalf("failed to use database during test setup: %s", err.Error())
+		}
 	}
 
-	err = s.checkoutBranch("main")
+	err := s.checkoutBranch("main")
 	if err != nil {
 		s.t.Fatalf("failed checkout main branch during test setup: %s", err.Error())
 	}
@@ -198,10 +224,16 @@ func (s *testSuite) Teardown(branchName string, teardownSQL DialectSQL, skipDolt
 	if err != nil {
 		s.t.Fatalf("failed to reach database: %s", err.Error())
 	}
+	if err = s.refreshDoltLiteSession(); err != nil {
+		s.t.Fatalf("failed to refresh DoltLite session during test teardown: %s", err.Error())
+	}
 
-	err = s.exec(s.dialect.UseDatabase(mcpTestDatabaseName))
-	if err != nil {
-		s.t.Fatalf("failed to use database during test setup: %s", err.Error())
+	// Single-database dialects (DoltLite) have no USE statement.
+	if useStmt := s.dialect.UseDatabase(mcpTestDatabaseName); useStmt != "" {
+		err = s.exec(useStmt)
+		if err != nil {
+			s.t.Fatalf("failed to use database during test setup: %s", err.Error())
+		}
 	}
 
 	sqlText := formatBranchSQL(teardownSQL.Get(s.dialectType), branchName)
@@ -272,9 +304,63 @@ func createMCPDoltServerTestSuite(ctx context.Context, doltBinPath string, diale
 	switch dialectType {
 	case db.DialectPostgres:
 		return createDoltgresTestSuite(ctx, doltBinPath)
+	case db.DialectDoltLite:
+		return createDoltLiteTestSuite(ctx)
 	default:
 		return createDoltTestSuite(ctx, doltBinPath)
 	}
+}
+
+func createDoltLiteTestSuite(ctx context.Context) (*testSuite, error) {
+	dialectType := db.DialectDoltLite
+	dialect := db.NewDialect(dialectType)
+
+	databaseParentDir, err := os.MkdirTemp("", "mcp-server-tests-doltlite-*")
+	if err != nil {
+		return nil, err
+	}
+
+	dbPath := filepath.Join(databaseParentDir, mcpTestDatabaseName+".db")
+
+	mcpConfig := db.Config{
+		DialectType: dialectType,
+		Path:        dbPath,
+		CommitName:  mcpTestCommitterName,
+		CommitEmail: mcpTestCommitterEmail,
+		BusyTimeout: db.DefaultDoltLiteBusyTimeout,
+	}
+
+	tx, err := db.NewDatabaseTransaction(ctx, mcpConfig)
+	if err != nil {
+		os.RemoveAll(databaseParentDir)
+		return nil, err
+	}
+	if err = tx.Rollback(ctx); err != nil {
+		os.RemoveAll(databaseParentDir)
+		return nil, err
+	}
+
+	dsn := dialect.FormatDSN(mcpConfig)
+	testDb, err := sql.Open(dialect.DriverName(), dsn)
+	if err != nil {
+		os.RemoveAll(databaseParentDir)
+		return nil, err
+	}
+	testDb.SetMaxOpenConns(1)
+
+	if err = testDb.PingContext(ctx); err != nil {
+		testDb.Close()
+		os.RemoveAll(databaseParentDir)
+		return nil, err
+	}
+
+	if err = seedDatabase(ctx, testDb, dialect, dialectType); err != nil {
+		testDb.Close()
+		os.RemoveAll(databaseParentDir)
+		return nil, err
+	}
+
+	return finishTestSuite(ctx, dialect, dialectType, "", databaseParentDir, databaseParentDir, dsn, testDb, noopServerProcess{}, mcpConfig)
 }
 
 func createDoltTestSuite(ctx context.Context, doltBinPath string) (*testSuite, error) {
@@ -358,7 +444,7 @@ func createDoltTestSuite(ctx context.Context, doltBinPath string) (*testSuite, e
 		return nil, err
 	}
 
-	err = seedDatabase(ctx, testDb, dialect)
+	err = seedDatabase(ctx, testDb, dialect, dialectType)
 	if err != nil {
 		return nil, err
 	}
@@ -451,7 +537,7 @@ func createDoltgresTestSuite(ctx context.Context, doltgresBinPath string) (*test
 		return nil, err
 	}
 
-	err = seedDatabase(ctx, testDb, dialect)
+	err = seedDatabase(ctx, testDb, dialect, dialectType)
 	if err != nil {
 		return nil, err
 	}
@@ -469,8 +555,8 @@ func createDoltgresTestSuite(ctx context.Context, doltgresBinPath string) (*test
 }
 
 // seedDatabase loads and executes the dialect-appropriate seed SQL, then commits.
-func seedDatabase(ctx context.Context, testDb *sql.DB, dialect db.Dialect) error {
-	seedSQLBytes, err := readSeedSQLFile()
+func seedDatabase(ctx context.Context, testDb *sql.DB, dialect db.Dialect, dialectType db.DialectType) error {
+	seedSQLBytes, err := readSeedSQLFile(dialectType)
 	if err != nil {
 		return err
 	}
@@ -760,15 +846,20 @@ func teardownMCPDoltServerTestSuite(s *testSuite) {
 	}
 }
 
-func readSeedSQLFile() ([]byte, error) {
+func readSeedSQLFile(dialectType db.DialectType) ([]byte, error) {
 	// Get the absolute path of the current source file
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		return nil, errors.New("could not determine caller path")
 	}
 
+	seedFileName := "seed.sql"
+	if dialectType == db.DialectDoltLite {
+		seedFileName = "seed_doltlite.sql"
+	}
+
 	// Build path relative to this source file
-	path := filepath.Join(filepath.Dir(filename), "testdata", "seed.sql")
+	path := filepath.Join(filepath.Dir(filename), "testdata", seedFileName)
 
 	return os.ReadFile(path)
 }

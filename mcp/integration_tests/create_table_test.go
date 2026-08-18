@@ -12,6 +12,7 @@ import (
 var testCreateTableT1Query = DialectSQL{
 	db.DialectMySQL:    "CREATE TABLE `t1` (pk int primary key);",
 	db.DialectPostgres: `CREATE TABLE "t1" (pk int primary key);`,
+	db.DialectDoltLite: `CREATE TABLE "t1" (pk int primary key);`,
 }
 
 var testCreateTablePlacesQuery = DialectSQL{
@@ -24,6 +25,14 @@ var testCreateTablePlacesQuery = DialectSQL{
 		"	`country` VARCHAR(1024) NOT NULL\n" +
 		");",
 	db.DialectPostgres: `
+CREATE TABLE "places"(
+	"id" VARCHAR(36) PRIMARY KEY,
+	"name" VARCHAR(1024) NOT NULL,
+	"address" VARCHAR(1024) NOT NULL,
+	"city" VARCHAR(1024) NOT NULL,
+	"country" VARCHAR(1024) NOT NULL
+);`,
+	db.DialectDoltLite: `
 CREATE TABLE "places"(
 	"id" VARCHAR(36) PRIMARY KEY,
 	"name" VARCHAR(1024) NOT NULL,
@@ -174,6 +183,9 @@ func testCreateTableToolInvalidArguments(s *testSuite, testBranchName string) {
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		createTableCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 
@@ -207,7 +219,7 @@ func testCreateTableToolSuccess(s *testSuite, testBranchName string) {
 			Arguments: map[string]any{
 				tools.WorkingBranchCallToolArgumentName:   testBranchName,
 				tools.WorkingDatabaseCallToolArgumentName: mcpTestDatabaseName,
-				tools.QueryCallToolArgumentName: testCreateTablePlacesQuery.Get(s.dialectType),
+				tools.QueryCallToolArgumentName:           testCreateTablePlacesQuery.Get(s.dialectType),
 			},
 		},
 	}

@@ -128,6 +128,9 @@ func testDoltFetchAllBranchesToolInvalidArguments(s *testSuite, testBranchName s
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		doltFetchAllBranchesCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

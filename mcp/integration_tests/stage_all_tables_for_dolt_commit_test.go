@@ -16,6 +16,9 @@ CREATE TABLE stagemetwo (pk int primary key);
 	db.DialectPostgres: `CREATE TABLE stagemeone (pk int primary key);
 CREATE TABLE stagemetwo (pk int primary key);
 `,
+	db.DialectDoltLite: `CREATE TABLE stagemeone (pk int primary key);
+CREATE TABLE stagemetwo (pk int primary key);
+`,
 }
 
 func testStageAllTablesForDoltCommitToolInvalidArguments(s *testSuite, testBranchName string) {
@@ -115,6 +118,9 @@ func testStageAllTablesForDoltCommitToolInvalidArguments(s *testSuite, testBranc
 	}
 
 	for _, request := range requests {
+		if shouldSkipCallToolCase(s, request.description) {
+			continue
+		}
 		stageAllTablesForDoltCommitCallToolResult, err := client.CallTool(ctx, request.request)
 		require.NoError(s.t, err)
 

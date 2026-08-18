@@ -1,0 +1,11 @@
+FROM golang:1.25.0-bookworm@sha256:81dc45d05a7444ead8c92a389621fafabc8e40f8fd1a19d7e5df14e61e98bc1a
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends build-essential tcl zlib1g-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY build_doltlite_binary.sh /usr/local/bin/build_doltlite_binary.sh
+RUN chmod +x /usr/local/bin/build_doltlite_binary.sh
+
+WORKDIR /src
+ENTRYPOINT ["/usr/local/bin/build_doltlite_binary.sh"]

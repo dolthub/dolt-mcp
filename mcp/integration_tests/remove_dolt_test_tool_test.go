@@ -13,6 +13,9 @@ var testRemoveDoltTestSetupSQL = DialectSQL{
 	db.DialectMySQL: `
 REPLACE INTO dolt_tests VALUES ('test_remove_me', 'grp', 'SELECT 1', 'expected_single_value', '==', '1');
 `,
+	db.DialectDoltLite: `
+REPLACE INTO dolt_tests VALUES ('test_remove_me', 'grp', 'SELECT 1', 'expected_single_value', '==', '1');
+`,
 	db.DialectPostgres: "",
 }
 
