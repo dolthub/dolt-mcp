@@ -70,7 +70,7 @@ rm -f staging/dolt-mcp-server-doltlite
 CGO_ENABLED=1 \
   CGO_CFLAGS="-I${LIB_DIR}" \
   CGO_LDFLAGS="-L${LIB_DIR} ${EXTRA_LIBS}" \
-  go build -trimpath -tags "doltlite libsqlite3" -ldflags "-s -w" \
+  go build -buildvcs=false -trimpath -tags "doltlite libsqlite3" -ldflags "-s -w" \
   -o staging/dolt-mcp-server-doltlite ./mcp/cmd/dolt-mcp-server
 tar -C staging -czf "${OUT_DIR_ABS}/${name}" dolt-mcp-server-doltlite
 rm -f staging/dolt-mcp-server-doltlite
